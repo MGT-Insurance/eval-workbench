@@ -41,7 +41,6 @@ class SlackConfig:
         return agent_map.get(agent_id, cls.ATHENA_TOKEN)
 
 
-
 class SlackResponse(TypedDict, total=False):
     success: bool
     ts: Optional[str]
@@ -129,7 +128,6 @@ class MultiChannelPostResult:
     errors: List[Dict[str, str]]
 
 
-
 SLACK_FORMATTING_RULES = """
 CRITICAL FORMATTING RULES (Slack mrkdwn format):
 - NEVER use # or ## or ### for headers
@@ -193,7 +191,6 @@ AGENT_INFO = {
         "hasChat": True,
     },
 }
-
 
 
 class SlackHttpClient:
@@ -329,8 +326,6 @@ def get_shared_slack_client() -> SlackHttpClient:
     if _SHARED_SLACK_CLIENT is None:
         _SHARED_SLACK_CLIENT = SlackHttpClient()
     return _SHARED_SLACK_CLIENT
-
-
 
 
 class SubscriptionStorage(ABC):
@@ -579,8 +574,6 @@ class SlackScraper:
             "thread_last_activity_at": max(timestamps) if timestamps else None,
             "human_participants": list(human_participants),
         }
-
-
 
 
 class SlackService:
@@ -939,7 +932,6 @@ class SlackService:
                 logger.error(f"[Slack API] Download error: {e}")
                 return FileDownloadResponse(success=False, error=str(e))
 
-
     async def post_to_subscribed_channels(
         self,
         agent_id: str,
@@ -1033,7 +1025,6 @@ class SlackService:
 
         return True
 
-
     async def _build_app_home_blocks(self, agent_id: str, user_id: str) -> List[Dict]:
         info = AGENT_INFO.get(agent_id, AGENT_INFO["athena"])
         blocks = []
@@ -1096,7 +1087,6 @@ class SlackService:
         if not filters:
             return "all"
         return ", ".join([f"{k}:{v}" for k, v in filters.items()])
-
 
 
 class SlackBlockBuilder:
