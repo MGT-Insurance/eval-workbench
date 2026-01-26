@@ -1,17 +1,3 @@
-"""
-Feedback Analysis Module
-
-Provides analytics for Athena AI underwriting conversations.
-
-Components:
-- schema: Data models for messages, contexts, metrics, and results
-- handler: LLM handler for conversation analysis
-- pipeline: ETL pipeline for processing conversations
-- metric_computations: Per-conversation metric calculation
-- aggregation_service: Period-based aggregation for dashboards
-- jobs: Background aggregation jobs
-"""
-
 # Schema models
 from implementations.athena.models.feedback_analysis.schema import (
     Message,
