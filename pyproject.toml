@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eval-workbench"
+version = "0.1.0"
+description = "Evaluation workbench implementations and shared metrics"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "axion @ git+https://github.com/ax-foundry/axion.git",
+    "fastapi",
+    "numpy",
+    "pydantic",
+    "pydantic-settings",
+    "psycopg-binary>=3.3.2",
+    "psycopg-pool>=3.3.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["shared*", "implementations*"]
