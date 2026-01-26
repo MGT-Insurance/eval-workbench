@@ -1,10 +1,3 @@
-"""
-Per-conversation metric computation for feedback analytics.
-
-This module provides utilities for computing quantitative metrics from
-conversation contexts and audit results at ingestion time.
-"""
-
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 

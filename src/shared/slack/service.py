@@ -10,9 +10,6 @@ from datetime import datetime
 from dataclasses import dataclass
 import aiohttp
 
-# =============================================================================
-# Configuration & Logging
-# =============================================================================
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SlackService")
@@ -43,10 +40,6 @@ class SlackConfig:
         }
         return agent_map.get(agent_id, cls.ATHENA_TOKEN)
 
-
-# =============================================================================
-# Types & Interfaces
-# =============================================================================
 
 
 class SlackResponse(TypedDict, total=False):
@@ -136,9 +129,6 @@ class MultiChannelPostResult:
     errors: List[Dict[str, str]]
 
 
-# =============================================================================
-# Constants & Formatting Rules
-# =============================================================================
 
 SLACK_FORMATTING_RULES = """
 CRITICAL FORMATTING RULES (Slack mrkdwn format):
@@ -204,9 +194,6 @@ AGENT_INFO = {
     },
 }
 
-# =============================================================================
-# Slack HTTP Client (Retries + Rate Limits)
-# =============================================================================
 
 
 class SlackHttpClient:
@@ -344,9 +331,6 @@ def get_shared_slack_client() -> SlackHttpClient:
     return _SHARED_SLACK_CLIENT
 
 
-# =============================================================================
-# Subscription Storage Interface
-# =============================================================================
 
 
 class SubscriptionStorage(ABC):
@@ -417,11 +401,6 @@ class InMemorySubscriptionStorage(SubscriptionStorage):
             and s.created_by_slack_user_id == user_id
             and s.active
         ]
-
-
-# =============================================================================
-# Slack Scraping Helpers
-# =============================================================================
 
 
 class SlackScraper:
@@ -602,9 +581,6 @@ class SlackScraper:
         }
 
 
-# =============================================================================
-# Core Slack Service
-# =============================================================================
 
 
 class SlackService:
@@ -963,9 +939,6 @@ class SlackService:
                 logger.error(f"[Slack API] Download error: {e}")
                 return FileDownloadResponse(success=False, error=str(e))
 
-    # =========================================================================
-    # Multi-Channel Logic
-    # =========================================================================
 
     async def post_to_subscribed_channels(
         self,
@@ -1029,10 +1002,6 @@ class SlackService:
         ]
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    # =========================================================================
-    # Subscription Helpers
-    # =========================================================================
-
     async def _find_matching_subscriptions(
         self, agent_id: str, event_type: str, event_data: Dict[str, str]
     ) -> List[SlackSubscription]:
@@ -1064,9 +1033,6 @@ class SlackService:
 
         return True
 
-    # =========================================================================
-    # App Home Builders
-    # =========================================================================
 
     async def _build_app_home_blocks(self, agent_id: str, user_id: str) -> List[Dict]:
         info = AGENT_INFO.get(agent_id, AGENT_INFO["athena"])
@@ -1131,10 +1097,6 @@ class SlackService:
             return "all"
         return ", ".join([f"{k}:{v}" for k, v in filters.items()])
 
-
-# =============================================================================
-# Block Builders (Static Helpers)
-# =============================================================================
 
 
 class SlackBlockBuilder:

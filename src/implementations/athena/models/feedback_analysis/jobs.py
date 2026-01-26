@@ -1,15 +1,3 @@
-"""
-Background Jobs for Feedback Analytics
-
-Provides scheduled job functions for computing and storing aggregated metrics.
-These jobs can be triggered by cron, task queues, or manual invocation.
-
-Job Types:
-- Daily aggregation: Run after midnight for previous day's metrics
-- Weekly aggregation: Run on Monday for previous week's metrics
-- Monthly aggregation: Run on 1st of month for previous month's metrics
-"""
-
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Set, Dict

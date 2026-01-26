@@ -1,13 +1,3 @@
-"""
-Feedback Analysis Pipeline
-
-ETL pipeline for processing Slack conversations through:
-1. Data transformation (raw JSON -> typed contexts)
-2. LLM analysis (conversation audit)
-3. Metric computation (quantitative metrics)
-4. Optional persistence (database storage)
-"""
-
 import asyncio
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Set
