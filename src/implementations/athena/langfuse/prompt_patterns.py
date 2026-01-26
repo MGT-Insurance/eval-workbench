@@ -18,7 +18,9 @@ class WorkflowPromptPatterns(PromptPatternsBase):
             "caseAssessment": create_extraction_pattern(h_case, re.escape(h_context)),
             "contextData": create_extraction_pattern(h_context, re.escape(h_flags)),
             "underwritingFlags": create_extraction_pattern(h_flags, re.escape(h_debug)),
-            "swallowDebugData": create_extraction_pattern(h_debug, f"{re.escape(h_prev)}|$"),
+            "swallowDebugData": create_extraction_pattern(
+                h_debug, f"{re.escape(h_prev)}|$"
+            ),
         }
 
 
@@ -39,5 +41,3 @@ class ChatPromptPatterns(PromptPatternsBase):
             "context": rf"{re.escape(h_context)}\s*(.*?)\s*(?:{re.escape(h_instructions)})",
             "instructions": rf"{re.escape(h_instructions)}\s*(.*?)\s*(?:$)",
         }
-
-

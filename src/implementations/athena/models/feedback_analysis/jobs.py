@@ -50,9 +50,7 @@ class AggregationJobRunner:
         self.aggregation_service = MetricAggregationService()
 
     async def run_daily_aggregation(
-        self,
-        date: Optional[datetime] = None,
-        store_result: bool = True
+        self, date: Optional[datetime] = None, store_result: bool = True
     ) -> AggregatedMetrics:
         """
         Run daily aggregation for a specific date.
@@ -94,9 +92,7 @@ class AggregationJobRunner:
         return aggregation
 
     async def run_weekly_aggregation(
-        self,
-        week_start: Optional[datetime] = None,
-        store_result: bool = True
+        self, week_start: Optional[datetime] = None, store_result: bool = True
     ) -> AggregatedMetrics:
         """
         Run weekly aggregation for a specific week.
@@ -144,7 +140,7 @@ class AggregationJobRunner:
         self,
         year: Optional[int] = None,
         month: Optional[int] = None,
-        store_result: bool = True
+        store_result: bool = True,
     ) -> AggregatedMetrics:
         """
         Run monthly aggregation for a specific month.
@@ -197,9 +193,7 @@ class AggregationJobRunner:
         return aggregation
 
     async def _fetch_period_data(
-        self,
-        period_start: datetime,
-        period_end: datetime
+        self, period_start: datetime, period_end: datetime
     ) -> tuple:
         """
         Fetch metrics and audit results for a time period.
@@ -219,9 +213,7 @@ class AggregationJobRunner:
         return metrics, audit_results, user_ids
 
     async def _query_metrics(
-        self,
-        period_start: datetime,
-        period_end: datetime
+        self, period_start: datetime, period_end: datetime
     ) -> List[ConversationMetrics]:
         """Query conversation metrics for period. Override for actual implementation."""
         # Reference SQL:
@@ -230,9 +222,7 @@ class AggregationJobRunner:
         return []
 
     async def _query_audit_results(
-        self,
-        period_start: datetime,
-        period_end: datetime
+        self, period_start: datetime, period_end: datetime
     ) -> List[AuditResult]:
         """Query audit results for period. Override for actual implementation."""
         # Reference SQL:
@@ -241,9 +231,7 @@ class AggregationJobRunner:
         return []
 
     async def _query_user_ids(
-        self,
-        period_start: datetime,
-        period_end: datetime
+        self, period_start: datetime, period_end: datetime
     ) -> Set[str]:
         """Query unique user IDs for period. Override for actual implementation."""
         # Reference SQL:
@@ -260,8 +248,7 @@ class AggregationJobRunner:
 
 
 async def run_all_pending_aggregations(
-    runner: AggregationJobRunner,
-    since: Optional[datetime] = None
+    runner: AggregationJobRunner, since: Optional[datetime] = None
 ) -> Dict[str, List[AggregatedMetrics]]:
     """
     Run all pending aggregations since a given date.
@@ -279,9 +266,9 @@ async def run_all_pending_aggregations(
         since = _utcnow() - timedelta(days=30)
 
     results = {
-        'daily': [],
-        'weekly': [],
-        'monthly': [],
+        "daily": [],
+        "weekly": [],
+        "monthly": [],
     }
 
     now = _utcnow()
@@ -290,7 +277,7 @@ async def run_all_pending_aggregations(
     current = since
     while current < now:
         aggregation = await runner.run_daily_aggregation(current)
-        results['daily'].append(aggregation)
+        results["daily"].append(aggregation)
         current += timedelta(days=1)
 
     # Run weekly aggregations (for complete weeks)
@@ -300,7 +287,7 @@ async def run_all_pending_aggregations(
 
     while week_start + timedelta(days=7) <= now:
         aggregation = await runner.run_weekly_aggregation(week_start)
-        results['weekly'].append(aggregation)
+        results["weekly"].append(aggregation)
         week_start += timedelta(days=7)
 
     # Run monthly aggregations (for complete months)
@@ -317,7 +304,7 @@ async def run_all_pending_aggregations(
             break
 
         aggregation = await runner.run_monthly_aggregation(year, month)
-        results['monthly'].append(aggregation)
+        results["monthly"].append(aggregation)
 
         if month == 12:
             year += 1

@@ -1,23 +1,24 @@
-import datetime
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
 
 class ModelUsageUnit(Enum):
-    TOKENS = 'TOKENS'
-    CHARACTERS = 'CHARACTERS'
-    MILLISECONDS = 'MILLISECONDS'
-    SECONDS = 'SECONDS'
-    IMAGES = 'IMAGES'
-    REQUESTS = 'REQUESTS'
+    TOKENS = "TOKENS"
+    CHARACTERS = "CHARACTERS"
+    MILLISECONDS = "MILLISECONDS"
+    SECONDS = "SECONDS"
+    IMAGES = "IMAGES"
+    REQUESTS = "REQUESTS"
+
 
 class ObservationLevel(Enum):
-    DEFAULT = 'DEFAULT'
-    DEBUG = 'DEBUG'
-    WARNING = 'WARNING'
-    ERROR = 'ERROR'
+    DEFAULT = "DEFAULT"
+    DEBUG = "DEBUG"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+
 
 @dataclass
 class Usage:
@@ -29,13 +30,15 @@ class Usage:
 
 def _normalize_key(key: str) -> str:
     """Helper to normalize keys for fuzzy matching (snake_case -> camelCase support)."""
-    return key.lower().replace('_', '')
+    return key.lower().replace("_", "")
+
 
 class SmartAccess:
     """
     A base class that allows dictionary values to be accessed via dot notation.
     It recursively wraps returned dictionaries, lists, and objects.
     """
+
     def __getattr__(self, key: str) -> Any:
         # 1. Try to find the key in the object's internal dictionary (exact match)
         try:
@@ -72,13 +75,15 @@ class SmartAccess:
 
         # If it's a generic object (has attributes) but not already a SmartAccess wrapper,
         # wrap it in SmartObject so we can traverse its attributes smartly.
-        if hasattr(val, '__dict__') and not isinstance(val, SmartAccess):
+        if hasattr(val, "__dict__") and not isinstance(val, SmartAccess):
             return SmartObject(val)
 
         return val
 
+
 class SmartDict(SmartAccess):
     """Wraps a standard dictionary to allow dot access with fuzzy matching."""
+
     def __init__(self, data: Dict):
         self._data = data
 
@@ -99,8 +104,10 @@ class SmartDict(SmartAccess):
         """Return the underlying raw dictionary."""
         return self._data
 
+
 class SmartObject(SmartAccess):
     """Wraps a generic Python object to ensure its attributes return Smart wrappers."""
+
     def __init__(self, obj: Any):
         self._obj = obj
 
@@ -124,11 +131,12 @@ class TraceView(SmartAccess):
     Wraps the root trace object.
     Holds attributes like id, latency, environment, and the list of observations.
     """
+
     def __init__(self, **kwargs):
         self._data = kwargs
         # Ensure observations is at least an empty list
-        if 'observations' not in self._data:
-            self._data['observations'] = []
+        if "observations" not in self._data:
+            self._data["observations"] = []
 
     def _lookup(self, key: str) -> Any:
         return self._data[key]
@@ -151,11 +159,13 @@ class TraceView(SmartAccess):
             # Fallback to SmartAccess logic logic
             return super().__getattr__(item)
 
+
 class ObservationsView(SmartAccess):
     """
     Wraps a single observation (Span/Generation).
     Uses internal storage to ensure attribute access triggers __getattr__.
     """
+
     def __init__(self, **kwargs):
         self._data = kwargs
 
@@ -170,16 +180,19 @@ class ObservationsView(SmartAccess):
         return None
 
     def __repr__(self):
-        name = self._data.get('name', 'unnamed')
-        type_ = self._data.get('type', 'unknown')
+        name = self._data.get("name", "unnamed")
+        type_ = self._data.get("type", "unknown")
         return f"ObservationsView(name='{name}', type='{type_}')"
+
 
 def create_extraction_pattern(start_text: str, end_pattern: str) -> str:
     r"""Helper for Regex: escaped(Start) -> (Content) -> End"""
     return rf"{re.escape(start_text)}:\s*(.*?)\s*(?:{end_pattern})"
 
+
 class PromptPatternsBase:
     """Base registry for regex extraction patterns (empty by default)."""
+
     @classmethod
     def get_for(cls, step_name: str) -> Dict[str, str]:
         method_name = f"_patterns_{step_name.lower()}"
@@ -195,11 +208,13 @@ def _resolve_prompt_patterns(
         return PromptPatternsBase()
     return patterns() if isinstance(patterns, type) else patterns
 
+
 class TraceStep(SmartAccess):
     """
     Represents a specific named step (e.g., 'recommendation').
     SmartAccess enables: step.generation, step.variables.caseAssessment
     """
+
     def __init__(
         self,
         name: str,
@@ -212,7 +227,7 @@ class TraceStep(SmartAccess):
 
     def _lookup(self, key: str) -> Any:
         # Handle special property 'variables' for prompt extraction
-        if key == 'variables':
+        if key == "variables":
             return self._extract_variables()
 
         # Handle aliases like 'generation' or 'context'
@@ -220,18 +235,20 @@ class TraceStep(SmartAccess):
 
         # Find the observation
         for obs in self.observations:
-            if getattr(obs, 'type', '').upper() == target_type:
+            if getattr(obs, "type", "").upper() == target_type:
                 return obs
 
-        raise KeyError(f"No observation of type '{target_type}' found in step '{self.name}'.")
+        raise KeyError(
+            f"No observation of type '{target_type}' found in step '{self.name}'."
+        )
 
     def _resolve_type_alias(self, key: str) -> str:
         key_upper = key.upper()
         mapping = {
-            'CONTEXT': 'SPAN',
-            'SPAN': 'SPAN',
-            'GENERATION': 'GENERATION',
-            'EVENT': 'EVENT'
+            "CONTEXT": "SPAN",
+            "SPAN": "SPAN",
+            "GENERATION": "GENERATION",
+            "EVENT": "EVENT",
         }
         return mapping.get(key_upper, key_upper)
 
@@ -239,8 +256,8 @@ class TraceStep(SmartAccess):
         """Lazy extraction of prompt variables."""
         try:
             # We reuse our own lookup to find the generation object
-            gen = self._lookup('GENERATION')
-            raw_text = getattr(gen, 'input', '')
+            gen = self._lookup("GENERATION")
+            raw_text = getattr(gen, "input", "")
             if not isinstance(raw_text, str):
                 return {}
 
@@ -255,8 +272,9 @@ class TraceStep(SmartAccess):
             return {}
 
     def __repr__(self):
-        types = [getattr(o, 'type', '') for o in self.observations]
+        types = [getattr(o, "type", "") for o in self.observations]
         return f"<TraceStep name='{self.name}' types={types}>"
+
 
 class Trace(SmartAccess):
     """
@@ -264,6 +282,7 @@ class Trace(SmartAccess):
     SmartAccess enables: trace.recommendation
     Also provides access to trace-level attributes (id, latency, etc.)
     """
+
     def __init__(
         self,
         trace_data: Any,
@@ -274,7 +293,9 @@ class Trace(SmartAccess):
             trace_data: Can be a list of observations OR the root trace object containing .observations
         """
         # 1. Detect input type
-        if hasattr(trace_data, 'observations') and isinstance(trace_data.observations, list):
+        if hasattr(trace_data, "observations") and isinstance(
+            trace_data.observations, list
+        ):
             self._trace_obj = trace_data
             self.observations = trace_data.observations
         elif isinstance(trace_data, list):
@@ -291,7 +312,7 @@ class Trace(SmartAccess):
 
     def _group_observations(self):
         for obs in self.observations:
-            name = getattr(obs, 'name', 'unnamed')
+            name = getattr(obs, "name", "unnamed")
             if name not in self._grouped:
                 self._grouped[name] = []
             self._grouped[name].append(obs)
@@ -308,13 +329,13 @@ class Trace(SmartAccess):
 
             # Special handling if trace_obj is a dict-like view/wrapper
             if isinstance(self._trace_obj, (TraceView, dict, ObservationsView)):
-                 try:
-                     # If it's a wrapper, allow it to use its own lookup
-                     if hasattr(self._trace_obj, '_lookup'):
-                         return self._trace_obj._lookup(key)
-                     return self._trace_obj[key]
-                 except (KeyError, AttributeError):
-                     pass
+                try:
+                    # If it's a wrapper, allow it to use its own lookup
+                    if hasattr(self._trace_obj, "_lookup"):
+                        return self._trace_obj._lookup(key)
+                    return self._trace_obj[key]
+                except (KeyError, AttributeError):
+                    pass
 
         raise KeyError(f"Attribute '{key}' not found in Trace steps or properties.")
 
@@ -329,16 +350,17 @@ class Trace(SmartAccess):
         # 2. Check root object attributes (e.g. trace.created_at -> createdAt)
         if self._trace_obj:
             # If it's a dict or wrapper, check keys
-            if hasattr(self._trace_obj, 'keys'): # Dict-like
+            if hasattr(self._trace_obj, "keys"):  # Dict-like
                 try:
                     # If it's a wrapper class
-                    if hasattr(self._trace_obj, '_lookup_insensitive'):
+                    if hasattr(self._trace_obj, "_lookup_insensitive"):
                         return self._trace_obj._lookup_insensitive(key)
                     # Standard dict loop
                     for k in self._trace_obj.keys():
                         if _normalize_key(k) == target:
                             return self._trace_obj[k]
-                except: pass
+                except:
+                    pass
 
             # If it's a general object, check dir()
             for k in dir(self._trace_obj):
@@ -350,16 +372,18 @@ class Trace(SmartAccess):
     def __repr__(self):
         base = f"<Trace steps={list(self._grouped.keys())}"
         if self._trace_obj:
-            tid = getattr(self._trace_obj, 'id', 'unknown')
+            tid = getattr(self._trace_obj, "id", "unknown")
             base += f" id='{tid}'"
         base += ">"
         return base
+
 
 class TraceCollection:
     """
     Wraps a list of trace data items (from JSON or API response).
     Each item in the list is converted to a Trace object.
     """
+
     def __init__(
         self,
         data: List[Any],
@@ -376,7 +400,7 @@ class TraceCollection:
     def __len__(self):
         return len(self._traces)
 
-    def filter_by(self, **kwargs) -> 'TraceCollection':
+    def filter_by(self, **kwargs) -> "TraceCollection":
         """
         Simple filter helper.
         """

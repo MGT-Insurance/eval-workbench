@@ -97,7 +97,9 @@ class AthenaNeonLangfuseJoiner:
 
         if trace_fetcher is not None:
             trace_data_list = [trace_fetcher(trace_id) for trace_id in ids]
-            return TraceCollection(trace_data_list, prompt_patterns=self._prompt_patterns)
+            return TraceCollection(
+                trace_data_list, prompt_patterns=self._prompt_patterns
+            )
 
         loader = self._loader
         fetch_by_id = (

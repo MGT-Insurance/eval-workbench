@@ -1,5 +1,5 @@
 """
-IMPORTANT: THIS IS CLAUDE GENERATED CODE FOR TESTING PURPOSES. 
+IMPORTANT: THIS IS CLAUDE GENERATED CODE FOR TESTING PURPOSES.
 DONT USE IT FOR PRODUCTION. NEEDS REFACTORING.
 """
 
@@ -44,11 +44,15 @@ def _parse_signature_header(signature_header: str) -> tuple[str | None, str]:
 
 def verify_signature(payload: bytes, signature_header: str | None, secret: str) -> None:
     if not signature_header:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing signature")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing signature"
+        )
 
     timestamp, provided_signature = _parse_signature_header(signature_header)
     if not provided_signature:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid signature")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid signature"
+        )
 
     candidates = [
         hmac.new(
@@ -67,8 +71,12 @@ def verify_signature(payload: bytes, signature_header: str | None, secret: str) 
             ).hexdigest()
         )
 
-    if not any(hmac.compare_digest(candidate, provided_signature) for candidate in candidates):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid signature")
+    if not any(
+        hmac.compare_digest(candidate, provided_signature) for candidate in candidates
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid signature"
+        )
 
 
 def _extract_prompt_name(payload: Dict[str, Any]) -> str | None:
@@ -140,7 +148,9 @@ async def _post_slack_alert_safe(event_type: str, payload: Dict[str, Any]) -> No
 @app.post("/webhooks/langfuse")
 async def langfuse_webhook(
     request: Request,
-    x_langfuse_signature: str | None = Header(default=None, alias="X-Langfuse-Signature"),
+    x_langfuse_signature: str | None = Header(
+        default=None, alias="X-Langfuse-Signature"
+    ),
 ) -> Dict[str, str]:
     secret = settings.langfuse_webhook_secret
     if not secret:
@@ -155,7 +165,9 @@ async def langfuse_webhook(
     try:
         data = json.loads(payload_bytes)
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON") from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON"
+        ) from exc
 
     event_type = data.get("event")
     payload = data.get("data") or {}

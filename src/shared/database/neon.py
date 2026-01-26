@@ -20,7 +20,7 @@ from shared.settings import RepoSettingsBase, build_settings_config
 if not logging.getLogger().handlers:
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 logger = logging.getLogger(__name__)
 
@@ -80,12 +80,17 @@ def _build_connection_kwargs(settings: NeonSettings) -> dict:
     }
     if settings.db_application_name:
         kwargs["application_name"] = settings.db_application_name
-    if settings.db_statement_timeout_ms > 0 and settings.db_use_startup_statement_timeout:
+    if (
+        settings.db_statement_timeout_ms > 0
+        and settings.db_use_startup_statement_timeout
+    ):
         kwargs["options"] = f"-c statement_timeout={settings.db_statement_timeout_ms}"
     return kwargs
 
 
-def _chunked(iterable: Iterable[Tuple[Any, ...]], size: int) -> Iterable[List[Tuple[Any, ...]]]:
+def _chunked(
+    iterable: Iterable[Tuple[Any, ...]], size: int
+) -> Iterable[List[Tuple[Any, ...]]]:
     batch: List[Tuple[Any, ...]] = []
     for item in iterable:
         batch.append(item)
@@ -105,8 +110,13 @@ def _validate_sql_type(sql_type: str) -> str:
     return sql_type
 
 
-def _apply_statement_timeout_sync(conn: psycopg.Connection, settings: NeonSettings) -> None:
-    if settings.db_statement_timeout_ms > 0 and not settings.db_use_startup_statement_timeout:
+def _apply_statement_timeout_sync(
+    conn: psycopg.Connection, settings: NeonSettings
+) -> None:
+    if (
+        settings.db_statement_timeout_ms > 0
+        and not settings.db_use_startup_statement_timeout
+    ):
         with conn.cursor() as cur:
             cur.execute(
                 sql.SQL("SET statement_timeout = {}").format(
@@ -115,8 +125,13 @@ def _apply_statement_timeout_sync(conn: psycopg.Connection, settings: NeonSettin
             )
 
 
-async def _apply_statement_timeout_async(conn: psycopg.AsyncConnection, settings: NeonSettings) -> None:
-    if settings.db_statement_timeout_ms > 0 and not settings.db_use_startup_statement_timeout:
+async def _apply_statement_timeout_async(
+    conn: psycopg.AsyncConnection, settings: NeonSettings
+) -> None:
+    if (
+        settings.db_statement_timeout_ms > 0
+        and not settings.db_use_startup_statement_timeout
+    ):
         async with conn.cursor() as cur:
             await cur.execute(
                 sql.SQL("SET statement_timeout = {}").format(
@@ -140,7 +155,9 @@ class NeonDatabaseManager:
         self._settings = get_neon_settings()
         self.dsn = connection_string or self._settings.database_url
         if not self.dsn:
-            raise ValueError("DATABASE_URL not found in environment variables or arguments.")
+            raise ValueError(
+                "DATABASE_URL not found in environment variables or arguments."
+            )
         if self._settings.db_pool_min_size > self._settings.db_pool_max_size:
             raise ValueError("DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.")
 
@@ -180,7 +197,9 @@ class NeonDatabaseManager:
             _apply_statement_timeout_sync(conn, self._settings)
             yield conn
 
-    def fetch_all(self, query: str, params: Optional[Union[tuple, dict]] = None) -> List[Dict[str, Any]]:
+    def fetch_all(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> List[Dict[str, Any]]:
         try:
             with self._connection() as conn:
                 with conn.cursor() as cur:
@@ -190,7 +209,9 @@ class NeonDatabaseManager:
             logger.error(f"Database query failed: {e}")
             raise
 
-    def fetch_one(self, query: str, params: Optional[Union[tuple, dict]] = None) -> Optional[Dict[str, Any]]:
+    def fetch_one(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> Optional[Dict[str, Any]]:
         try:
             with self._connection() as conn:
                 with conn.cursor() as cur:
@@ -200,7 +221,9 @@ class NeonDatabaseManager:
             logger.error(f"Database fetch_one failed: {e}")
             raise
 
-    def execute_commit(self, query: str, params: Optional[Union[tuple, dict]] = None) -> None:
+    def execute_commit(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> None:
         try:
             with self._connection() as conn:
                 with conn.cursor() as cur:
@@ -211,7 +234,9 @@ class NeonDatabaseManager:
             logger.error(f"Database execution failed: {e}")
             raise
 
-    def fetch_dataframe(self, query: str, params: Optional[Union[tuple, dict]] = None) -> pd.DataFrame:
+    def fetch_dataframe(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> pd.DataFrame:
         try:
             data = self.fetch_all(query, params)
             return pd.DataFrame(data)
@@ -270,8 +295,8 @@ class NeonDatabaseManager:
             columns = list(df_clean.columns)
             query = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
                 sql.Identifier(table_name),
-                sql.SQL(', ').join(map(sql.Identifier, columns)),
-                sql.SQL(', ').join(sql.Placeholder() * len(columns))
+                sql.SQL(", ").join(map(sql.Identifier, columns)),
+                sql.SQL(", ").join(sql.Placeholder() * len(columns)),
             )
             with self._connection() as conn:
                 with conn.cursor() as cur:
@@ -279,7 +304,9 @@ class NeonDatabaseManager:
                     for batch in _chunked(rows_iter, settings.db_upload_chunk_size):
                         cur.executemany(query, batch)
                 conn.commit()
-            logger.info(f"Successfully uploaded {len(df_clean)} rows to '{table_name}'.")
+            logger.info(
+                f"Successfully uploaded {len(df_clean)} rows to '{table_name}'."
+            )
         except psycopg.Error as e:
             logger.error(f"Failed to upload DataFrame to '{table_name}': {e}")
             raise
@@ -342,7 +369,9 @@ class AsyncNeonDatabaseManager:
             await _apply_statement_timeout_async(conn, self._settings)
             yield conn
 
-    async def fetch_all(self, query: str, params: Optional[Union[tuple, dict]] = None) -> List[Dict[str, Any]]:
+    async def fetch_all(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> List[Dict[str, Any]]:
         """Async fetch all."""
         try:
             async with self._connection() as conn:
@@ -353,7 +382,9 @@ class AsyncNeonDatabaseManager:
             logger.error(f"Async DB query failed: {e}")
             raise
 
-    async def fetch_one(self, query: str, params: Optional[Union[tuple, dict]] = None) -> Optional[Dict[str, Any]]:
+    async def fetch_one(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> Optional[Dict[str, Any]]:
         """Async fetch one."""
         try:
             async with self._connection() as conn:
@@ -364,7 +395,9 @@ class AsyncNeonDatabaseManager:
             logger.error(f"Async DB fetch_one failed: {e}")
             raise
 
-    async def execute_commit(self, query: str, params: Optional[Union[tuple, dict]] = None) -> None:
+    async def execute_commit(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> None:
         """Async execute and commit."""
         try:
             async with self._connection() as conn:
@@ -375,7 +408,9 @@ class AsyncNeonDatabaseManager:
             logger.error(f"Async DB execution failed: {e}")
             raise
 
-    async def fetch_dataframe(self, query: str, params: Optional[Union[tuple, dict]] = None) -> pd.DataFrame:
+    async def fetch_dataframe(
+        self, query: str, params: Optional[Union[tuple, dict]] = None
+    ) -> pd.DataFrame:
         """Async execute query and return pandas DataFrame."""
         try:
             # We await the data fetch, then create the dataframe synchronously (fast in memory)
@@ -433,8 +468,8 @@ class AsyncNeonDatabaseManager:
             columns = list(df_clean.columns)
             query = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
                 sql.Identifier(table_name),
-                sql.SQL(', ').join(map(sql.Identifier, columns)),
-                sql.SQL(', ').join(sql.Placeholder() * len(columns))
+                sql.SQL(", ").join(map(sql.Identifier, columns)),
+                sql.SQL(", ").join(sql.Placeholder() * len(columns)),
             )
 
             async with self._connection() as conn:
@@ -445,7 +480,9 @@ class AsyncNeonDatabaseManager:
                         await cur.executemany(query, batch)
                 await conn.commit()
 
-            logger.info(f"Successfully uploaded {len(df_clean)} rows to '{table_name}' (Async).")
+            logger.info(
+                f"Successfully uploaded {len(df_clean)} rows to '{table_name}' (Async)."
+            )
         except psycopg.Error as e:
             logger.error(f"Failed to upload DataFrame to '{table_name}': {e}")
             raise
@@ -480,7 +517,7 @@ class QueueExecutor:
                 If None, uses the event loop's default executor.
         """
         if num_workers <= 0:
-            raise ValueError('num_workers must be a positive integer')
+            raise ValueError("num_workers must be a positive integer")
 
         self.num_workers = num_workers
         self.maxsize = maxsize
@@ -572,7 +609,7 @@ class QueueExecutor:
                 break
             except Exception as e:
                 # Log unexpected errors but keep worker running
-                logger.error(f'Worker {worker_id} encountered unexpected error: {e}')
+                logger.error(f"Worker {worker_id} encountered unexpected error: {e}")
 
     def submit(
         self, func: Callable[..., Any], *args: Any, **kwargs: Any
@@ -592,7 +629,7 @@ class QueueExecutor:
         """
         if not self._running:
             raise RuntimeError(
-                'QueueExecutor must be started before submitting tasks. '
+                "QueueExecutor must be started before submitting tasks. "
                 "Use 'async with QueueExecutor(...)' or call 'await executor.start()'"
             )
 

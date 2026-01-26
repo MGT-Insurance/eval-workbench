@@ -10,8 +10,7 @@ ETL pipeline for processing Slack conversations through:
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Set
 import pandas as pd
 
 from axion.llm_registry import LLMRegistry
@@ -20,9 +19,10 @@ from implementations.athena.models.feedback_analysis.schema import (
     ConversationMetrics,
     AuditResult,
     Message,
-    EscalationType,
 )
-from implementations.athena.models.feedback_analysis.handler import UnderwritingAuditHandler
+from implementations.athena.models.feedback_analysis.handler import (
+    UnderwritingAuditHandler,
+)
 from implementations.athena.models.feedback_analysis.metric_computations import (
     ConversationMetricCalculator,
     classify_escalation,
@@ -33,6 +33,7 @@ from implementations.athena.models.feedback_analysis.metric_computations import 
 @dataclass
 class PipelineResult:
     """Result of running the feedback analysis pipeline."""
+
     contexts: List[ConversationContext] = field(default_factory=list)
     audit_results: List[AuditResult] = field(default_factory=list)
     metrics: List[ConversationMetrics] = field(default_factory=list)
@@ -102,11 +103,13 @@ class FeedbackAnalysisPipeline:
 
         for ctx, res in zip(contexts, raw_results):
             if isinstance(res, Exception):
-                errors.append({
-                    "thread_id": ctx.thread_id,
-                    "error": str(res),
-                    "error_type": type(res).__name__
-                })
+                errors.append(
+                    {
+                        "thread_id": ctx.thread_id,
+                        "error": str(res),
+                        "error_type": type(res).__name__,
+                    }
+                )
                 print(f"Error on {ctx.thread_id}: {res}")
             else:
                 # 4. Classify escalation type
@@ -147,12 +150,14 @@ class FeedbackAnalysisPipeline:
         self,
         contexts: List[ConversationContext],
         audit_results: List[AuditResult],
-        metrics: List[ConversationMetrics]
+        metrics: List[ConversationMetrics],
     ) -> None:
         """Persist results to database. Override in subclass for actual implementation."""
         pass
 
-    def _transform_to_contexts(self, raw_data: List[Dict[str, Any]]) -> List[ConversationContext]:
+    def _transform_to_contexts(
+        self, raw_data: List[Dict[str, Any]]
+    ) -> List[ConversationContext]:
         """
         Transform raw JSON data to typed ConversationContext objects.
 
@@ -166,18 +171,18 @@ class FeedbackAnalysisPipeline:
 
         for thread_root in raw_data:
             # 1. Get Thread ID, Channel ID, and URL from root object
-            thread_id = str(thread_root.get('id', 'unknown_id'))
-            channel_id = thread_root.get('channel_id') or thread_root.get('channelId')
-            slack_url = thread_root.get('messageUrl', '')
+            thread_id = str(thread_root.get("id", "unknown_id"))
+            channel_id = thread_root.get("channel_id") or thread_root.get("channelId")
+            slack_url = thread_root.get("messageUrl", "")
 
             # 2. Get Messages
-            raw_msgs = thread_root.get('threadReplies', [])
+            raw_msgs = thread_root.get("threadReplies", [])
             if not raw_msgs:
                 # Fallback if no replies structure
                 raw_msgs = [thread_root]
 
             # 3. Extract Metadata from first message
-            first_msg_content = raw_msgs[0].get('content', '')
+            first_msg_content = raw_msgs[0].get("content", "")
             case_id = self._extract_case_id(thread_root)
             title = self._extract_business_name(first_msg_content)
 
@@ -187,14 +192,14 @@ class FeedbackAnalysisPipeline:
             timestamps = []
 
             for i, m in enumerate(raw_msgs):
-                ts_str = str(m.get('ts', ''))
+                ts_str = str(m.get("ts", ""))
                 timestamp_utc = parse_slack_timestamp(ts_str)
 
                 if timestamp_utc:
                     timestamps.append(timestamp_utc)
 
-                is_bot = m.get('is_bot', False) or 'bot_id' in m
-                user_id = m.get('user_id') or m.get('user')
+                is_bot = m.get("is_bot", False) or "bot_id" in m
+                user_id = m.get("user_id") or m.get("user")
 
                 # Track human participants
                 if not is_bot and user_id:
@@ -204,12 +209,12 @@ class FeedbackAnalysisPipeline:
                     Message(
                         ts=ts_str,
                         timestamp_utc=timestamp_utc,
-                        sender=m.get('sender', 'unknown'),
+                        sender=m.get("sender", "unknown"),
                         user_id=user_id,
                         is_bot=is_bot,
-                        content=m.get('content', ''),
-                        messageUrl=m.get('messageUrl'),
-                        reply_count=m.get('reply_count', 0),
+                        content=m.get("content", ""),
+                        messageUrl=m.get("messageUrl"),
+                        reply_count=m.get("reply_count", 0),
                         is_thread_reply=i > 0,  # First message is thread root
                     )
                 )
@@ -237,7 +242,7 @@ class FeedbackAnalysisPipeline:
     @staticmethod
     def _extract_case_id(data: Dict[str, Any]) -> str:
         """Extract the ID directly from the data payload."""
-        return str(data.get('id', 'unknown'))
+        return str(data.get("id", "unknown"))
 
     @staticmethod
     def _extract_business_name(text: str) -> str:
@@ -280,7 +285,9 @@ async def run_pipeline(raw_data_list: List[Dict]) -> pd.DataFrame:
             "Slack_URL": ctx.slack_url,
             "Has_Intervention": res.has_human_intervention,
             "Intervention_Type": res.intervention_category.value,
-            "Escalation_Type": res.escalation_type.value if res.escalation_type else None,
+            "Escalation_Type": res.escalation_type.value
+            if res.escalation_type
+            else None,
             "Friction_Point": res.friction_point,
             "Sentiment": res.human_sentiment.value,
             "Human_Summary": res.summary_of_human_input,
@@ -298,10 +305,12 @@ async def run_pipeline(raw_data_list: List[Dict]) -> pd.DataFrame:
             "Is_Stalemate": metric.is_stalemate,
             "Has_Frustrated_Message": metric.has_frustrated_message,
             # Conversation preview
-            "Full_Conversation": "\n".join([
-                f"{'[BOT]' if m.is_bot else '[HUMAN]'} {m.sender}: {m.content}"
-                for m in ctx.messages
-            ])
+            "Full_Conversation": "\n".join(
+                [
+                    f"{'[BOT]' if m.is_bot else '[HUMAN]'} {m.sender}: {m.content}"
+                    for m in ctx.messages
+                ]
+            ),
         }
         dashboard_rows.append(row)
 

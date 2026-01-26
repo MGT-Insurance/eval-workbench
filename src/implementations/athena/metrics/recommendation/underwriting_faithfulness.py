@@ -14,13 +14,49 @@ logger = get_logger(__name__)
 
 
 STOPWORDS = {
-    'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'he',
-    'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'were',
-    'will', 'with', 'this', 'but', 'they', 'have', 'had', 'what', 'when',
-    'where', 'who', 'which', 'why', 'how', 'been', 'since'
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "for",
+    "from",
+    "has",
+    "he",
+    "in",
+    "is",
+    "it",
+    "its",
+    "of",
+    "on",
+    "that",
+    "the",
+    "to",
+    "was",
+    "were",
+    "will",
+    "with",
+    "this",
+    "but",
+    "they",
+    "have",
+    "had",
+    "what",
+    "when",
+    "where",
+    "who",
+    "which",
+    "why",
+    "how",
+    "been",
+    "since",
 }
 
-def flatten_json(y: Any, parent_key: str = '', sep: str = '.') -> List[str]:
+
+def flatten_json(y: Any, parent_key: str = "", sep: str = ".") -> List[str]:
     """Recursively flattens a nested dictionary/list into a list of 'path: value' strings."""
     out = []
 
@@ -37,11 +73,14 @@ def flatten_json(y: Any, parent_key: str = '', sep: str = '.') -> List[str]:
     _flatten(y, parent_key)
     return out
 
-def find_relevant_context(claim: str, flattened_context: List[str], top_k: int = 5) -> List[str]:
+
+def find_relevant_context(
+    claim: str, flattened_context: List[str], top_k: int = 5
+) -> List[str]:
     """Finds the most relevant data points for a claim using token overlap (ignoring stopwords)."""
     # Regex [^\W_]+ matches alphanumeric characters but excludes underscores,
     # effectively splitting snake_case into separate tokens (e.g., 'bop_protection_class' -> 'bop', 'protection', 'class')
-    token_pattern = r'[^\W_]+'
+    token_pattern = r"[^\W_]+"
 
     # Tokenize and remove stopwords
     claim_tokens = set(re.findall(token_pattern, claim.lower())) - STOPWORDS
@@ -65,15 +104,21 @@ def find_relevant_context(claim: str, flattened_context: List[str], top_k: int =
     scored_lines.sort(key=lambda x: x[0], reverse=True)
     return [line for _, line in scored_lines[:top_k]]
 
+
 # --- Components: LLM Models ---
+
 
 class ClaimExtractionInput(RichBaseModel):
     text: str = Field(..., description="The underwriting recommendation text.")
-    model_config = {'extra': 'forbid'}
+    model_config = {"extra": "forbid"}
+
 
 class ClaimExtractionOutput(RichBaseModel):
-    claims: List[str] = Field(..., description="List of atomic factual claims extracted from the text.")
-    model_config = {'extra': 'forbid'}
+    claims: List[str] = Field(
+        ..., description="List of atomic factual claims extracted from the text."
+    )
+    model_config = {"extra": "forbid"}
+
 
 class ClaimExtractor(BaseMetric[ClaimExtractionInput, ClaimExtractionOutput]):
     instruction = """
@@ -84,15 +129,20 @@ class ClaimExtractor(BaseMetric[ClaimExtractionInput, ClaimExtractionOutput]):
     input_model = ClaimExtractionInput
     output_model = ClaimExtractionOutput
 
+
 class VerificationInput(RichBaseModel):
     claim: str = Field(..., description="The claim to verify.")
     evidence: str = Field(..., description="Candidate facts from the source data.")
-    model_config = {'extra': 'forbid'}
+    model_config = {"extra": "forbid"}
+
 
 class VerificationOutput(RichBaseModel):
-    is_supported: bool = Field(..., description="True if the evidence supports the claim.")
+    is_supported: bool = Field(
+        ..., description="True if the evidence supports the claim."
+    )
     reason: str = Field(..., description="Explanation of the verdict.")
-    model_config = {'extra': 'forbid'}
+    model_config = {"extra": "forbid"}
+
 
 class FactVerifier(BaseMetric[VerificationInput, VerificationOutput]):
     instruction = """
@@ -110,13 +160,14 @@ class HeuristicFactVerifier:
     Does not use an LLM, making it faster and free, but less semantically aware.
     Prioritizes numerical matches heavily.
     """
+
     def __init__(self, threshold: float = 0.75, **kwargs):
         self.threshold = threshold
 
     async def execute(self, input_data: VerificationInput) -> VerificationOutput:
         """Calculates weighted recall of the claim against the evidence."""
         # Use regex that splits on underscores to handle snake_case keys
-        token_pattern = r'[^\W_]+'
+        token_pattern = r"[^\W_]+"
 
         # 1. Clean and tokenize claim
         raw_claim_tokens = set(re.findall(token_pattern, input_data.claim.lower()))
@@ -147,7 +198,9 @@ class HeuristicFactVerifier:
             num_found = numeric_tokens.intersection(evidence_tokens)
             num_recall = len(num_found) / len(numeric_tokens)
 
-            reason_parts.append(f"Numbers: {len(num_found)}/{len(numeric_tokens)} match")
+            reason_parts.append(
+                f"Numbers: {len(num_found)}/{len(numeric_tokens)} match"
+            )
 
             if text_tokens:
                 text_found = text_tokens.intersection(evidence_tokens)
@@ -180,12 +233,13 @@ class HeuristicFactVerifier:
             # Only show missing text if it failed, to avoid noise
             missing_info.append(f"Missing words: {list(missing_text)[:3]}...")
 
-        reason_str = f"Heuristic {status_text} (Score: {score:.0%}). " + "; ".join(reason_parts)
+        reason_str = f"Heuristic {status_text} (Score: {score:.0%}). " + "; ".join(
+            reason_parts
+        )
         if missing_info:
             reason_str += ". " + " ".join(missing_info)
 
         return VerificationOutput(is_supported=is_supported, reason=reason_str)
-
 
 
 class UnderwritingFaithfulnessResult(RichBaseModel):
@@ -194,18 +248,24 @@ class UnderwritingFaithfulnessResult(RichBaseModel):
     supported_claims: int
     hallucinations: int
     claim_details: List[Dict[str, Any]]
-    model_config = {'extra': 'forbid'}
+    model_config = {"extra": "forbid"}
+
 
 @metric(
-    name='Underwriting Faithfulness',
-    key='underwriting_faithfulness',
-    description='Checks if extracted claims in the recommendation exist in the source JSON.',
+    name="Underwriting Faithfulness",
+    key="underwriting_faithfulness",
+    description="Checks if extracted claims in the recommendation exist in the source JSON.",
     required_fields=[],
     default_threshold=0.9,
-    tags=['heuristic'],
+    tags=["heuristic"],
 )
 class UnderwritingFaithfulness(BaseMetric):
-    def __init__(self, verification_mode: Literal['llm', 'heuristic'] = 'llm', max_concurrent: int = 5, **kwargs):
+    def __init__(
+        self,
+        verification_mode: Literal["llm", "heuristic"] = "llm",
+        max_concurrent: int = 5,
+        **kwargs,
+    ):
         """
         Args:
             verification_mode: 'llm' for AI-based verification (slower, more accurate),
@@ -218,7 +278,7 @@ class UnderwritingFaithfulness(BaseMetric):
         self.semaphore_runner = SemaphoreExecutor(max_concurrent=max_concurrent)
 
         # Select the verifier based on the mode
-        if verification_mode == 'heuristic':
+        if verification_mode == "heuristic":
             self.verifier = HeuristicFactVerifier(**kwargs)
         else:
             self.verifier = FactVerifier(**kwargs)
@@ -227,8 +287,11 @@ class UnderwritingFaithfulness(BaseMetric):
         # 1. Select Text Source
         text = ""
         if item.additional_output:
-            text = item.additional_output.get('detailed_recommendation') or \
-                   item.additional_output.get('brief_recommendation') or ""
+            text = (
+                item.additional_output.get("detailed_recommendation")
+                or item.additional_output.get("brief_recommendation")
+                or ""
+            )
         if not text:
             text = item.actual_output or ""
 
@@ -236,7 +299,9 @@ class UnderwritingFaithfulness(BaseMetric):
         flattened_facts_list = flatten_json(item.additional_input or {})
 
         if not flattened_facts_list:
-             return MetricEvaluationResult(score=0.0, explanation="No source data found in additional_input.")
+            return MetricEvaluationResult(
+                score=0.0, explanation="No source data found in additional_input."
+            )
 
         # 3. Run Extraction
         extract_res = await self.extractor.execute(ClaimExtractionInput(text=text))
@@ -244,8 +309,7 @@ class UnderwritingFaithfulness(BaseMetric):
 
         if not claims:
             return MetricEvaluationResult(
-                score=1.0,
-                explanation="No verifiable claims found in text."
+                score=1.0, explanation="No verifiable claims found in text."
             )
 
         # 4. Run Verification (ASYNC / PARALLEL with THROTTLING)
@@ -253,7 +317,9 @@ class UnderwritingFaithfulness(BaseMetric):
 
         for claim in claims:
             # Filter evidence for this specific claim
-            relevant_lines = find_relevant_context(claim, flattened_facts_list, top_k=15)
+            relevant_lines = find_relevant_context(
+                claim, flattened_facts_list, top_k=15
+            )
             evidence_text = "\n".join(relevant_lines)
 
             verify_input = VerificationInput(claim=claim, evidence=evidence_text)
@@ -278,11 +344,15 @@ class UnderwritingFaithfulness(BaseMetric):
             if is_pass:
                 supported_count += 1
 
-            results.append({
-                "claim": claim,
-                "status": "✅ Supported" if is_pass else "❌ Hallucinated/Unsupported",
-                "reason": reason
-            })
+            results.append(
+                {
+                    "claim": claim,
+                    "status": "✅ Supported"
+                    if is_pass
+                    else "❌ Hallucinated/Unsupported",
+                    "reason": reason,
+                }
+            )
 
         score = supported_count / len(claims) if claims else 1.0
         explanation = f"Faithfulness Score: {score:.2f}. Verified {supported_count}/{len(claims)} claims."
@@ -295,41 +365,45 @@ class UnderwritingFaithfulness(BaseMetric):
                 total_claims=len(claims),
                 supported_claims=supported_count,
                 hallucinations=len(claims) - supported_count,
-                claim_details=results
-            )
+                claim_details=results,
+            ),
         )
 
-    def get_signals(self, result: UnderwritingFaithfulnessResult) -> List[SignalDescriptor]:
+    def get_signals(
+        self, result: UnderwritingFaithfulnessResult
+    ) -> List[SignalDescriptor]:
         signals = [
             SignalDescriptor(
                 name="hallucination_count",
                 description="Number of unsupported claims.",
                 extractor=lambda r: r.hallucinations,
-                headline_display=True
+                headline_display=True,
             )
         ]
 
         for i, det in enumerate(result.claim_details):
-            group_name = f"Claim {i+1}"
-            signals.extend([
-                SignalDescriptor(
-                    name="claim_text",
-                    group=group_name,
-                    description="Extracted Claim",
-                    extractor=lambda r, idx=i: r.claim_details[idx]['claim']
-                ),
-                SignalDescriptor(
-                    name="status",
-                    group=group_name,
-                    description="Verdict",
-                    extractor=lambda r, idx=i: r.claim_details[idx]['status']
-                ),
-                SignalDescriptor(
-                    name="reason",
-                    group=group_name,
-                    description="Judge Reasoning",
-                    extractor=lambda r, idx=i: r.claim_details[idx]['reason']
-                )
-            ])
+            group_name = f"Claim {i + 1}"
+            signals.extend(
+                [
+                    SignalDescriptor(
+                        name="claim_text",
+                        group=group_name,
+                        description="Extracted Claim",
+                        extractor=lambda r, idx=i: r.claim_details[idx]["claim"],
+                    ),
+                    SignalDescriptor(
+                        name="status",
+                        group=group_name,
+                        description="Verdict",
+                        extractor=lambda r, idx=i: r.claim_details[idx]["status"],
+                    ),
+                    SignalDescriptor(
+                        name="reason",
+                        group=group_name,
+                        description="Judge Reasoning",
+                        extractor=lambda r, idx=i: r.claim_details[idx]["reason"],
+                    ),
+                ]
+            )
 
         return signals

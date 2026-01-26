@@ -27,7 +27,7 @@ class MetricAggregationService:
         user_ids: Set[str],
         period_start: datetime,
         period_end: datetime,
-        period_type: str = "daily"
+        period_type: str = "daily",
     ) -> AggregatedMetrics:
         """
         Aggregate metrics for a time period.
@@ -50,7 +50,9 @@ class MetricAggregationService:
 
         # Validate alignment
         if len(audit_results) != total:
-            raise ValueError(f"Metrics ({total}) and audit_results ({len(audit_results)}) must have same length")
+            raise ValueError(
+                f"Metrics ({total}) and audit_results ({len(audit_results)}) must have same length"
+            )
 
         # Trust Metrics
         mau = len(user_ids)
@@ -58,9 +60,15 @@ class MetricAggregationService:
         shift_left_rate = stp_count / total
 
         # Escalation Spectrum counts
-        hard_count = sum(1 for r in audit_results if r.escalation_type == EscalationType.HARD)
-        soft_count = sum(1 for r in audit_results if r.escalation_type == EscalationType.SOFT)
-        authority_count = sum(1 for r in audit_results if r.escalation_type == EscalationType.AUTHORITY)
+        hard_count = sum(
+            1 for r in audit_results if r.escalation_type == EscalationType.HARD
+        )
+        soft_count = sum(
+            1 for r in audit_results if r.escalation_type == EscalationType.SOFT
+        )
+        authority_count = sum(
+            1 for r in audit_results if r.escalation_type == EscalationType.AUTHORITY
+        )
 
         # Operational Efficiency
         avg_messages = sum(m.total_messages for m in metrics) / total
@@ -81,7 +89,8 @@ class MetricAggregationService:
         stalemate_count = sum(1 for m in metrics if m.is_stalemate)
         frustrated_count = sum(1 for m in metrics if m.has_frustrated_message)
         clarification_count = sum(
-            1 for r in audit_results
+            1
+            for r in audit_results
             if r.intervention_category == InterventionType.CLARIFICATION
         )
 
@@ -93,8 +102,8 @@ class MetricAggregationService:
         mttr_seconds = avg_turnaround
 
         # Business Impact
-        approved_count = sum(1 for m in metrics if m.resolution_type == 'approved')
-        declined_count = sum(1 for m in metrics if m.resolution_type == 'declined')
+        approved_count = sum(1 for m in metrics if m.resolution_type == "approved")
+        declined_count = sum(1 for m in metrics if m.resolution_type == "declined")
 
         # Rates based on resolved conversations
         resolved_count = sum(1 for m in metrics if m.is_resolved)
@@ -130,10 +139,7 @@ class MetricAggregationService:
         )
 
     def _empty_aggregation(
-        self,
-        period_start: datetime,
-        period_end: datetime,
-        period_type: str
+        self, period_start: datetime, period_end: datetime, period_type: str
     ) -> AggregatedMetrics:
         """Return an empty aggregation for periods with no data."""
         return AggregatedMetrics(
@@ -164,7 +170,7 @@ class MetricAggregationService:
         metrics: List[ConversationMetrics],
         audit_results: List[AuditResult],
         user_ids: Set[str],
-        date: datetime
+        date: datetime,
     ) -> AggregatedMetrics:
         """
         Aggregate metrics for a single day.
@@ -189,7 +195,7 @@ class MetricAggregationService:
         metrics: List[ConversationMetrics],
         audit_results: List[AuditResult],
         user_ids: Set[str],
-        week_start: datetime
+        week_start: datetime,
     ) -> AggregatedMetrics:
         """
         Aggregate metrics for a week (7 days starting from week_start).
@@ -215,7 +221,7 @@ class MetricAggregationService:
         audit_results: List[AuditResult],
         user_ids: Set[str],
         year: int,
-        month: int
+        month: int,
     ) -> AggregatedMetrics:
         """
         Aggregate metrics for a calendar month.

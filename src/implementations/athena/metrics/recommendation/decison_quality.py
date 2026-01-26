@@ -12,45 +12,74 @@ logger = get_logger(__name__)
 
 class ReasoningGap(RichBaseModel):
     """A specific concept mentioned by the human but missed by the AI."""
+
     concept: str = Field(..., description="The specific risk factor or reason missed.")
-    impact: str = Field(..., description="Why this omission matters (e.g., 'Critical', 'Nuance').")
-    model_config = {'extra': 'forbid'}
+    impact: str = Field(
+        ..., description="Why this omission matters (e.g., 'Critical', 'Nuance')."
+    )
+    model_config = {"extra": "forbid"}
+
 
 class ReasoningMatch(RichBaseModel):
     """A concept where both Human and AI aligned."""
-    concept: str = Field(..., description="The risk factor or reason identified by both.")
-    model_config = {'extra': 'forbid'}
+
+    concept: str = Field(
+        ..., description="The risk factor or reason identified by both."
+    )
+    model_config = {"extra": "forbid"}
+
 
 class DecisionQualityResult(RichBaseModel):
     """The structured output for the Decision Quality metric."""
 
     # Outcome Component
-    overall_score: float = Field(..., description="Combined score of outcome and reasoning.")
-    outcome_match: bool = Field(..., description="True if the final decisions (Approve/Decline) match.")
+    overall_score: float = Field(
+        ..., description="Combined score of outcome and reasoning."
+    )
+    outcome_match: bool = Field(
+        ..., description="True if the final decisions (Approve/Decline) match."
+    )
     outcome_score: float = Field(..., description="1.0 for match, 0.0 for mismatch.")
-    human_decision_detected: str = Field(..., description="Normalized decision extracted from Human Notes.")
-    ai_decision_detected: str = Field(..., description="Normalized decision extracted from AI Output.")
+    human_decision_detected: str = Field(
+        ..., description="Normalized decision extracted from Human Notes."
+    )
+    ai_decision_detected: str = Field(
+        ..., description="Normalized decision extracted from AI Output."
+    )
 
     # Reasoning Component
-    reasoning_score: float = Field(..., description="Score based on coverage of human concepts.")
-    missing_concepts: List[ReasoningGap] = Field(default_factory=list, description="List of reasons the AI missed.")
-    matched_concepts: List[ReasoningMatch] = Field(default_factory=list, description="List of reasons both agreed on.")
-    model_config = {'extra': 'forbid'}
+    reasoning_score: float = Field(
+        ..., description="Score based on coverage of human concepts."
+    )
+    missing_concepts: List[ReasoningGap] = Field(
+        default_factory=list, description="List of reasons the AI missed."
+    )
+    matched_concepts: List[ReasoningMatch] = Field(
+        default_factory=list, description="List of reasons both agreed on."
+    )
+    model_config = {"extra": "forbid"}
+
 
 # --- 2. Reasoning Judge Component (LLM Model) ---
 
+
 class ReasoningJudgeInput(RichBaseModel):
-    human_notes: str = Field(..., description="The underwriter's notes serving as the ground truth criteria.")
+    human_notes: str = Field(
+        ..., description="The underwriter's notes serving as the ground truth criteria."
+    )
     ai_output: str = Field(..., description="The AI agent's full recommendation.")
-    model_config = {'extra': 'forbid'}
+    model_config = {"extra": "forbid"}
+
 
 class ReasoningJudgeOutput(RichBaseModel):
     missing_concepts: List[ReasoningGap]
     matched_concepts: List[ReasoningMatch]
     reasoning_completeness_score: float = Field(
-        ..., description="0.0 to 1.0 score representing how well the AI captured the human's reasoning."
+        ...,
+        description="0.0 to 1.0 score representing how well the AI captured the human's reasoning.",
     )
-    model_config = {'extra': 'forbid'}
+    model_config = {"extra": "forbid"}
+
 
 class ReasoningJudge(BaseMetric[ReasoningJudgeInput, ReasoningJudgeOutput]):
     instruction = """
@@ -76,7 +105,7 @@ class ReasoningJudge(BaseMetric[ReasoningJudgeInput, ReasoningJudgeOutput]):
     description="Evaluates if the AI made the right decision for the right reasons.",
     required_fields=["actual_output", "expected_output"],
     score_range=(0, 1),
-    tags=["Agent"]
+    tags=["Agent"],
 )
 class DecisionQuality(BaseMetric):
     def __init__(
@@ -84,7 +113,7 @@ class DecisionQuality(BaseMetric):
         outcome_weight: float = 0.5,
         reasoning_weight: float = 0.5,
         hard_fail_on_outcome_mismatch: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """
         Args:
@@ -101,24 +130,30 @@ class DecisionQuality(BaseMetric):
 
         self.reasoning_judge = ReasoningJudge(**kwargs)
 
-    async def execute(self, dataset_item: DatasetItem, **kwargs) -> MetricEvaluationResult:
-
+    async def execute(
+        self, dataset_item: DatasetItem, **kwargs
+    ) -> MetricEvaluationResult:
         # Parse Decisions
         human_decision = dataset_item.expected_output or "UNKNOWN"
         ai_decision = dataset_item.actual_output or "UNKNOWN"
 
         # Simple string equality
-        outcome_match = (human_decision.strip().lower() == ai_decision.strip().lower()) and (human_decision != "UNKNOWN")
+        outcome_match = (
+            human_decision.strip().lower() == ai_decision.strip().lower()
+        ) and (human_decision != "UNKNOWN")
         outcome_score = 1.0 if outcome_match else 0.0
 
         # Reasoning Check (LLM Logic)
-        human_text = dataset_item.acceptance_criteria[0] if dataset_item.acceptance_criteria else human_decision
-        ai_text = dataset_item.additional_output.get('brief_recommendation', dataset_item.actual_output)
-
-        llm_input = ReasoningJudgeInput(
-            human_notes=human_text,
-            ai_output=ai_text
+        human_text = (
+            dataset_item.acceptance_criteria[0]
+            if dataset_item.acceptance_criteria
+            else human_decision
         )
+        ai_text = dataset_item.additional_output.get(
+            "brief_recommendation", dataset_item.actual_output
+        )
+
+        llm_input = ReasoningJudgeInput(human_notes=human_text, ai_output=ai_text)
 
         reasoning_result = await self.reasoning_judge.execute(llm_input)
 
@@ -139,13 +174,10 @@ class DecisionQuality(BaseMetric):
             ai_decision_detected=ai_decision,
             reasoning_score=reasoning_result.reasoning_completeness_score,
             missing_concepts=reasoning_result.missing_concepts,
-            matched_concepts=reasoning_result.matched_concepts
+            matched_concepts=reasoning_result.matched_concepts,
         )
 
-        return MetricEvaluationResult(
-            score=final_score,
-            signals=result_data
-        )
+        return MetricEvaluationResult(score=final_score, signals=result_data)
 
     def get_signals(self, result: DecisionQualityResult) -> List[SignalDescriptor]:
         """
@@ -162,7 +194,7 @@ class DecisionQuality(BaseMetric):
                 group="Decision Logic",
                 extractor=lambda r: r.outcome_match,
                 score_mapping={True: 1.0, False: 0.0},
-                headline_display=True
+                headline_display=True,
             )
         )
 
@@ -171,42 +203,46 @@ class DecisionQuality(BaseMetric):
                 name="Decisions",
                 description="Comparison of detected decisions.",
                 group="Decision Logic",
-                extractor=lambda r: f"Human: {r.human_decision_detected} | AI: {r.ai_decision_detected}"
+                extractor=lambda r: f"Human: {r.human_decision_detected} | AI: {r.ai_decision_detected}",
             )
         )
 
         # Group 2: Missing Concepts (The Critical Feedback)
         for i, gap in enumerate(result.missing_concepts):
             group_name = f"Missing: {gap.concept}"
-            signals.extend([
-                SignalDescriptor(
-                    name=f"missed_concept_{i}",
-                    group=group_name,
-                    extractor=lambda r, idx=i: r.missing_concepts[idx].concept,
-                    description="The concept missed by the AI."
-                ),
-                SignalDescriptor(
-                    name=f"impact_{i}",
-                    group=group_name,
-                    extractor=lambda r, idx=i: r.missing_concepts[idx].impact,
-                    description="Why this omission matters.",
-                    value=0.0, # Visual indicator of failure
-                    headline_display=False
-                )
-            ])
+            signals.extend(
+                [
+                    SignalDescriptor(
+                        name=f"missed_concept_{i}",
+                        group=group_name,
+                        extractor=lambda r, idx=i: r.missing_concepts[idx].concept,
+                        description="The concept missed by the AI.",
+                    ),
+                    SignalDescriptor(
+                        name=f"impact_{i}",
+                        group=group_name,
+                        extractor=lambda r, idx=i: r.missing_concepts[idx].impact,
+                        description="Why this omission matters.",
+                        value=0.0,  # Visual indicator of failure
+                        headline_display=False,
+                    ),
+                ]
+            )
 
         # Group 3: Matched Concepts (The "Good" Stuff)
         for i, match in enumerate(result.matched_concepts):
             group_name = f"Matched: {match.concept}"
-            signals.extend([
-                SignalDescriptor(
-                    name=f"matched_concept_{i}",
-                    group=group_name,
-                    extractor=lambda r, idx=i: r.matched_concepts[idx].concept,
-                    description="AI correctly identified this factor.",
-                    value=1.0,
-                    headline_display=False
-                )
-            ])
+            signals.extend(
+                [
+                    SignalDescriptor(
+                        name=f"matched_concept_{i}",
+                        group=group_name,
+                        extractor=lambda r, idx=i: r.matched_concepts[idx].concept,
+                        description="AI correctly identified this factor.",
+                        value=1.0,
+                        headline_display=False,
+                    )
+                ]
+            )
 
         return signals

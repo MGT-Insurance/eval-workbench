@@ -1,8 +1,12 @@
 from typing import Tuple, List
 from axion.handlers import LLMHandler
 
-from implementations.athena.models.feedback_analysis.schema import ConversationContext, AuditResult, Message
-from typing import Tuple, List
+from implementations.athena.models.feedback_analysis.schema import (
+    ConversationContext,
+    AuditResult,
+    Message,
+)
+
 
 class UnderwritingAuditHandler(LLMHandler[ConversationContext, AuditResult]):
     """
@@ -36,9 +40,19 @@ class UnderwritingAuditHandler(LLMHandler[ConversationContext, AuditResult]):
                 title="Joe's Roofers",
                 slack_url="http://slack.com/archives/123",
                 messages=[
-                    Message(ts="1", sender="Athena", is_bot=True, content="Status: Blocked (RoofAge)"),
-                    Message(ts="2", sender="U_HUMAN", is_bot=False, content="This is wrong. Override this.")
-                ]
+                    Message(
+                        ts="1",
+                        sender="Athena",
+                        is_bot=True,
+                        content="Status: Blocked (RoofAge)",
+                    ),
+                    Message(
+                        ts="2",
+                        sender="U_HUMAN",
+                        is_bot=False,
+                        content="This is wrong. Override this.",
+                    ),
+                ],
             ),
             AuditResult(
                 has_human_intervention=True,
@@ -46,8 +60,8 @@ class UnderwritingAuditHandler(LLMHandler[ConversationContext, AuditResult]):
                 summary_of_human_input="Human overrode the roof age block.",
                 friction_point="Roof Age Data",
                 human_sentiment="neutral",
-                final_status="Approved"
-            )
+                final_status="Approved",
+            ),
         )
     ]
 

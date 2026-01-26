@@ -2,7 +2,18 @@ import logging
 import re
 import time
 from functools import lru_cache
-from typing import Optional, List, Dict, Any, Union, Sequence, Iterable, Literal, Callable, Set
+from typing import (
+    Optional,
+    List,
+    Dict,
+    Any,
+    Union,
+    Sequence,
+    Iterable,
+    Literal,
+    Callable,
+    Set,
+)
 from langfuse import Langfuse
 from langfuse.model import PromptClient
 from pydantic import Field
@@ -32,6 +43,7 @@ class LangfuseSettings(RepoSettingsBase):
 @lru_cache(maxsize=1)
 def get_langfuse_settings() -> LangfuseSettings:
     return LangfuseSettings()
+
 
 class LangfusePromptManager:
     """
@@ -63,15 +75,13 @@ class LangfusePromptManager:
                 "LANGFUSE_SECRET_KEY or pass them explicitly."
             )
 
-        self.client = Langfuse(
-            public_key=public_key,
-            secret_key=secret_key,
-            host=host
-        )
+        self.client = Langfuse(public_key=public_key, secret_key=secret_key, host=host)
         self.default_label = settings.langfuse_default_label
         self.default_cache_ttl_seconds = settings.langfuse_default_cache_ttl_seconds
         self._stale_prompts: Set[str] = set()
-        self._prompt_change_listeners: List[Callable[[str, Dict[str, Any] | None], None]] = []
+        self._prompt_change_listeners: List[
+            Callable[[str, Dict[str, Any] | None], None]
+        ] = []
 
     def mark_prompt_as_stale(self, prompt_name: str) -> None:
         """Flags a prompt to be re-fetched immediately on next use."""
@@ -125,7 +135,7 @@ class LangfusePromptManager:
             prompt=prompt_content,
             type=prompt_type,
             config=config or {},
-            labels=list(labels) if labels else []
+            labels=list(labels) if labels else [],
         )
 
     def get_prompt(
@@ -148,9 +158,13 @@ class LangfusePromptManager:
         """
         # Langfuse logic: If version is set, use it. If label is set, use it.
         # If neither, it defaults to label="production".
-        resolved_label = label if label is not None else (None if version else self.default_label)
+        resolved_label = (
+            label if label is not None else (None if version else self.default_label)
+        )
         resolved_cache_ttl = (
-            self.default_cache_ttl_seconds if cache_ttl_seconds is None else cache_ttl_seconds
+            self.default_cache_ttl_seconds
+            if cache_ttl_seconds is None
+            else cache_ttl_seconds
         )
         if name in self._stale_prompts:
             logger.info("Fetching fresh version for stale prompt: %s", name)
@@ -169,7 +183,7 @@ class LangfusePromptManager:
                 last_error = exc
                 if attempt >= retry_count:
                     break
-                time.sleep(retry_backoff_seconds * (2 ** attempt))
+                time.sleep(retry_backoff_seconds * (2**attempt))
         raise last_error
 
     def _extract_template_strings(self, prompt_obj: PromptClient) -> List[str]:
@@ -201,7 +215,9 @@ class LangfusePromptManager:
             found.extend(placeholder_re.findall(text))
         return sorted(set(found))
 
-    def _find_unrendered_placeholders(self, compiled: Union[str, List[Dict[str, Any]]]) -> List[str]:
+    def _find_unrendered_placeholders(
+        self, compiled: Union[str, List[Dict[str, Any]]]
+    ) -> List[str]:
         placeholder_re = re.compile(r"\{\{\s*([a-zA-Z_][\w\.]*)\s*\}\}")
         found: List[str] = []
         if isinstance(compiled, str):
@@ -225,7 +241,9 @@ class LangfusePromptManager:
         required_variables: Optional[Sequence[str]] = None,
         strict_mode: Literal["template", "required", "none"] = "template",
         fallback_on_compile_error: bool = True,
-        render_with: Optional[Callable[[Union[str, List[Dict[str, Any]]], Dict[str, Any]], Any]] = None,
+        render_with: Optional[
+            Callable[[Union[str, List[Dict[str, Any]]], Dict[str, Any]], Any]
+        ] = None,
         **kwargs,
     ) -> Union[str, List[Dict]]:
         """
@@ -257,7 +275,9 @@ class LangfusePromptManager:
             if strict_mode == "required" and required_variables is not None:
                 expected = set(required_variables)
             else:
-                expected = set(self._find_placeholders(self._extract_template_strings(prompt_obj)))
+                expected = set(
+                    self._find_placeholders(self._extract_template_strings(prompt_obj))
+                )
             missing = expected.difference(variables.keys())
             if missing:
                 raise ValueError(f"Missing prompt variables: {sorted(missing)}")

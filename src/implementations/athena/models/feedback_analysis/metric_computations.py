@@ -5,7 +5,7 @@ This module provides utilities for computing quantitative metrics from
 conversation contexts and audit results at ingestion time.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
 from implementations.athena.models.feedback_analysis.schema import (
@@ -74,7 +74,7 @@ class ConversationMetricCalculator:
         self,
         context: ConversationContext,
         audit_result: AuditResult,
-        current_time: Optional[datetime] = None
+        current_time: Optional[datetime] = None,
     ) -> ConversationMetrics:
         """
         Compute all metrics for a single conversation.
@@ -118,10 +118,7 @@ class ConversationMetricCalculator:
 
         # Resolution detection
         is_resolved, resolution_type, ttr = self._detect_resolution(
-            audit_result,
-            timestamps,
-            context.thread_last_activity_at,
-            current_time
+            audit_result, timestamps, context.thread_last_activity_at, current_time
         )
 
         # Sentiment analysis
@@ -129,9 +126,7 @@ class ConversationMetricCalculator:
 
         # Stalemate detection
         is_stalemate = self._detect_stalemate(
-            is_resolved,
-            context.thread_last_activity_at,
-            current_time
+            is_resolved, context.thread_last_activity_at, current_time
         )
 
         # Update resolution_type if stalemate
@@ -166,7 +161,7 @@ class ConversationMetricCalculator:
             elif m.ts:
                 # Fallback: parse from ts string
                 try:
-                    ts_float = float(m.ts.split('.')[0])
+                    ts_float = float(m.ts.split(".")[0])
                     timestamps.append(datetime.utcfromtimestamp(ts_float))
                 except (ValueError, TypeError):
                     pass
@@ -198,8 +193,8 @@ class ConversationMetricCalculator:
 
                 # Fallback to ts parsing
                 try:
-                    prev_float = float(prev_msg.ts.split('.')[0])
-                    curr_float = float(curr_msg.ts.split('.')[0])
+                    prev_float = float(prev_msg.ts.split(".")[0])
+                    curr_float = float(curr_msg.ts.split(".")[0])
                     return curr_float - prev_float
                 except (ValueError, TypeError):
                     pass
@@ -228,8 +223,8 @@ class ConversationMetricCalculator:
                 else:
                     # Fallback to ts parsing
                     try:
-                        prev_float = float(prev_msg.ts.split('.')[0])
-                        curr_float = float(curr_msg.ts.split('.')[0])
+                        prev_float = float(prev_msg.ts.split(".")[0])
+                        curr_float = float(curr_msg.ts.split(".")[0])
                         response_times.append(curr_float - prev_float)
                     except (ValueError, TypeError):
                         pass
@@ -256,7 +251,7 @@ class ConversationMetricCalculator:
         audit_result: AuditResult,
         timestamps: List[datetime],
         last_activity: Optional[datetime],
-        current_time: datetime
+        current_time: datetime,
     ) -> Tuple[bool, Optional[str], Optional[float]]:
         """
         Detect if conversation is resolved and compute time to resolution.
@@ -264,7 +259,9 @@ class ConversationMetricCalculator:
         Returns:
             Tuple of (is_resolved, resolution_type, time_to_resolution_seconds)
         """
-        final_status = audit_result.final_status.lower() if audit_result.final_status else ""
+        final_status = (
+            audit_result.final_status.lower() if audit_result.final_status else ""
+        )
 
         # Map final_status to resolution type
         resolution_type = None
@@ -292,7 +289,7 @@ class ConversationMetricCalculator:
         self,
         is_resolved: bool,
         last_activity: Optional[datetime],
-        current_time: datetime
+        current_time: datetime,
     ) -> bool:
         """
         Detect if conversation is stalemate (>72 hours inactive without resolution).
