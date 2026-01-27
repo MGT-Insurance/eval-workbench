@@ -7,8 +7,4 @@ from implementations.athena.metrics.recommendation.underwriting_faithfulness imp
 from athena.metrics.recommendation.decison_quality import DecisionQuality
 
 
-__all__ = [
-    "CitationFidelity", 
-    "UnderwritingFaithfulness", 
-    "DecisionQuality"
-]
+__all__ = ["CitationFidelity", "UnderwritingFaithfulness", "DecisionQuality"]

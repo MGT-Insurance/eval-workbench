@@ -128,7 +128,7 @@ class DecisionQuality(BaseMetric):
 
         self.reasoning_judge = ReasoningJudge(**kwargs)
 
-    @trace(name='DecisionQuality', capture_args=True, capture_response=True)
+    @trace(name="DecisionQuality", capture_args=True, capture_response=True)
     async def execute(
         self, dataset_item: DatasetItem, **kwargs
     ) -> MetricEvaluationResult:

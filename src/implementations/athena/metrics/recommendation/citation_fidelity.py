@@ -132,7 +132,7 @@ class CitationFidelity(BaseMetric):
 
         return False
 
-    @trace(name='CitationFidelity', capture_args=True, capture_response=True)
+    @trace(name="CitationFidelity", capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         self._validate_required_metric_fields(item)
 

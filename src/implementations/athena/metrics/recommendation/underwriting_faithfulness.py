@@ -106,7 +106,6 @@ def find_relevant_context(
     return [line for _, line in scored_lines[:top_k]]
 
 
-
 class ClaimExtractionInput(RichBaseModel):
     text: str = Field(..., description="The underwriting recommendation text.")
     model_config = {"extra": "forbid"}
@@ -163,7 +162,7 @@ class HeuristicFactVerifier:
     def __init__(self, threshold: float = 0.75, **kwargs):
         self.threshold = threshold
 
-    @trace(name='HeuristicFactVerifier', capture_args=True, capture_response=True)
+    @trace(name="HeuristicFactVerifier", capture_args=True, capture_response=True)
     async def execute(self, input_data: VerificationInput) -> VerificationOutput:
         """Calculates weighted recall of the claim against the evidence."""
         # Use regex that splits on underscores to handle snake_case keys
@@ -283,7 +282,7 @@ class UnderwritingFaithfulness(BaseMetric):
         else:
             self.verifier = FactVerifier(**kwargs)
 
-    @trace(name='UnderwritingFaithfulness', capture_args=True, capture_response=True)
+    @trace(name="UnderwritingFaithfulness", capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         # Select Text Source
         text = ""
