@@ -6,6 +6,7 @@ from axion._core.schema import RichBaseModel
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SignalDescriptor
+from axion._core.tracing import trace
 
 logger = get_logger(__name__)
 
@@ -127,6 +128,7 @@ class DecisionQuality(BaseMetric):
 
         self.reasoning_judge = ReasoningJudge(**kwargs)
 
+    @trace(name='DecisionQuality', capture_args=True, capture_response=True)
     async def execute(
         self, dataset_item: DatasetItem, **kwargs
     ) -> MetricEvaluationResult:

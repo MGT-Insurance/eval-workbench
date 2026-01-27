@@ -9,6 +9,7 @@ from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SignalDescriptor
 from axion._core.asyncio import SemaphoreExecutor
+from axion._core.tracing import trace
 
 logger = get_logger(__name__)
 
@@ -162,6 +163,7 @@ class HeuristicFactVerifier:
     def __init__(self, threshold: float = 0.75, **kwargs):
         self.threshold = threshold
 
+    @trace(name='HeuristicFactVerifier', capture_args=True, capture_response=True)
     async def execute(self, input_data: VerificationInput) -> VerificationOutput:
         """Calculates weighted recall of the claim against the evidence."""
         # Use regex that splits on underscores to handle snake_case keys
@@ -281,6 +283,7 @@ class UnderwritingFaithfulness(BaseMetric):
         else:
             self.verifier = FactVerifier(**kwargs)
 
+    @trace(name='UnderwritingFaithfulness', capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         # Select Text Source
         text = ""
