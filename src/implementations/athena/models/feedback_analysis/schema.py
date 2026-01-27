@@ -123,6 +123,11 @@ class AuditResult(RichBaseModel):
         description="The specific concept causing friction (e.g., 'Roof Age', 'Inverted Logic', 'Default Square Footage').",
     )
 
+    issue_details: Optional[str] = Field(
+        None,
+        description="Detailed technical description of the issue, including specific values, calculations, or root cause analysis (e.g., 'Premium showing $4,303 instead of $430K - appears to be divided by 100', 'Wine Bar with >75% alcohol sales has no valid industry code mapping').",
+    )
+
     human_sentiment: Sentiment
 
     final_status: str = Field(

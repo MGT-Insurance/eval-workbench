@@ -13,6 +13,7 @@ from axion.metrics.base import (
 )
 from axion.metrics.schema import SignalDescriptor
 from axion._core.schema import RichBaseModel
+from axion._core.tracing import trace
 
 logger = get_logger(__name__)
 
@@ -131,6 +132,7 @@ class CitationFidelity(BaseMetric):
 
         return False
 
+    @trace(name="CitationFidelity", capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         self._validate_required_metric_fields(item)
 

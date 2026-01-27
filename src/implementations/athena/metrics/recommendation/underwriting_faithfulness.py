@@ -9,6 +9,7 @@ from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SignalDescriptor
 from axion._core.asyncio import SemaphoreExecutor
+from axion._core.tracing import trace
 
 logger = get_logger(__name__)
 
@@ -105,9 +106,6 @@ def find_relevant_context(
     return [line for _, line in scored_lines[:top_k]]
 
 
-# --- Components: LLM Models ---
-
-
 class ClaimExtractionInput(RichBaseModel):
     text: str = Field(..., description="The underwriting recommendation text.")
     model_config = {"extra": "forbid"}
@@ -164,12 +162,13 @@ class HeuristicFactVerifier:
     def __init__(self, threshold: float = 0.75, **kwargs):
         self.threshold = threshold
 
+    @trace(name="HeuristicFactVerifier", capture_args=True, capture_response=True)
     async def execute(self, input_data: VerificationInput) -> VerificationOutput:
         """Calculates weighted recall of the claim against the evidence."""
         # Use regex that splits on underscores to handle snake_case keys
         token_pattern = r"[^\W_]+"
 
-        # 1. Clean and tokenize claim
+        # Clean and tokenize claim
         raw_claim_tokens = set(re.findall(token_pattern, input_data.claim.lower()))
 
         # Identify numbers: Digits OR Alphanumeric codes (e.g., "P2", "1st", "A1")
@@ -183,10 +182,10 @@ class HeuristicFactVerifier:
         if not text_tokens and not numeric_tokens:
             text_tokens = raw_claim_tokens
 
-        # 2. Tokenize the ENTIRE evidence block (Union approach)
+        # Tokenize the ENTIRE evidence block (Union approach)
         evidence_tokens = set(re.findall(token_pattern, input_data.evidence.lower()))
 
-        # 3. Calculate Weighted Score
+        # Calculate Weighted Score
         # Strategy: If numbers exist, they account for 70% of the score. Text is 30%.
         # If no numbers, Text is 100%.
 
@@ -283,8 +282,9 @@ class UnderwritingFaithfulness(BaseMetric):
         else:
             self.verifier = FactVerifier(**kwargs)
 
+    @trace(name="UnderwritingFaithfulness", capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
-        # 1. Select Text Source
+        # Select Text Source
         text = ""
         if item.additional_output:
             text = (
@@ -295,7 +295,7 @@ class UnderwritingFaithfulness(BaseMetric):
         if not text:
             text = item.actual_output or ""
 
-        # 2. Flatten Source of Truth
+        # Flatten Source of Truth
         flattened_facts_list = flatten_json(item.additional_input or {})
 
         if not flattened_facts_list:
@@ -303,7 +303,7 @@ class UnderwritingFaithfulness(BaseMetric):
                 score=0.0, explanation="No source data found in additional_input."
             )
 
-        # 3. Run Extraction
+        # Run Extraction
         extract_res = await self.extractor.execute(ClaimExtractionInput(text=text))
         claims = extract_res.claims
 
@@ -312,7 +312,7 @@ class UnderwritingFaithfulness(BaseMetric):
                 score=1.0, explanation="No verifiable claims found in text."
             )
 
-        # 4. Run Verification (ASYNC / PARALLEL with THROTTLING)
+        # Run Verification (ASYNC / PARALLEL with THROTTLING)
         verification_tasks = []
 
         for claim in claims:
@@ -331,7 +331,7 @@ class UnderwritingFaithfulness(BaseMetric):
         # Run all verifications at once (controlled by semaphore)
         verification_results = await asyncio.gather(*verification_tasks)
 
-        # 5. Compile Results
+        # Compile Results
         results = []
         supported_count = 0
 

@@ -6,6 +6,7 @@ from axion._core.schema import RichBaseModel
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SignalDescriptor
+from axion._core.tracing import trace
 
 logger = get_logger(__name__)
 
@@ -58,9 +59,6 @@ class DecisionQualityResult(RichBaseModel):
         default_factory=list, description="List of reasons both agreed on."
     )
     model_config = {"extra": "forbid"}
-
-
-# --- 2. Reasoning Judge Component (LLM Model) ---
 
 
 class ReasoningJudgeInput(RichBaseModel):
@@ -130,6 +128,7 @@ class DecisionQuality(BaseMetric):
 
         self.reasoning_judge = ReasoningJudge(**kwargs)
 
+    @trace(name="DecisionQuality", capture_args=True, capture_response=True)
     async def execute(
         self, dataset_item: DatasetItem, **kwargs
     ) -> MetricEvaluationResult:
@@ -223,7 +222,6 @@ class DecisionQuality(BaseMetric):
                         group=group_name,
                         extractor=lambda r, idx=i: r.missing_concepts[idx].impact,
                         description="Why this omission matters.",
-                        value=0.0,  # Visual indicator of failure
                         headline_display=False,
                     ),
                 ]
@@ -239,7 +237,6 @@ class DecisionQuality(BaseMetric):
                         group=group_name,
                         extractor=lambda r, idx=i: r.matched_concepts[idx].concept,
                         description="AI correctly identified this factor.",
-                        value=1.0,
                         headline_display=False,
                     )
                 ]

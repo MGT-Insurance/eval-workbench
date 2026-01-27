@@ -5,6 +5,7 @@ from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SignalDescriptor
 from axion._core.schema import RichBaseModel
+from axion._core.tracing import trace
 
 
 class FormattingIssue(RichBaseModel):
@@ -41,6 +42,7 @@ class SlackFormattingCompliance(BaseMetric):
     # Logic: Look for $ or % that is NOT preceded by `
     UNWRAPPED_DATA_PATTERN = re.compile(r"(?<!`)(\$[\d,.]+[KM]?|\d+%)(?!`)")
 
+    @trace(name="SlackFormattingCompliance", capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         text = item.actual_output
         issues = []
