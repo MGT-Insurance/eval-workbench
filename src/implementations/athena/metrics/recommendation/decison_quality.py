@@ -60,9 +60,6 @@ class DecisionQualityResult(RichBaseModel):
     model_config = {"extra": "forbid"}
 
 
-# --- 2. Reasoning Judge Component (LLM Model) ---
-
-
 class ReasoningJudgeInput(RichBaseModel):
     human_notes: str = Field(
         ..., description="The underwriter's notes serving as the ground truth criteria."
@@ -223,7 +220,6 @@ class DecisionQuality(BaseMetric):
                         group=group_name,
                         extractor=lambda r, idx=i: r.missing_concepts[idx].impact,
                         description="Why this omission matters.",
-                        value=0.0,  # Visual indicator of failure
                         headline_display=False,
                     ),
                 ]
@@ -239,7 +235,6 @@ class DecisionQuality(BaseMetric):
                         group=group_name,
                         extractor=lambda r, idx=i: r.matched_concepts[idx].concept,
                         description="AI correctly identified this factor.",
-                        value=1.0,
                         headline_display=False,
                     )
                 ]

@@ -4,6 +4,11 @@ from implementations.athena.metrics.recommendation.citation_fidelity import (
 from implementations.athena.metrics.recommendation.underwriting_faithfulness import (
     UnderwritingFaithfulness,
 )
+from athena.metrics.recommendation.decison_quality import DecisionQuality
 
 
-__all__ = ["CitationFidelity", "UnderwritingFaithfulness"]
+__all__ = [
+    "CitationFidelity", 
+    "UnderwritingFaithfulness", 
+    "DecisionQuality"
+]

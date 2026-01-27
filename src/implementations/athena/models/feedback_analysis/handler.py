@@ -28,7 +28,8 @@ class UnderwritingAuditHandler(LLMHandler[ConversationContext, AuditResult]):
     1. **Check for Humans**: Did a human post a message? If NO, set 'has_human_intervention' to False.
     2. **Categorize Intervention**: Why did the human speak? (Fixing data? Reporting a bug? Just approving?)
     3. **Extract Friction**: What specific underwriting rule or data point caused discussion?
-    4. **Status**: What is the final state of the quote?
+    4. **Issue Details**: Capture the specific technical details of the problem - include exact values, discrepancies, calculations, or root causes mentioned (e.g., "Premium showing $4,303 instead of $430K", "Industry code missing for Wine Bar with >75% alcohol sales").
+    5. **Status**: What is the final state of the quote?
     """
 
     # Updated Examples with new Schema fields (thread_id, etc)
@@ -59,6 +60,7 @@ class UnderwritingAuditHandler(LLMHandler[ConversationContext, AuditResult]):
                 intervention_category="correction_factual",
                 summary_of_human_input="Human overrode the roof age block.",
                 friction_point="Roof Age Data",
+                issue_details="Athena blocked quote due to roof age >20 years, but inspection report confirms recent replacement in 2022.",
                 human_sentiment="neutral",
                 final_status="Approved",
             ),
