@@ -1,0 +1,47 @@
+# Monitoring configuration for Athena recommendation monitoring
+version: "1.0"
+name: "athena_recommendation_monitor"
+
+# Source configuration
+source:
+  type: langfuse
+  name: "athena"
+  extractor: "implementations.athena.extractors.extract_recommendation"
+  prompt_patterns: "implementations.athena.langfuse.prompt_patterns.WorkflowPromptPatterns"
+  limit: 3
+  days_back: 5
+  tags: ["preview"]
+  timeout: 60
+  fetch_full_traces: true
+  show_progress: true
+
+# Sampling strategy
+sampling:
+  strategy: random
+  n: 10
+  seed: 42
+
+# Metrics configuration
+metrics_config:
+  UnderwritingFaithfulness:
+    class: "underwriting_faithfulness"
+    llm_provider: 'openai'
+    model_name: 'gpt-4o'
+
+# Publishing configuration
+publishing:
+  push_to_db: true
+  push_to_langfuse: true
+  trace_experiment: true
+
+  # Database upload configuration (used when push_to_db: true)
+  database:
+    connection_string: "postgresql://mattevanoff@localhost:5432/eval"  # Override DATABASE_URL env var
+    on_conflict: do_nothing  # do_nothing | upsert | error
+    chunk_size: 1000         # Rows per batch upload
+
+  experiment:
+    enabled: true
+    dataset_name: "development"
+    run_name: "online-${ENVIRONMENT:-preview}"
+    link_to_traces: true

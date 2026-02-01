@@ -103,7 +103,7 @@ Main helper class to coordinate fetching and joining case data from Neon with tr
 ```python
 def __init__(
     self,
-    neon_db: NeonDatabaseManager,
+    neon_db: NeonConnection,
     trace_loader: LangfuseTraceLoader,
     *,
     settings: JoinSettings | None = None,
@@ -113,7 +113,7 @@ def __init__(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `neon_db` | `NeonDatabaseManager` | Required | Database connection manager |
+| `neon_db` | `NeonConnection` | Required | Database connection manager |
 | `trace_loader` | `LangfuseTraceLoader` | Required | Langfuse trace fetching client |
 | `settings` | `JoinSettings \| None` | `JoinSettings()` | Configuration for table/column/trace names |
 | `prompt_patterns` | `PromptPatternsBase` | `WorkflowPromptPatterns` | Pattern registry for prompt extraction |
@@ -394,11 +394,11 @@ The Athena implementation builds on the shared Langfuse trace module:
 ```python
 from implementations.athena.langfuse.join import AthenaNeonLangfuseJoiner, JoinSettings
 from implementations.athena.langfuse.prompt_patterns import WorkflowPromptPatterns
-from shared.database.neon import NeonDatabaseManager
+from shared.database.neon import NeonConnection
 from axion.tracing import LangfuseTraceLoader
 
 # Initialize components
-neon_db = NeonDatabaseManager()
+neon_db = NeonConnection()
 trace_loader = LangfuseTraceLoader(api_key="YOUR_API_KEY")
 
 # Create joiner

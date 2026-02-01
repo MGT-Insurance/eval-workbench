@@ -75,8 +75,11 @@ coverage_html_report
 data/raw/
 
 # athena folders
-implementations/athena/data/raw/
-implementations/athena/notebooks/
+src/implementations/athena/data/
+src/implementations/athena/notebooks/
 
 # scripts
 scripts/
+
+# Documentation build output
+site/
