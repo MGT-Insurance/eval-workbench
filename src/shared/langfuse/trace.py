@@ -1,23 +1,25 @@
+import json
 import re
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List
 
 
 class ModelUsageUnit(Enum):
-    TOKENS = "TOKENS"
-    CHARACTERS = "CHARACTERS"
-    MILLISECONDS = "MILLISECONDS"
-    SECONDS = "SECONDS"
-    IMAGES = "IMAGES"
-    REQUESTS = "REQUESTS"
+    TOKENS = 'TOKENS'
+    CHARACTERS = 'CHARACTERS'
+    MILLISECONDS = 'MILLISECONDS'
+    SECONDS = 'SECONDS'
+    IMAGES = 'IMAGES'
+    REQUESTS = 'REQUESTS'
 
 
 class ObservationLevel(Enum):
-    DEFAULT = "DEFAULT"
-    DEBUG = "DEBUG"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
+    DEFAULT = 'DEFAULT'
+    DEBUG = 'DEBUG'
+    WARNING = 'WARNING'
+    ERROR = 'ERROR'
 
 
 @dataclass
@@ -30,7 +32,7 @@ class Usage:
 
 def _normalize_key(key: str) -> str:
     """Helper to normalize keys for fuzzy matching (snake_case -> camelCase support)."""
-    return key.lower().replace("_", "")
+    return key.lower().replace('_', '')
 
 
 class SmartAccess:
@@ -75,7 +77,7 @@ class SmartAccess:
 
         # If it's a generic object (has attributes) but not already a SmartAccess wrapper,
         # wrap it in SmartObject so we can traverse its attributes smartly.
-        if hasattr(val, "__dict__") and not isinstance(val, SmartAccess):
+        if hasattr(val, '__dict__') and not isinstance(val, SmartAccess):
             return SmartObject(val)
 
         return val
@@ -98,7 +100,7 @@ class SmartDict(SmartAccess):
         return None
 
     def __repr__(self):
-        return f"<SmartDict keys={list(self._data.keys())}>"
+        return f'<SmartDict keys={list(self._data.keys())}>'
 
     def to_dict(self) -> Dict:
         """Return the underlying raw dictionary."""
@@ -135,8 +137,8 @@ class TraceView(SmartAccess):
     def __init__(self, **kwargs):
         self._data = kwargs
         # Ensure observations is at least an empty list
-        if "observations" not in self._data:
-            self._data["observations"] = []
+        if 'observations' not in self._data:
+            self._data['observations'] = []
 
     def _lookup(self, key: str) -> Any:
         return self._data[key]
@@ -180,14 +182,14 @@ class ObservationsView(SmartAccess):
         return None
 
     def __repr__(self):
-        name = self._data.get("name", "unnamed")
-        type_ = self._data.get("type", "unknown")
+        name = self._data.get('name', 'unnamed')
+        type_ = self._data.get('type', 'unknown')
         return f"ObservationsView(name='{name}', type='{type_}')"
 
 
 def create_extraction_pattern(start_text: str, end_pattern: str) -> str:
     r"""Helper for Regex: escaped(Start) -> (Content) -> End"""
-    return rf"{re.escape(start_text)}:\s*(.*?)\s*(?:{end_pattern})"
+    return rf'{re.escape(start_text)}:\s*(.*?)\s*(?:{end_pattern})'
 
 
 class PromptPatternsBase:
@@ -195,7 +197,7 @@ class PromptPatternsBase:
 
     @classmethod
     def get_for(cls, step_name: str) -> Dict[str, str]:
-        method_name = f"_patterns_{step_name.lower()}"
+        method_name = f'_patterns_{step_name.lower()}'
         if hasattr(cls, method_name):
             return getattr(cls, method_name)()
         return {}
@@ -227,7 +229,7 @@ class TraceStep(SmartAccess):
 
     def _lookup(self, key: str) -> Any:
         # Handle special property 'variables' for prompt extraction
-        if key == "variables":
+        if key == 'variables':
             return self._extract_variables()
 
         # Handle aliases like 'generation' or 'context'
@@ -235,7 +237,7 @@ class TraceStep(SmartAccess):
 
         # Find the observation
         for obs in self.observations:
-            if getattr(obs, "type", "").upper() == target_type:
+            if getattr(obs, 'type', '').upper() == target_type:
                 return obs
 
         raise KeyError(
@@ -245,10 +247,10 @@ class TraceStep(SmartAccess):
     def _resolve_type_alias(self, key: str) -> str:
         key_upper = key.upper()
         mapping = {
-            "CONTEXT": "SPAN",
-            "SPAN": "SPAN",
-            "GENERATION": "GENERATION",
-            "EVENT": "EVENT",
+            'CONTEXT': 'SPAN',
+            'SPAN': 'SPAN',
+            'GENERATION': 'GENERATION',
+            'EVENT': 'EVENT',
         }
         return mapping.get(key_upper, key_upper)
 
@@ -256,23 +258,46 @@ class TraceStep(SmartAccess):
         """Lazy extraction of prompt variables."""
         try:
             # We reuse our own lookup to find the generation object
-            gen = self._lookup("GENERATION")
-            raw_text = getattr(gen, "input", "")
-            if not isinstance(raw_text, str):
+            gen = self._lookup('GENERATION')
+            raw_text = getattr(gen, 'input', '')
+            prompt_text = self._normalize_prompt_text(raw_text)
+            if not prompt_text:
                 return {}
 
             patterns = self.prompt_patterns.get_for(self.name)
             extracted = {}
             for k, pattern in patterns.items():
-                match = re.search(pattern, raw_text, re.DOTALL)
+                match = re.search(pattern, prompt_text, re.DOTALL)
                 if match:
                     extracted[k] = match.group(1).strip()
             return extracted
         except (KeyError, AttributeError):
             return {}
 
+    @staticmethod
+    def _normalize_prompt_text(raw_text: Any) -> str:
+        if isinstance(raw_text, str):
+            return raw_text
+        if isinstance(raw_text, dict):
+            for key in ('content', 'prompt', 'text'):
+                value = raw_text.get(key)
+                if isinstance(value, str):
+                    return value
+            return ''
+        if isinstance(raw_text, list):
+            parts: list[str] = []
+            for item in raw_text:
+                if isinstance(item, str):
+                    parts.append(item)
+                elif isinstance(item, dict):
+                    value = item.get('content')
+                    if isinstance(value, str):
+                        parts.append(value)
+            return '\n'.join(parts)
+        return ''
+
     def __repr__(self):
-        types = [getattr(o, "type", "") for o in self.observations]
+        types = [getattr(o, 'type', '') for o in self.observations]
         return f"<TraceStep name='{self.name}' types={types}>"
 
 
@@ -293,11 +318,16 @@ class Trace(SmartAccess):
             trace_data: Can be a list of observations OR the root trace object containing .observations
         """
         # 1. Detect input type
-        if hasattr(trace_data, "observations") and isinstance(
+        if hasattr(trace_data, 'observations') and isinstance(
             trace_data.observations, list
         ):
             self._trace_obj = trace_data
             self.observations = trace_data.observations
+        elif isinstance(trace_data, dict) and isinstance(
+            trace_data.get('observations'), list
+        ):
+            self._trace_obj = TraceView(**trace_data)
+            self.observations = trace_data.get('observations', [])
         elif isinstance(trace_data, list):
             self._trace_obj = None
             self.observations = trace_data
@@ -306,13 +336,19 @@ class Trace(SmartAccess):
             self._trace_obj = trace_data
             self.observations = []
 
-        self._grouped = {}
+        # Normalize observation dicts into ObservationsView for attribute access.
+        self.observations = [
+            ObservationsView(**obs) if isinstance(obs, dict) else obs
+            for obs in self.observations
+        ]
+
+        self._grouped: dict[str, list[ObservationsView]] = {}
         self._prompt_patterns = _resolve_prompt_patterns(prompt_patterns)
         self._group_observations()
 
     def _group_observations(self):
         for obs in self.observations:
-            name = getattr(obs, "name", "unnamed")
+            name = getattr(obs, 'name', 'unnamed')
             if name not in self._grouped:
                 self._grouped[name] = []
             self._grouped[name].append(obs)
@@ -331,7 +367,7 @@ class Trace(SmartAccess):
             if isinstance(self._trace_obj, (TraceView, dict, ObservationsView)):
                 try:
                     # If it's a wrapper, allow it to use its own lookup
-                    if hasattr(self._trace_obj, "_lookup"):
+                    if hasattr(self._trace_obj, '_lookup'):
                         return self._trace_obj._lookup(key)
                     return self._trace_obj[key]
                 except (KeyError, AttributeError):
@@ -350,16 +386,16 @@ class Trace(SmartAccess):
         # 2. Check root object attributes (e.g. trace.created_at -> createdAt)
         if self._trace_obj:
             # If it's a dict or wrapper, check keys
-            if hasattr(self._trace_obj, "keys"):  # Dict-like
+            if hasattr(self._trace_obj, 'keys'):  # Dict-like
                 try:
                     # If it's a wrapper class
-                    if hasattr(self._trace_obj, "_lookup_insensitive"):
+                    if hasattr(self._trace_obj, '_lookup_insensitive'):
                         return self._trace_obj._lookup_insensitive(key)
                     # Standard dict loop
                     for k in self._trace_obj.keys():
                         if _normalize_key(k) == target:
                             return self._trace_obj[k]
-                except:
+                except Exception:
                     pass
 
             # If it's a general object, check dir()
@@ -370,11 +406,11 @@ class Trace(SmartAccess):
         return None
 
     def __repr__(self):
-        base = f"<Trace steps={list(self._grouped.keys())}"
+        base = f'<Trace steps={list(self._grouped.keys())}'
         if self._trace_obj:
-            tid = getattr(self._trace_obj, "id", "unknown")
+            tid = getattr(self._trace_obj, 'id', 'unknown')
             base += f" id='{tid}'"
-        base += ">"
+        base += '>'
         return base
 
 
@@ -391,6 +427,52 @@ class TraceCollection:
     ):
         self._traces = [Trace(item, prompt_patterns=prompt_patterns) for item in data]
 
+    @staticmethod
+    def _to_jsonable(value: Any) -> Any:
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, dict):
+            return {k: TraceCollection._to_jsonable(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [TraceCollection._to_jsonable(v) for v in value]
+        if is_dataclass(value) and not isinstance(value, type):
+            return TraceCollection._to_jsonable(asdict(value))
+        if hasattr(value, 'model_dump'):
+            return TraceCollection._to_jsonable(value.model_dump())
+        if hasattr(value, 'dict'):
+            try:
+                return TraceCollection._to_jsonable(value.dict())
+            except TypeError:
+                pass
+        if hasattr(value, 'to_dict'):
+            return TraceCollection._to_jsonable(value.to_dict())
+        if hasattr(value, '__dict__'):
+            return TraceCollection._to_jsonable(vars(value))
+        return str(value)
+
+    def to_list(self) -> List[Any]:
+        return [t._trace_obj for t in self._traces]
+
+    def save_json(self, path: str | Path) -> None:
+        target = Path(path).expanduser()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        payload = [self._to_jsonable(t._trace_obj) for t in self._traces]
+        target.write_text(json.dumps(payload, indent=2, sort_keys=True))
+
+    @classmethod
+    def load_json(
+        cls,
+        path: str | Path,
+        prompt_patterns: PromptPatternsBase | type[PromptPatternsBase] | None = None,
+    ) -> 'TraceCollection':
+        source = Path(path).expanduser()
+        data = json.loads(source.read_text())
+        if not isinstance(data, list):
+            raise ValueError('TraceCollection.load_json expects a JSON list.')
+        return cls(data, prompt_patterns=prompt_patterns)
+
     def __getitem__(self, index: int) -> Trace:
         return self._traces[index]
 
@@ -400,7 +482,7 @@ class TraceCollection:
     def __len__(self):
         return len(self._traces)
 
-    def filter_by(self, **kwargs) -> "TraceCollection":
+    def filter_by(self, **kwargs) -> 'TraceCollection':
         """
         Simple filter helper.
         """
@@ -420,4 +502,4 @@ class TraceCollection:
         )
 
     def __repr__(self):
-        return f"<TraceCollection count={len(self._traces)}>"
+        return f'<TraceCollection count={len(self._traces)}>'

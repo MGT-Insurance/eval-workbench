@@ -3,15 +3,16 @@ import functools
 import logging
 import re
 from concurrent.futures import Executor
-from contextlib import contextmanager, asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Union, Callable, Tuple, TypeVar, Iterable
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union
+
+import pandas as pd
 import psycopg
 from psycopg import sql
 from psycopg.rows import dict_row
-from psycopg_pool import ConnectionPool, AsyncConnectionPool
-import pandas as pd
+from psycopg_pool import AsyncConnectionPool, ConnectionPool
 from pydantic import Field
 
 from shared.settings import RepoSettingsBase, build_settings_config
@@ -20,11 +21,11 @@ from shared.settings import RepoSettingsBase, build_settings_config
 if not logging.getLogger().handlers:
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     )
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 class NeonSettings(RepoSettingsBase):
@@ -32,35 +33,35 @@ class NeonSettings(RepoSettingsBase):
 
     database_url: str | None = Field(
         default=None,
-        description="Postgres connection URL.",
+        description='Postgres connection URL.',
     )
     db_pool_min_size: int = Field(
         default=0,
-        description="Minimum number of connections in the pool.",
+        description='Minimum number of connections in the pool.',
     )
     db_pool_max_size: int = Field(
         default=20,
-        description="Maximum number of connections in the pool.",
+        description='Maximum number of connections in the pool.',
     )
     db_connect_timeout_seconds: int = Field(
         default=10,
-        description="Connection timeout in seconds.",
+        description='Connection timeout in seconds.',
     )
     db_statement_timeout_ms: int = Field(
         default=60000,
-        description="Statement timeout in milliseconds. 0 disables timeout.",
+        description='Statement timeout in milliseconds. 0 disables timeout.',
     )
     db_use_startup_statement_timeout: bool = Field(
         default=False,
-        description="Set statement_timeout via startup options (unsupported by Neon pooler).",
+        description='Set statement_timeout via startup options (unsupported by Neon pooler).',
     )
     db_application_name: str | None = Field(
         default=None,
-        description="Optional Postgres application_name.",
+        description='Optional Postgres application_name.',
     )
     db_upload_chunk_size: int = Field(
         default=1000,
-        description="Rows per batch for upload_dataframe.",
+        description='Rows per batch for upload_dataframe.',
     )
 
 
@@ -75,16 +76,16 @@ def reset_neon_settings_cache() -> None:
 
 def _build_connection_kwargs(settings: NeonSettings) -> dict:
     kwargs: dict = {
-        "row_factory": dict_row,
-        "connect_timeout": settings.db_connect_timeout_seconds,
+        'row_factory': dict_row,
+        'connect_timeout': settings.db_connect_timeout_seconds,
     }
     if settings.db_application_name:
-        kwargs["application_name"] = settings.db_application_name
+        kwargs['application_name'] = settings.db_application_name
     if (
         settings.db_statement_timeout_ms > 0
         and settings.db_use_startup_statement_timeout
     ):
-        kwargs["options"] = f"-c statement_timeout={settings.db_statement_timeout_ms}"
+        kwargs['options'] = f'-c statement_timeout={settings.db_statement_timeout_ms}'
     return kwargs
 
 
@@ -101,12 +102,12 @@ def _chunked(
         yield batch
 
 
-_SQL_TYPE_PATTERN = re.compile(r"^[A-Za-z0-9_\s(),\.]+$")
+_SQL_TYPE_PATTERN = re.compile(r'^[A-Za-z0-9_\s(),\.]+$')
 
 
 def _validate_sql_type(sql_type: str) -> str:
     if not _SQL_TYPE_PATTERN.fullmatch(sql_type.strip()):
-        raise ValueError(f"Unsafe SQL type definition: {sql_type!r}")
+        raise ValueError(f'Unsafe SQL type definition: {sql_type!r}')
     return sql_type
 
 
@@ -119,7 +120,7 @@ def _apply_statement_timeout_sync(
     ):
         with conn.cursor() as cur:
             cur.execute(
-                sql.SQL("SET statement_timeout = {}").format(
+                sql.SQL('SET statement_timeout = {}').format(
                     sql.Literal(settings.db_statement_timeout_ms)
                 )
             )
@@ -134,13 +135,13 @@ async def _apply_statement_timeout_async(
     ):
         async with conn.cursor() as cur:
             await cur.execute(
-                sql.SQL("SET statement_timeout = {}").format(
+                sql.SQL('SET statement_timeout = {}').format(
                     sql.Literal(settings.db_statement_timeout_ms)
                 )
             )
 
 
-class NeonDatabaseManager:
+class NeonConnection:
     """
     Synchronous database manager for Neon (PostgreSQL).
     Best for scripts, data analysis, or standard web apps (Flask/Django).
@@ -156,10 +157,10 @@ class NeonDatabaseManager:
         self.dsn = connection_string or self._settings.database_url
         if not self.dsn:
             raise ValueError(
-                "DATABASE_URL not found in environment variables or arguments."
+                'DATABASE_URL not found in environment variables or arguments.'
             )
         if self._settings.db_pool_min_size > self._settings.db_pool_max_size:
-            raise ValueError("DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.")
+            raise ValueError('DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.')
 
         # Initialize Connection Pool
         self.pool = ConnectionPool(
@@ -168,15 +169,15 @@ class NeonDatabaseManager:
             max_size=self._settings.db_pool_max_size,
             kwargs=_build_connection_kwargs(self._settings),
         )
-        logger.info("Sync Database connection pool initialized.")
+        logger.info('Sync Database connection pool initialized.')
 
     def close(self):
         """Close the connection pool gracefully."""
         if self.pool:
             self.pool.close()
-            logger.info("Sync Database connection pool closed.")
+            logger.info('Sync Database connection pool closed.')
 
-    def __enter__(self) -> "NeonDatabaseManager":
+    def __enter__(self) -> 'NeonConnection':
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -206,7 +207,7 @@ class NeonDatabaseManager:
                     cur.execute(query, params)
                     return cur.fetchall()
         except psycopg.Error as e:
-            logger.error(f"Database query failed: {e}")
+            logger.error(f'Database query failed: {e}')
             raise
 
     def fetch_one(
@@ -218,7 +219,7 @@ class NeonDatabaseManager:
                     cur.execute(query, params)
                     return cur.fetchone()
         except psycopg.Error as e:
-            logger.error(f"Database fetch_one failed: {e}")
+            logger.error(f'Database fetch_one failed: {e}')
             raise
 
     def execute_commit(
@@ -229,9 +230,9 @@ class NeonDatabaseManager:
                 with conn.cursor() as cur:
                     cur.execute(query, params)
                 conn.commit()
-                logger.info("Transaction committed successfully.")
+                logger.info('Transaction committed successfully.')
         except psycopg.Error as e:
-            logger.error(f"Database execution failed: {e}")
+            logger.error(f'Database execution failed: {e}')
             raise
 
     def fetch_dataframe(
@@ -241,7 +242,7 @@ class NeonDatabaseManager:
             data = self.fetch_all(query, params)
             return pd.DataFrame(data)
         except Exception as e:
-            logger.error(f"Failed to fetch DataFrame: {e}")
+            logger.error(f'Failed to fetch DataFrame: {e}')
             raise
 
     def create_table(
@@ -257,22 +258,22 @@ class NeonDatabaseManager:
         as (name, type) tuples. Column types are validated against a safe pattern.
         """
         if (schema is None) == (columns is None):
-            raise ValueError("Provide exactly one of schema or columns.")
+            raise ValueError('Provide exactly one of schema or columns.')
 
         try:
             if columns is not None:
                 column_defs = [
-                    sql.SQL("{} {}").format(
+                    sql.SQL('{} {}').format(
                         sql.Identifier(name),
                         sql.SQL(_validate_sql_type(col_type)),
                     )
                     for name, col_type in columns
                 ]
-                schema_sql = sql.SQL(", ").join(column_defs)
+                schema_sql = sql.SQL(', ').join(column_defs)
             else:
                 schema_sql = sql.SQL(schema)
 
-            query = sql.SQL("CREATE TABLE IF NOT EXISTS {} ({})").format(
+            query = sql.SQL('CREATE TABLE IF NOT EXISTS {} ({})').format(
                 sql.Identifier(table_name),
                 schema_sql,
             )
@@ -287,16 +288,18 @@ class NeonDatabaseManager:
 
     def upload_dataframe(self, df: pd.DataFrame, table_name: str) -> None:
         if df.empty:
-            logger.warning("DataFrame is empty, skipping upload.")
+            logger.warning('DataFrame is empty, skipping upload.')
             return
         try:
             settings = get_neon_settings()
-            df_clean = df.where(pd.notnull(df), None)
+            # Ensure missing values become actual Python `None` (SQL NULL),
+            # even for numeric columns where pandas would otherwise keep NaN.
+            df_clean = df.astype(object).where(pd.notna(df), None)
             columns = list(df_clean.columns)
-            query = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
+            query = sql.SQL('INSERT INTO {} ({}) VALUES ({})').format(
                 sql.Identifier(table_name),
-                sql.SQL(", ").join(map(sql.Identifier, columns)),
-                sql.SQL(", ").join(sql.Placeholder() * len(columns)),
+                sql.SQL(', ').join(map(sql.Identifier, columns)),
+                sql.SQL(', ').join(sql.Placeholder() * len(columns)),
             )
             with self._connection() as conn:
                 with conn.cursor() as cur:
@@ -313,7 +316,7 @@ class NeonDatabaseManager:
 
     def check_health(self) -> bool:
         try:
-            self.fetch_one("SELECT 1")
+            self.fetch_one('SELECT 1')
             return True
         except Exception:
             return False
@@ -329,9 +332,9 @@ class AsyncNeonDatabaseManager:
         self._settings = get_neon_settings()
         self.dsn = connection_string or self._settings.database_url
         if not self.dsn:
-            raise ValueError("DATABASE_URL not found.")
+            raise ValueError('DATABASE_URL not found.')
         if self._settings.db_pool_min_size > self._settings.db_pool_max_size:
-            raise ValueError("DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.")
+            raise ValueError('DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.')
         self._pool_opened = False
 
         # Initialize Async Connection Pool
@@ -342,16 +345,16 @@ class AsyncNeonDatabaseManager:
             kwargs=_build_connection_kwargs(self._settings),
             open=False,
         )
-        logger.info("Async Database connection pool initialized.")
+        logger.info('Async Database connection pool initialized.')
 
     async def close(self):
         """Close the async pool."""
         if self.pool:
             await self.pool.close()
             self._pool_opened = False
-            logger.info("Async Database connection pool closed.")
+            logger.info('Async Database connection pool closed.')
 
-    async def __aenter__(self) -> "AsyncNeonDatabaseManager":
+    async def __aenter__(self) -> 'AsyncNeonDatabaseManager':
         if self.pool and not self._pool_opened:
             await self.pool.open()
             self._pool_opened = True
@@ -379,7 +382,7 @@ class AsyncNeonDatabaseManager:
                     await cur.execute(query, params)
                     return await cur.fetchall()
         except psycopg.Error as e:
-            logger.error(f"Async DB query failed: {e}")
+            logger.error(f'Async DB query failed: {e}')
             raise
 
     async def fetch_one(
@@ -392,7 +395,7 @@ class AsyncNeonDatabaseManager:
                     await cur.execute(query, params)
                     return await cur.fetchone()
         except psycopg.Error as e:
-            logger.error(f"Async DB fetch_one failed: {e}")
+            logger.error(f'Async DB fetch_one failed: {e}')
             raise
 
     async def execute_commit(
@@ -405,7 +408,7 @@ class AsyncNeonDatabaseManager:
                     await cur.execute(query, params)
                 await conn.commit()
         except psycopg.Error as e:
-            logger.error(f"Async DB execution failed: {e}")
+            logger.error(f'Async DB execution failed: {e}')
             raise
 
     async def fetch_dataframe(
@@ -417,7 +420,7 @@ class AsyncNeonDatabaseManager:
             data = await self.fetch_all(query, params)
             return pd.DataFrame(data)
         except Exception as e:
-            logger.error(f"Failed to fetch DataFrame asynchronously: {e}")
+            logger.error(f'Failed to fetch DataFrame asynchronously: {e}')
             raise
 
     async def create_table(
@@ -428,22 +431,22 @@ class AsyncNeonDatabaseManager:
     ) -> None:
         """Async create table safely."""
         if (schema is None) == (columns is None):
-            raise ValueError("Provide exactly one of schema or columns.")
+            raise ValueError('Provide exactly one of schema or columns.')
 
         try:
             if columns is not None:
                 column_defs = [
-                    sql.SQL("{} {}").format(
+                    sql.SQL('{} {}').format(
                         sql.Identifier(name),
                         sql.SQL(_validate_sql_type(col_type)),
                     )
                     for name, col_type in columns
                 ]
-                schema_sql = sql.SQL(", ").join(column_defs)
+                schema_sql = sql.SQL(', ').join(column_defs)
             else:
                 schema_sql = sql.SQL(schema)
 
-            query = sql.SQL("CREATE TABLE IF NOT EXISTS {} ({})").format(
+            query = sql.SQL('CREATE TABLE IF NOT EXISTS {} ({})').format(
                 sql.Identifier(table_name),
                 schema_sql,
             )
@@ -459,17 +462,17 @@ class AsyncNeonDatabaseManager:
     async def upload_dataframe(self, df: pd.DataFrame, table_name: str) -> None:
         """Async upload pandas DataFrame."""
         if df.empty:
-            logger.warning("DataFrame is empty, skipping upload.")
+            logger.warning('DataFrame is empty, skipping upload.')
             return
 
         try:
             settings = get_neon_settings()
             df_clean = df.where(pd.notnull(df), None)
             columns = list(df_clean.columns)
-            query = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
+            query = sql.SQL('INSERT INTO {} ({}) VALUES ({})').format(
                 sql.Identifier(table_name),
-                sql.SQL(", ").join(map(sql.Identifier, columns)),
-                sql.SQL(", ").join(sql.Placeholder() * len(columns)),
+                sql.SQL(', ').join(map(sql.Identifier, columns)),
+                sql.SQL(', ').join(sql.Placeholder() * len(columns)),
             )
 
             async with self._connection() as conn:
@@ -489,7 +492,7 @@ class AsyncNeonDatabaseManager:
 
     async def check_health(self) -> bool:
         try:
-            await self.fetch_one("SELECT 1")
+            await self.fetch_one('SELECT 1')
             return True
         except Exception:
             return False
@@ -517,7 +520,7 @@ class QueueExecutor:
                 If None, uses the event loop's default executor.
         """
         if num_workers <= 0:
-            raise ValueError("num_workers must be a positive integer")
+            raise ValueError('num_workers must be a positive integer')
 
         self.num_workers = num_workers
         self.maxsize = maxsize
@@ -609,7 +612,7 @@ class QueueExecutor:
                 break
             except Exception as e:
                 # Log unexpected errors but keep worker running
-                logger.error(f"Worker {worker_id} encountered unexpected error: {e}")
+                logger.error(f'Worker {worker_id} encountered unexpected error: {e}')
 
     def submit(
         self, func: Callable[..., Any], *args: Any, **kwargs: Any
@@ -629,11 +632,11 @@ class QueueExecutor:
         """
         if not self._running:
             raise RuntimeError(
-                "QueueExecutor must be started before submitting tasks. "
+                'QueueExecutor must be started before submitting tasks. '
                 "Use 'async with QueueExecutor(...)' or call 'await executor.start()'"
             )
 
-        future = asyncio.Future()
+        future: asyncio.Future[Any] = asyncio.Future()
 
         async def _submit():
             await self.queue.put((func, args, kwargs, future))

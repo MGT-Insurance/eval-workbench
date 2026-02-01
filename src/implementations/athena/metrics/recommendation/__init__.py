@@ -1,10 +1,33 @@
+# TODO -- need this file to be auto loaded for metrics access
+from athena.metrics.recommendation.decison_quality import DecisionQuality
+from athena.metrics.recommendation.referral_reason import (
+    ReferralReasonAnalysis,
+    ReferralReasonCategory,
+)
+from athena.metrics.recommendation.underwriting_rules import UnderwritingRules
+from axion.metrics import metric_registry
+
+from implementations.athena.metrics.recommendation.citation_accuracy import (
+    CitationAccuracy,
+)
 from implementations.athena.metrics.recommendation.citation_fidelity import (
     CitationFidelity,
+)
+from implementations.athena.metrics.recommendation.underwriting_completeness import (
+    UnderwritingCompleteness,
 )
 from implementations.athena.metrics.recommendation.underwriting_faithfulness import (
     UnderwritingFaithfulness,
 )
-from athena.metrics.recommendation.decison_quality import DecisionQuality
 
-
-__all__ = ["CitationFidelity", "UnderwritingFaithfulness", "DecisionQuality"]
+__all__ = [
+    'metric_registry',
+    'CitationFidelity',
+    'CitationAccuracy',
+    'UnderwritingFaithfulness',
+    'DecisionQuality',
+    'UnderwritingRules',
+    'ReferralReasonAnalysis',
+    'ReferralReasonCategory',
+    'UnderwritingCompleteness',
+]

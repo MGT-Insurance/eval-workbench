@@ -1,16 +1,29 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "eval-workbench"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Evaluation workbench implementations and shared metrics"
 readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Matt Evanoff", email = "mevanoff24@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = [
     "axion @ git+https://github.com/ax-foundry/axion.git",
+    "APScheduler>=3.10",
+    "aiohttp",
     "fastapi",
+    "pandas",
+    "pyyaml",
+    "langfuse>=3.0.0",
     "numpy",
     "pydantic",
     "pydantic-settings",
@@ -18,9 +31,82 @@ dependencies = [
     "psycopg-pool>=3.3.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "ruff==0.4.5",
+    "pre-commit",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "mkdocs-git-authors-plugin",
+    "mkdocs-git-revision-date-localized-plugin",
+    "pytest",
+    "pytest-asyncio",
+    "coverage",
+    "mypy",
+    "mike",
+    "nbstripout",
+]
+# Tracing providers (optional)
+langfuse = ["langfuse>=3.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/MGT-Insurance/eval-workbench"
+Documentation = "https://github.com/MGT-Insurance/eval-workbench"
+Repository = "https://github.com/MGT-Insurance/eval-workbench.git"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["shared*", "implementations*"]
+
+[tool.setuptools_scm]
+fallback_version = "0.1.0"
+local_scheme = "no-local-version"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "Q"]
+ignore = ["E722", "E501"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = 'single'
+docstring-quotes = 'double'
+multiline-quotes = 'double'
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+
+[tool.mypy]
+mypy_path = "."
+explicit_package_bases = true
+no_implicit_optional = false
+exclude = ["tests/"]
+check_untyped_defs = false
+
+disable_error_code = [
+    "override",
+    "attr-defined",
+    "arg-type",
+    "assignment",
+    "type-var",
+    "union-attr",
+    "import-untyped",
+    "var-annotated",
+    "misc",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "setup"
+ignore_missing_imports = true
