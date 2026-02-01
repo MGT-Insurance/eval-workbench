@@ -4,6 +4,8 @@ from contextlib import contextmanager
 
 import pandas as pd
 import pytest
+
+psycopg = pytest.importorskip('psycopg')
 from psycopg.types.json import Jsonb
 
 from shared.database.evaluation_upload import (
