@@ -20,7 +20,6 @@ from implementations.athena.utils import detect_outcome
 logger = get_logger(__name__)
 
 
-
 class TriggerName(str, Enum):
     """
     The 'Athena' Universe of Underwriting Triggers.

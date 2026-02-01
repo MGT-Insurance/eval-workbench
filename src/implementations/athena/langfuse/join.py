@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import Callable, Iterable, Optional, Sequence
 
 import pandas as pd
-
 from axion.tracing import LangfuseTraceLoader
+
 from implementations.athena.langfuse.prompt_patterns import WorkflowPromptPatterns
 from shared.database.neon import NeonConnection
 from shared.langfuse.trace import PromptPatternsBase, TraceCollection
@@ -13,17 +13,17 @@ from shared.langfuse.trace import PromptPatternsBase, TraceCollection
 
 @dataclass(frozen=True)
 class JoinSettings:
-    case_table: str = "athena_cases"
+    case_table: str = 'athena_cases'
     case_columns: tuple[str, ...] = (
-        "id",
-        "workflow_id",
-        "quote_locator",
-        "slack_thread_ts",
-        "slack_channel_id",
-        "langfuse_trace_id",
+        'id',
+        'workflow_id',
+        'quote_locator',
+        'slack_thread_ts',
+        'slack_channel_id',
+        'langfuse_trace_id',
     )
-    trace_name: str = "athena"
-    trace_tags: tuple[str, ...] = ("production",)
+    trace_name: str = 'athena'
+    trace_tags: tuple[str, ...] = ('production',)
 
 
 class AthenaNeonLangfuseJoiner:
@@ -57,12 +57,12 @@ class AthenaNeonLangfuseJoiner:
         where: Optional[str] = None,
         columns: Optional[Sequence[str]] = None,
     ) -> pd.DataFrame:
-        cols = ", ".join(columns or self._settings.case_columns)
-        query = f"SELECT {cols} FROM {self._settings.case_table}"
+        cols = ', '.join(columns or self._settings.case_columns)
+        query = f'SELECT {cols} FROM {self._settings.case_table}'
         if where:
-            query = f"{query} WHERE {where}"
+            query = f'{query} WHERE {where}'
         if limit is not None:
-            query = f"{query} LIMIT {int(limit)}"
+            query = f'{query} LIMIT {int(limit)}'
         return self._db.fetch_dataframe(query)
 
     def fetch_traces(
@@ -103,14 +103,14 @@ class AthenaNeonLangfuseJoiner:
 
         loader = self._loader
         fetch_by_id = (
-            getattr(loader, "fetch_trace_by_id", None)
-            or getattr(loader, "fetch_trace", None)
-            or getattr(loader, "get_trace", None)
+            getattr(loader, 'fetch_trace_by_id', None)
+            or getattr(loader, 'fetch_trace', None)
+            or getattr(loader, 'get_trace', None)
         )
         if not callable(fetch_by_id):
             raise ValueError(
-                "LangfuseTraceLoader does not expose a trace-id fetch method. "
-                "Pass trace_fetcher=callable to fetch traces by id."
+                'LangfuseTraceLoader does not expose a trace-id fetch method. '
+                'Pass trace_fetcher=callable to fetch traces by id.'
             )
 
         trace_data_list = []
@@ -131,8 +131,8 @@ class AthenaNeonLangfuseJoiner:
         cases: pd.DataFrame,
         traces: TraceCollection,
         *,
-        trace_id_column: str = "langfuse_trace_id",
-        trace_output_column: str = "langfuse_trace",
+        trace_id_column: str = 'langfuse_trace_id',
+        trace_output_column: str = 'langfuse_trace',
     ) -> pd.DataFrame:
         if trace_id_column not in cases.columns:
             raise KeyError(f"Missing '{trace_id_column}' in cases dataframe.")
@@ -146,7 +146,7 @@ class AthenaNeonLangfuseJoiner:
         indexed: dict[str, object] = {}
         for trace in traces:
             try:
-                trace_id = getattr(trace, "id", None)
+                trace_id = getattr(trace, 'id', None)
             except Exception:
                 trace_id = None
             if trace_id:

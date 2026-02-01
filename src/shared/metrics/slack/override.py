@@ -364,7 +364,6 @@ class OverrideDetector(BaseMetric):
         ]
 
 
-
 class SatisfactionInput(RichBaseModel):
     """Input model for override satisfaction analysis."""
 

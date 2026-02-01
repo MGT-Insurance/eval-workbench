@@ -1,4 +1,3 @@
-
 # Individual metrics
 from shared.metrics.slack.acceptance import AcceptanceDetector, AcceptanceResult
 
