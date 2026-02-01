@@ -6,9 +6,8 @@ import pandas as pd
 import pytest
 
 psycopg = pytest.importorskip('psycopg')
-from psycopg.types.json import Jsonb
-
-from shared.database.evaluation_upload import (
+from psycopg.types.json import Jsonb  # noqa: E402
+from shared.database.evaluation_upload import (  # noqa: E402
     EVALUATION_DATASET_COLUMNS,
     EVALUATION_RESULTS_COLUMNS,
     EvaluationUploader,
