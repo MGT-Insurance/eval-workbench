@@ -5,6 +5,8 @@ from contextlib import contextmanager
 import pandas as pd
 import pytest
 
+pytest.importorskip('psycopg')
+
 
 class _FakeCursor:
     def __init__(self) -> None:
