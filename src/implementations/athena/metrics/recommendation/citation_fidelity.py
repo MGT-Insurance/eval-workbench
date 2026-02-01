@@ -175,11 +175,11 @@ class CitationFidelity(BaseMetric):
             self._get_text_window(full_text, citation_start)
         )
 
-        # 1. Exact Substring Match (Case-insensitive)
+        # Exact Substring Match (Case-insensitive)
         if str_val in window_text:
             return True, 'Exact match.'
 
-        # 2. Number Match (ignoring symbols)
+        # Number Match (ignoring symbols)
         # "2,500,000" (JSON) vs "$2.5M" (Text)
         num_val = self._coerce_number(str_val)
         if num_val is not None:
@@ -192,7 +192,7 @@ class CitationFidelity(BaseMetric):
                     if rel_err <= self.numeric_tolerance:
                         return True, 'Numeric match.'
 
-        # 3. Token Overlap (For strings like "Dental Office" vs "DENTISTO")
+        # Token Overlap (For strings like "Dental Office" vs "DENTISTO")
         # Do they share significant words?
         val_tokens = set(re.findall(r'\w{4,}', str_val))  # Only words 4+ chars
         text_tokens = set(re.findall(r'\w{4,}', window_text))
@@ -201,7 +201,7 @@ class CitationFidelity(BaseMetric):
         if val_tokens and len(shared) >= self.min_shared_tokens:
             return True, 'Token overlap.'
 
-        # 4. Fuzzy Matching against sentence window
+        # Fuzzy Matching against sentence window
         if window_text and len(str_val) >= 4:
             ratio = SequenceMatcher(None, str_val, window_text).ratio()
             if ratio >= self.fuzzy_threshold:
@@ -236,7 +236,7 @@ class CitationFidelity(BaseMetric):
             # Clean prefixes often hallucinated by LLMs
             clean_path = re.sub(r'^(Source:|cite:)', '', raw_path).strip()
 
-            # 1. Resolve Path
+            # Resolve Path
             json_val = self._resolve_json_path(json_data, clean_path)
             path_exists = json_val is not self._MISSING
 

@@ -1,17 +1,3 @@
-"""
-Slack Conversation Metrics.
-
-Provides comprehensive metrics for analyzing Slack conversations including:
-- Interaction and engagement analysis
-- Recommendation detection
-- Escalation and frustration detection
-- Acceptance and override analysis
-- Intervention detection (feedback analysis)
-- Sentiment analysis
-- Resolution detection
-
-Each metric can be used standalone or combined via the composite analyzers.
-"""
 
 # Individual metrics
 from shared.metrics.slack.acceptance import AcceptanceDetector, AcceptanceResult

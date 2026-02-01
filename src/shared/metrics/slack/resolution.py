@@ -1,9 +1,3 @@
-"""
-Resolution Detection Metric for Slack Conversations.
-
-Detects how conversations are resolved (approved, declined, blocked, stalemate, etc.).
-"""
-
 from datetime import datetime, timezone
 from typing import List, Literal, Optional
 

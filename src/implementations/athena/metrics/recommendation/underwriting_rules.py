@@ -20,10 +20,6 @@ from implementations.athena.utils import detect_outcome
 logger = get_logger(__name__)
 
 
-# ==============================================================================
-# 1. DOMAIN SCHEMAS & ENUMS
-# ==============================================================================
-
 
 class TriggerName(str, Enum):
     """
@@ -490,7 +486,7 @@ class UnderwritingRules(BaseMetric):
         detected_events: List[TriggerEvent] = []
         llm_fallback_used = False
 
-        # 2a. Structured Checks (based on additional_input)
+        # Structured Checks (based on additional_input)
         flat_map = self._flatten_additional_input(dataset_item.additional_input or {})
 
         bpp_limit = self._get_number(
@@ -644,7 +640,7 @@ class UnderwritingRules(BaseMetric):
                 )
             )
 
-        # 3. Regex Scan (Fast Path) using pre-compiled patterns
+        # Regex Scan (Fast Path) using pre-compiled patterns
         for spec in self._trigger_specs:
             compiled_list = self._compiled_patterns.get(spec.name, [])
             for pattern in compiled_list:
@@ -661,10 +657,10 @@ class UnderwritingRules(BaseMetric):
                     # Break inner loop (don't match same rule twice)
                     break
 
-        # 4. Deduplication Step
+        # Deduplication Step
         detected_events = self._deduplicate_events(detected_events)
 
-        # 5. Ghost Referral Handling (LLM Fallback)
+        # Ghost Referral Handling (LLM Fallback)
         if is_referral and not detected_events:
             llm_fallback_used = True
             llm_input = GhostReferralInput(ai_output=full_text)
@@ -680,7 +676,7 @@ class UnderwritingRules(BaseMetric):
                     )
                 )
 
-        # 6. Compute Enhanced Signals
+        # Compute Enhanced Signals
         trigger_count = len(detected_events)
 
         min_confidence = 1.0
@@ -703,7 +699,7 @@ class UnderwritingRules(BaseMetric):
             for e in detected_events
         )
 
-        # 7. Priority-based Primary Selection
+        # Priority-based Primary Selection
         primary_reason = self._select_primary_trigger(detected_events)
         if primary_reason == TriggerName.NONE and is_referral:
             primary_reason = TriggerName.UNKNOWN
@@ -711,13 +707,13 @@ class UnderwritingRules(BaseMetric):
         summary_str = ', '.join([t.trigger_name.value for t in detected_events])
 
         # Score Definition:
-        # 1.0 when outcome aligns with triggers:
+        # when outcome aligns with triggers:
         # - referral/decline AND triggers present
         # - approval/unknown AND no triggers present
         # 0.0 for mismatches (approve with triggers, refer without triggers)
         score = 1.0 if (is_referral == bool(detected_events)) else 0.0
 
-        # 8. Build Enriched TriggerReport
+        # Build Enriched TriggerReport
         result_data = TriggerReport(
             is_referral=is_referral,
             active_triggers=detected_events,
@@ -742,7 +738,7 @@ class UnderwritingRules(BaseMetric):
         """
         signals = []
 
-        # 1. Headline: Primary Reason (e.g., "orgEstYear")
+        # Headline: Primary Reason (e.g., "orgEstYear")
         signals.append(
             SignalDescriptor(
                 name='Primary Trigger',
@@ -752,7 +748,7 @@ class UnderwritingRules(BaseMetric):
             )
         )
 
-        # 2. Outcome Label (Referral/Approved/Unknown)
+        # Outcome Label (Referral/Approved/Unknown)
         signals.append(
             SignalDescriptor(
                 name='Outcome Status',
@@ -762,7 +758,7 @@ class UnderwritingRules(BaseMetric):
             )
         )
 
-        # 3. Trigger Count
+        # Trigger Count
         signals.append(
             SignalDescriptor(
                 name='Trigger Count',
@@ -772,7 +768,7 @@ class UnderwritingRules(BaseMetric):
             )
         )
 
-        # 4. LLM Fallback Used (Yes/No)
+        # LLM Fallback Used (Yes/No)
         signals.append(
             SignalDescriptor(
                 name='LLM Fallback Used',
@@ -782,7 +778,7 @@ class UnderwritingRules(BaseMetric):
             )
         )
 
-        # 5. Min Confidence (percentage)
+        # Min Confidence (percentage)
         signals.append(
             SignalDescriptor(
                 name='Min Confidence',
@@ -792,7 +788,7 @@ class UnderwritingRules(BaseMetric):
             )
         )
 
-        # 6. Has Hard Trigger (Yes/No)
+        # Has Hard Trigger (Yes/No)
         signals.append(
             SignalDescriptor(
                 name='Has Hard Trigger',
@@ -802,7 +798,7 @@ class UnderwritingRules(BaseMetric):
             )
         )
 
-        # 7. Detection Method (for primary trigger)
+        # Detection Method (for primary trigger)
         signals.append(
             SignalDescriptor(
                 name='Detection Method',
@@ -819,7 +815,7 @@ class UnderwritingRules(BaseMetric):
             )
         )
 
-        # 8. Per-trigger details with severity labels
+        # Per-trigger details with severity labels
         for i, event in enumerate(result.active_triggers):
             spec = self._spec_by_name.get(event.trigger_name)
             severity = spec.severity if spec else 'unknown'

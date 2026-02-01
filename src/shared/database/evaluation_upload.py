@@ -595,7 +595,6 @@ class EvaluationUploader:
     on_conflict: Literal['error', 'do_nothing', 'upsert'] = 'error'
     chunk_size: int = 1000
 
-    # ---- Subset helpers ----
     def subset_dataset(
         self, df: pd.DataFrame, *, include_missing_columns: bool | None = None
     ) -> pd.DataFrame:
@@ -655,7 +654,6 @@ class EvaluationUploader:
             ),
         )
 
-    # ---- Upload helpers ----
     def upload_dataset(
         self,
         df: pd.DataFrame,

@@ -1,20 +1,3 @@
-"""
-Sampling strategies for OnlineMonitor.
-
-Allows configurable selection of items from the pool of fetched items
-before evaluation. Useful when you don't want to evaluate every trace.
-
-Example usage:
-    from shared.monitoring.sampling import RandomSampling, SamplingStrategyType
-
-    # Direct instantiation
-    strategy = RandomSampling(n=10, seed=42)
-    sampled = strategy.sample(items)
-
-    # Factory via enum
-    strategy = SamplingStrategyType.RANDOM.create(n=10, seed=42)
-"""
-
 import random
 from abc import ABC, abstractmethod
 from enum import Enum

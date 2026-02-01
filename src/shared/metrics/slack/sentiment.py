@@ -1,9 +1,3 @@
-"""
-Sentiment Detection Metric for Slack Conversations.
-
-Analyzes user sentiment including positive, neutral, frustrated, and confused states.
-"""
-
 from typing import List, Literal, Optional
 
 from axion._core.schema import HumanMessage, RichBaseModel

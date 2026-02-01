@@ -486,7 +486,7 @@ class ReferralReasonAnalysis(BaseMetric):
         """Define how results appear in the Dashboard/UI."""
         signals = []
 
-        # 1. Headline: Primary Category
+        #  Headline: Primary Category
         signals.append(
             SignalDescriptor(
                 name='Primary Category',
@@ -496,7 +496,7 @@ class ReferralReasonAnalysis(BaseMetric):
             )
         )
 
-        # 2. Outcome Label
+        # Outcome Label
         signals.append(
             SignalDescriptor(
                 name='Outcome',
@@ -506,7 +506,7 @@ class ReferralReasonAnalysis(BaseMetric):
             )
         )
 
-        # 3. Actionable Type (market/system/policy)
+        # Actionable Type (market/system/policy)
         signals.append(
             SignalDescriptor(
                 name='Actionable Type',
@@ -519,7 +519,7 @@ class ReferralReasonAnalysis(BaseMetric):
             )
         )
 
-        # 4. Reason Count
+        # Reason Count
         signals.append(
             SignalDescriptor(
                 name='Reason Count',
@@ -529,7 +529,7 @@ class ReferralReasonAnalysis(BaseMetric):
             )
         )
 
-        # 5. Primary Reason Details
+        # Primary Reason Details
         if result.primary_reason:
             signals.append(
                 SignalDescriptor(
@@ -572,7 +572,7 @@ class ReferralReasonAnalysis(BaseMetric):
                 )
             )
 
-        # 6. All Reasons (detailed breakdown)
+        # All Reasons (detailed breakdown)
         for i, reason in enumerate(result.all_reasons):
             group_name = f'Reason {i + 1}: {reason.category.value}'
             signals.extend(

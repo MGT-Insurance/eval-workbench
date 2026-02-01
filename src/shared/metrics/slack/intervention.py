@@ -1,9 +1,3 @@
-"""
-Intervention Detection Metric for Slack Conversations.
-
-Detects when humans intervene in AI conversations and classifies the intervention type.
-"""
-
 from typing import List, Literal, Optional
 
 from axion._core.schema import RichBaseModel

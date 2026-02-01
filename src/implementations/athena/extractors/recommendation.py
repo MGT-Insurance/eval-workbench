@@ -1,10 +1,3 @@
-"""
-Athena recommendation trace extractor.
-
-Converts Langfuse traces to axion DatasetItems for evaluation.
-Based on the trace structure from Athena's recommendation workflow.
-"""
-
 import ast
 import json
 import logging

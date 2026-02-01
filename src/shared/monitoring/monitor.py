@@ -432,26 +432,26 @@ class OnlineMonitor:
         Returns:
             EvaluationResults from axion's evaluation_runner, or None if no items
         """
-        # 1. Fetch items from source
+        # Fetch items from source
         items = await self._source.fetch_items()
         if not items:
             logger.warning('No items found from source')
             return None
 
-        # 2. Filter already-scored items
+        # Filter already-scored items
         if deduplicate:
             items = self.filter_unscored_items(items)
             if not items:
                 logger.info('All items already scored, nothing to process')
                 return None
 
-        # 3. Apply sampling strategy
+        # Apply sampling strategy
         items = self.sample_items(items)
         if not items:
             logger.info('No items to process after sampling')
             return None
 
-        # 4. Run evaluation
+        # Run evaluation
         if not self._metrics_config:
             raise ConfigurationError('metrics_config required')
 
@@ -480,7 +480,7 @@ class OnlineMonitor:
         if not should_trace:
             configure_tracing('langfuse')
 
-        # 5. Record scored items
+        # Record scored items
         self.record_scored_items(items)
 
         if publish:
