@@ -12,9 +12,10 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SignalDescriptor
 from pydantic import Field
 
+from implementations.athena.metrics.recommendation.underwriting_faithfulness import (
+    flatten_json,
+)
 from implementations.athena.utils import detect_outcome
-
-from implementations.athena.metrics.recommendation.underwriting_faithfulness import flatten_json
 
 logger = get_logger(__name__)
 

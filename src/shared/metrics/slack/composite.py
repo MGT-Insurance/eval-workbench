@@ -250,8 +250,29 @@ class SlackAnalysisResult(RichBaseModel):
     llm_analysis_performed: bool = Field(default=False)
     analysis_reasoning: str = Field(default='')
 
+    def _get_active_metrics(self) -> List[str]:
+        """Get list of metrics that have data, auto-detecting if enabled_metrics is empty."""
+        if self.enabled_metrics:
+            return self.enabled_metrics
+
+        # Auto-detect from non-None signal fields
+        all_metric_fields = [
+            'interaction',
+            'engagement',
+            'recommendation',
+            'escalation',
+            'frustration',
+            'acceptance',
+            'override',
+            'satisfaction',
+            'intervention',
+            'sentiment',
+            'resolution',
+        ]
+        return [m for m in all_metric_fields if getattr(self, m, None) is not None]
+
     def to_rows(self, include_metadata: bool = True) -> List[Dict[str, Any]]:
-        """Convert to separate rows per signal group (only enabled metrics)."""
+        """Convert to separate rows per signal group."""
         metadata = {}
         if include_metadata:
             metadata = {
@@ -262,7 +283,7 @@ class SlackAnalysisResult(RichBaseModel):
             }
 
         rows = []
-        for metric_name in self.enabled_metrics:
+        for metric_name in self._get_active_metrics():
             signals = getattr(self, metric_name, None)
             if signals is not None:
                 rows.append(
@@ -1089,7 +1110,8 @@ class SlackConversationAnalyzer(BaseMetric):
         )
 
     def get_signals(self, result: SlackAnalysisResult) -> List[SignalDescriptor]:
-        """Generate signal descriptors for enabled metrics."""
+        """Generate signal descriptors for all metrics."""
+        # Always include base descriptors for the original 8 metrics
         descriptors = [
             SignalDescriptor(name='thread_id', extractor=lambda r: r.thread_id),
             SignalDescriptor(
@@ -1097,28 +1119,36 @@ class SlackConversationAnalyzer(BaseMetric):
                 extractor=lambda r: r.interaction.is_interactive,
                 headline_display=True,
             ),
+            SignalDescriptor(
+                name='is_escalated',
+                extractor=lambda r: r.escalation.is_escalated if r.escalation else None,
+                headline_display=True,
+            ),
+            SignalDescriptor(
+                name='is_frustrated',
+                extractor=lambda r: r.frustration.is_frustrated
+                if r.frustration
+                else None,
+                headline_display=True,
+            ),
+            SignalDescriptor(
+                name='has_recommendation',
+                extractor=lambda r: r.recommendation.has_recommendation,
+                headline_display=True,
+            ),
+            SignalDescriptor(
+                name='is_accepted',
+                extractor=lambda r: r.acceptance.is_accepted if r.acceptance else None,
+                headline_display=True,
+            ),
+            SignalDescriptor(
+                name='is_overridden',
+                extractor=lambda r: r.override.is_overridden if r.override else None,
+                headline_display=True,
+            ),
         ]
 
-        if result.escalation:
-            descriptors.append(
-                SignalDescriptor(
-                    name='is_escalated',
-                    extractor=lambda r: r.escalation.is_escalated
-                    if r.escalation
-                    else None,
-                    headline_display=True,
-                )
-            )
-        if result.frustration:
-            descriptors.append(
-                SignalDescriptor(
-                    name='is_frustrated',
-                    extractor=lambda r: r.frustration.is_frustrated
-                    if r.frustration
-                    else None,
-                    headline_display=True,
-                )
-            )
+        # Add feedback metric descriptors if present
         if result.intervention:
             descriptors.extend(
                 [
@@ -1175,7 +1205,7 @@ class SlackConversationAnalyzer(BaseMetric):
 
     @staticmethod
     def expand_results(results) -> pd.DataFrame:
-        """Expand results into rows per enabled metric."""
+        """Expand results into rows per metric, matching to_dataframe() format."""
         if not hasattr(results, 'results'):
             raise TypeError(f'Expected EvaluationResult, got {type(results)}')
 
@@ -1197,18 +1227,42 @@ class SlackConversationAnalyzer(BaseMetric):
                     **score_result.metadata['slack_analysis_result']
                 )
 
-                for metric_name in result_obj.enabled_metrics:
+                for metric_name in result_obj._get_active_metrics():
                     signals = getattr(result_obj, metric_name, None)
                     if signals is None:
                         continue
 
+                    signals_dict = signals.model_dump()
+
+                    # Extract primary score based on metric type
+                    metric_score = None
+                    if metric_name == 'frustration' and hasattr(
+                        signals, 'frustration_score'
+                    ):
+                        metric_score = signals.frustration_score
+                    elif metric_name == 'satisfaction' and hasattr(
+                        signals, 'satisfaction_score'
+                    ):
+                        metric_score = signals.satisfaction_score
+                    elif metric_name == 'sentiment' and hasattr(
+                        signals, 'sentiment_score'
+                    ):
+                        metric_score = signals.sentiment_score
+
                     row = {
                         'id': test_case_id,
                         'metric_name': f'slack_{metric_name}',
-                        'signals': signals.model_dump(),
-                        'thread_id': result_obj.thread_id,
-                        'channel_id': result_obj.channel_id,
-                        'sender': result_obj.sender,
+                        'metric_score': metric_score,
+                        'metric_type': 'analysis',
+                        'threshold': None,
+                        'passed': None,
+                        'explanation': None,
+                        'signals': signals_dict,
+                        'metadata': {
+                            'thread_id': result_obj.thread_id,
+                            'channel_id': result_obj.channel_id,
+                            'sender': result_obj.sender,
+                        },
                         'run_id': results.run_id,
                         'evaluation_name': results.evaluation_name,
                     }

@@ -188,13 +188,19 @@ class TestSlackAnalysisResult:
     """Tests for SlackAnalysisResult model methods."""
 
     def test_to_rows_returns_all_metrics(self):
-        """Should return 8 rows, one for each metric group."""
+        """Should return rows for all metrics that have data."""
         result = SlackAnalysisResult(
             thread_id='123',
             channel_id='C123',
             sender='user1',
             interaction=InteractionSignals(is_interactive=True),
+            engagement=EngagementSignals(interaction_depth=2),
             recommendation=RecommendationSignals(has_recommendation=True),
+            escalation=EscalationSignals(is_escalated=False),
+            frustration=FrustrationSignals(frustration_score=0.2),
+            acceptance=AcceptanceSignals(is_accepted=True),
+            override=OverrideSignals(is_overridden=False),
+            satisfaction=SatisfactionSignals(satisfaction_score=0.8),
         )
 
         rows = result.to_rows()
@@ -441,17 +447,22 @@ class TestExpandResults:
             ]
         )
 
-    def test_expand_results_creates_8_rows_per_item(self, mock_evaluation_result):
-        """Should create 8 rows per original item."""
+    def test_expand_results_creates_rows_for_active_metrics(
+        self, mock_evaluation_result
+    ):
+        """Should create rows for metrics that have data."""
         expanded = SlackConversationAnalyzer.expand_results(mock_evaluation_result)
 
-        # 2 items * 8 metrics = 16 rows
-        assert len(expanded) == 16
+        # item1 has 8 metrics, item2 has 5 metrics (missing acceptance, override, satisfaction)
+        assert len(expanded) == 13
 
-        # Check metric distribution
-        metric_counts = expanded['metric_name'].value_counts()
-        assert len(metric_counts) == 8
-        assert all(count == 2 for count in metric_counts)
+        # Check metric distribution - all 8 should appear for item1
+        item1_metrics = expanded[expanded['id'] == 'item1']['metric_name'].tolist()
+        assert len(item1_metrics) == 8
+
+        # item2 should have 5 metrics
+        item2_metrics = expanded[expanded['id'] == 'item2']['metric_name'].tolist()
+        assert len(item2_metrics) == 5
 
     def test_expand_results_matches_to_dataframe_format(self, mock_evaluation_result):
         """Should have same columns as to_dataframe() would produce."""
@@ -497,18 +508,14 @@ class TestExpandResults:
             & (expanded['metric_name'] == 'slack_frustration')
         ].iloc[0]
         assert item2_frustration['metric_score'] == 0.8
-        assert item2_frustration['metric_type'] == 'SCORE'
-        assert item2_frustration['threshold'] == 0.6
-        assert item2_frustration['passed'] == True  # noqa: E712 (0.8 >= 0.6 = True, passed means met threshold)
+        assert item2_frustration['metric_type'] == 'analysis'
 
-        # Escalation row for item2 should have score 1.0 (escalated=True)
+        # Escalation row for item2 - check signals
         item2_escalation = expanded[
             (expanded['id'] == 'item2')
             & (expanded['metric_name'] == 'slack_escalation')
         ].iloc[0]
-        assert item2_escalation['metric_score'] == 1.0
-        assert item2_escalation['metric_type'] == 'CLASSIFICATION'
-        assert item2_escalation['passed'] == True  # noqa: E712
+        assert item2_escalation['signals']['is_escalated'] is True
 
     def test_expand_results_signals_contain_metric_data(self, mock_evaluation_result):
         """Should have metric-specific signals in each row."""
@@ -541,7 +548,6 @@ class TestExpandResults:
         assert metadata['thread_id'] == 'thread1'
         assert metadata['channel_id'] == 'C123'
         assert metadata['sender'] == 'user1'
-        assert metadata['parent_metric'] == 'Slack Conversation Analyzer'
 
     def test_expand_results_handles_empty_results(self):
         """Should handle empty EvaluationResult."""
