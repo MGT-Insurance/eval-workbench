@@ -77,6 +77,7 @@ class LangfuseDataSource(DataSource):
         limit: int = 100,
         days_back: int | None = None,
         hours_back: int | None = None,
+        minutes_back: int | None = None,
         tags: list[str] | None = None,
         timeout: int = 60,
         fetch_full_traces: bool = True,
@@ -88,6 +89,7 @@ class LangfuseDataSource(DataSource):
         self._limit = limit
         self._days_back = days_back
         self._hours_back = hours_back
+        self._minutes_back = minutes_back
         self._tags = tags
         self._timeout = timeout
         self._fetch_full_traces = fetch_full_traces
@@ -102,15 +104,19 @@ class LangfuseDataSource(DataSource):
         """Fetch traces from Langfuse and extract DatasetItems."""
         loader = LangfuseTraceLoader(timeout=self._timeout)
 
+        hours_back = self._hours_back
+        if self._days_back is None and hours_back is None and self._minutes_back is not None:
+            hours_back = self._minutes_back / 60.0
+
         logger.info(
             f'Fetching traces: name={self._name}, limit={self._limit}, '
-            f'days_back={self._days_back}, hours_back={self._hours_back}, tags={self._tags}'
+            f'days_back={self._days_back}, hours_back={hours_back}, tags={self._tags}'
         )
 
         trace_data = loader.fetch_traces(
             limit=self._limit,
             days_back=self._days_back,
-            hours_back=self._hours_back,
+            hours_back=hours_back,
             name=self._name,
             tags=self._tags,
             fetch_full_traces=self._fetch_full_traces,

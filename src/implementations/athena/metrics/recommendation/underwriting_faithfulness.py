@@ -392,6 +392,7 @@ class UnderwritingFaithfulness(BaseMetric):
                 task = self.semaphore_runner.run(self.verifier.execute, verify_input)
                 verification_tasks.append(task)
 
+        failed_indices: list[int] = []
         if self.verification_mode == 'heuristic_then_llm':
             heuristic_tasks = [
                 self.semaphore_runner.run(self.heuristic_verifier.execute, verify_input)

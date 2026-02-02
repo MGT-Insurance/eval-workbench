@@ -54,6 +54,16 @@ scored_store:
   connection_string: "postgresql://..."
 ```
 
+### Scheduling via YAML
+
+If you use `MonitoringScheduler`, you can define the interval or cron in YAML:
+
+```yaml
+schedule:
+  interval_minutes: 10
+  # cron: "*/10 * * * *"
+```
+
 
 
 ### No deduplication

@@ -7,6 +7,10 @@ environment: "${ENVIRONMENT:-preview}"
 scored_store:
   type: db
 
+# Schedule configuration (used by MonitoringScheduler)
+schedule:
+  interval_minutes: 10
+
 # Source configuration
 source:
   type: langfuse
@@ -16,7 +20,7 @@ source:
   extractor: "implementations.athena.extractors.extract_recommendation"
   prompt_patterns: "implementations.athena.langfuse.prompt_patterns.WorkflowPromptPatterns"
   limit: 6
-  days_back: 10
+  minutes_back: 10
   tags: ["preview"]
   timeout: 60
   fetch_full_traces: true
@@ -39,7 +43,7 @@ metrics_config:
 # Publishing configuration
 publishing:
   push_to_db: true
-  push_to_langfuse: true
+  push_to_langfuse: false
   trace_experiment: false
 
   # Database upload configuration (used when push_to_db: true)

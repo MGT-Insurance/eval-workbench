@@ -1,30 +1,3 @@
-"""
-OnlineMonitor that supports pluggable data sources and deduplication.
-
-Supports multiple data sources (Langfuse, Slack, etc.) and tracks scored
-items to avoid re-processing.
-
-Example usage:
-    from shared.monitoring import OnlineMonitor
-    from shared.monitoring.sources import LangfuseDataSource
-    from shared.monitoring.scored_items import ScoredItemsStore
-
-    # From YAML config
-    store = ScoredItemsStore("data/scored_items.csv")
-    monitor = OnlineMonitor.from_yaml("config/monitoring.yaml", scored_store=store)
-    results = monitor.run()
-
-    # Programmatic setup
-    source = LangfuseDataSource(name="athena", extractor=extract_fn, limit=100)
-    monitor = OnlineMonitor(
-        name="athena_monitor",
-        source=source,
-        metrics_config={"Metric": {"class": "metric_class"}},
-        scored_store=store,
-    )
-    results = monitor.run()
-"""
-
 import importlib
 import json
 import logging
@@ -36,10 +9,11 @@ from axion._core.asyncio import run_async_function
 from axion.dataset import DatasetItem
 from axion.runners import evaluation_runner
 from axion.tracing import configure_tracing
+from axion.metrics import metric_registry
 from pandas.api import types as ptypes
 
 # -- need this file to be auto loaded for metrics access
-from implementations.athena.metrics.recommendation import metric_registry
+from implementations.athena.metrics import recommendation as _recommendation_metrics  # noqa: F401
 from shared import config
 from shared.config import ConfigurationError
 from shared.database.evaluation_upload import EvaluationUploader
@@ -242,6 +216,7 @@ class OnlineMonitor:
             limit=source_cfg.get('limit', 100),
             days_back=source_cfg.get('days_back'),
             hours_back=source_cfg.get('hours_back'),
+            minutes_back=source_cfg.get('minutes_back'),
             tags=source_cfg.get('tags'),
             timeout=source_cfg.get('timeout', 60),
             fetch_full_traces=source_cfg.get('fetch_full_traces', True),
@@ -356,7 +331,10 @@ class OnlineMonitor:
         for column in prepared.columns:
             series = prepared[column]
             if ptypes.is_object_dtype(series):
-                if series.map(lambda value: isinstance(value, (dict, list))).any():
+                has_json = series.map(
+                    lambda value: isinstance(value, (dict, list))
+                ).to_numpy(dtype=bool, na_value=False).any()
+                if has_json:
                     prepared[column] = series.map(
                         lambda value: json.dumps(value, default=str)
                         if value is not None
@@ -398,7 +376,6 @@ class OnlineMonitor:
         connection_string = db_cfg.get('connection_string')
         on_conflict = db_cfg.get('on_conflict', 'do_nothing')
         chunk_size = db_cfg.get('chunk_size', 1000)
-        print(f'Pushing to DB: {connection_string}, {on_conflict}, {chunk_size}')
         with NeonConnection(connection_string=connection_string) as db:
             uploader = EvaluationUploader(
                 db=db, on_conflict=on_conflict, chunk_size=chunk_size

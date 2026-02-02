@@ -25,6 +25,12 @@ name: "my_monitor"
 #   # file_path: "data/scored_items.csv"
 #   # connection_string: "postgresql://user:pass@host:5432/dbname"
 
+# Schedule configuration (optional, used by MonitoringScheduler)
+# schedule:
+#   # Use ONE of these
+#   interval_minutes: 10
+#   # cron: "*/10 * * * *"
+
 # =============================================================================
 # SOURCE CONFIGURATION
 # =============================================================================
@@ -56,6 +62,7 @@ source:
   # Time window - use ONE of these (days_back takes precedence)
   days_back: 7        # Fetch traces from last N days
   # hours_back: 24    # OR fetch traces from last N hours
+  # minutes_back: 10  # OR fetch traces from last N minutes
 
   # Filter by tags (optional) - only fetch traces with these tags
   tags: ["production"]
