@@ -61,26 +61,27 @@ class _FakeNeonConnection:
         yield self.conn
 
 
-def test_subset_dataset_renames_metadata_to_data_metadata() -> None:
+def test_subset_dataset_drops_unknown_metadata_and_keeps_dataset_metadata() -> None:
     df = pd.DataFrame(
         [
             {
-                'id': 'x',
+                'dataset_id': 'x',
                 'query': 'q',
-                'metadata': '{"hello": "world"}',  # should become data_metadata
+                'dataset_metadata': '{"hello": "world"}',
+                'metadata': {'unused': True},  # should be dropped
                 'extra': 123,  # should be dropped
             }
         ]
     )
     out = subset_evaluation_dataset_df_for_upload(df)
     assert 'metadata' not in out.columns
-    assert 'data_metadata' in out.columns
+    assert 'dataset_metadata' in out.columns
     assert 'extra' not in out.columns
-    assert out.loc[0, 'data_metadata'] == '{"hello": "world"}'
+    assert out.loc[0, 'dataset_metadata'] == '{"hello": "world"}'
 
 
 def test_subset_dataset_include_missing_adds_all_columns() -> None:
-    df = pd.DataFrame([{'id': 'x'}])
+    df = pd.DataFrame([{'dataset_id': 'x'}])
     out = subset_evaluation_dataset_df_for_upload(df, include_missing_columns=True)
     assert list(out.columns) == EVALUATION_DATASET_COLUMNS
 
@@ -121,7 +122,9 @@ def test_uploader_requires_db_for_upload() -> None:
     uploader = EvaluationUploader(db=None)
     with pytest.raises(ValueError, match='No db provided'):
         uploader.upload_results(
-            pd.DataFrame([{'run_id': 'r', 'id': 'x', 'metric_name': 'm'}])
+            pd.DataFrame(
+                [{'run_id': 'r', 'dataset_id': 'x', 'metric_name': 'm'}]
+            )
         )
 
 
