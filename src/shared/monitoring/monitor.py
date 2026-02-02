@@ -349,16 +349,18 @@ class OnlineMonitor:
 
         cfg = self._raw_config or {}
         source_cfg = config.get('source', cfg=cfg) or {}
-        agent = source_cfg.get('type')
-        channel = source_cfg.get('name')
-        component = source_cfg.get('component')
+        source_name = source_cfg.get('name')
+        source_type = source_cfg.get('type')
+        source_component = source_cfg.get('component', 'agent')
+        environment = source_cfg.get('environment', 'preview')
 
         for df in (dataset_df, metrics_df):
             if not df.empty:
-                df['agent'] = agent
-                df['channel'] = channel
+                df['source_name'] = source_name
+                df['source_type'] = source_type
                 # Match the evaluation table schema name.
-                df['agent_component'] = component
+                df['source_component'] = source_component
+                df['environment'] = environment
 
         if dataset_df.empty and metrics_df.empty:
             logger.info('No rows to push to DB')

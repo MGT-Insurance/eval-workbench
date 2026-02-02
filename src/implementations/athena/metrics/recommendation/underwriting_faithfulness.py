@@ -308,7 +308,7 @@ class UnderwritingFaithfulnessResult(RichBaseModel):
     description='Checks if extracted claims in the recommendation exist in the source JSON.',
     required_fields=[],
     default_threshold=0.9,
-    tags=['athena', 'heuristic'],
+    tags=['athena'],
 )
 class UnderwritingFaithfulness(BaseMetric):
     def __init__(
@@ -328,6 +328,8 @@ class UnderwritingFaithfulness(BaseMetric):
             **kwargs: Additional arguments passed to BaseMetric/Components.
         """
         super().__init__(**kwargs)
+        if verification_mode == 'heuristic':
+            self.tags = ['athena', 'heuristic']
         self.extractor = ClaimExtractor(**kwargs)
         self.semaphore_runner = SemaphoreExecutor(max_concurrent=max_concurrent)
         self.max_claims = max_claims

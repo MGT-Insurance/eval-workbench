@@ -10,6 +10,15 @@ on:
         description: 'Config file to run (relative to src/implementations/athena/config/)'
         required: false
         default: 'monitoring.yaml'
+      environment:
+        description: 'Environment (preview, staging, production)'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - preview
+          - staging
+          - production
       deduplicate:
         description: 'Skip already-scored items'
         required: false
@@ -58,7 +67,7 @@ jobs:
           python scripts/run_monitoring.py ${{ github.event.inputs.config_file || 'monitoring.yaml' }}
         env:
           DEDUPLICATE: ${{ github.event.inputs.deduplicate || 'true' }}
-          ENVIRONMENT: ${{ vars.ENVIRONMENT || 'production' }}
+          ENVIRONMENT: ${{ inputs.environment || vars.ENVIRONMENT || 'production' }}
           # API keys from secrets
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

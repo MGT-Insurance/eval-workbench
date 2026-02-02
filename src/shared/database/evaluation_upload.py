@@ -19,20 +19,20 @@ class EvaluationUploadError(RuntimeError):
 
 # Same order as the table DDL
 EVALUATION_DATASET_COLUMNS: list[str] = [
-    'id',
+    'dataset_id',
     'query',
     'expected_output',
     'actual_output',
     'additional_input',
     'acceptance_criteria',
-    'data_metadata',
+    'dataset_metadata',
     'user_tags',
     'created_at',
     'conversation',
-    'channel',
+    'source_type',
     'environment',
-    'agent',
-    'agent_component',
+    'source_name',
+    'source_component',
     'tools_called',
     'expected_tools',
     'retrieved_content',
@@ -46,7 +46,7 @@ EVALUATION_DATASET_COLUMNS: list[str] = [
     'latency',
     'trace_id',
     'observation_id',
-    'error',
+    'has_errors',
 ]
 
 
@@ -65,7 +65,7 @@ EVALUATION_RESULTS_COLUMNS: list[str] = [
     'parent',
     'weight',
     'source',
-    'metadata',
+    'metric_metadata',
     'evaluation_name',
     'cost_estimate',
     'model_name',
@@ -78,7 +78,7 @@ EVALUATION_RESULTS_COLUMNS: list[str] = [
 _EVALUATION_DATASET_JSONB_COLUMNS: set[str] = {
     'additional_input',
     'acceptance_criteria',
-    'data_metadata',
+    'dataset_metadata',
     'user_tags',
     'conversation',
     'tools_called',
@@ -90,19 +90,18 @@ _EVALUATION_DATASET_JSONB_COLUMNS: set[str] = {
     'additional_output',
     'actual_reference',
     'expected_reference',
-    'error',
 }
 
 _EVALUATION_RESULTS_JSONB_COLUMNS: set[str] = {
     'signals',
-    'metadata',
+    'metric_metadata',
     'evaluation_metadata',
 }
 
-_EVALUATION_DATASET_REQUIRED_COLUMNS: set[str] = {'id'}
+_EVALUATION_DATASET_REQUIRED_COLUMNS: set[str] = {'dataset_id'}
 _EVALUATION_RESULTS_REQUIRED_COLUMNS: set[str] = {'run_id', 'dataset_id', 'metric_name'}
 
-_EVALUATION_DATASET_CONFLICT_COLUMNS: tuple[str, ...] = ('id',)
+_EVALUATION_DATASET_CONFLICT_COLUMNS: tuple[str, ...] = ('dataset_id',)
 _EVALUATION_RESULTS_CONFLICT_COLUMNS: tuple[str, ...] = (
     'run_id',
     'dataset_id',
@@ -118,17 +117,12 @@ def subset_evaluation_dataset_df_for_upload(
 
     - Drops unknown/extra columns.
     - If `include_missing_columns=True`, adds any missing table columns with NULLs.
-    - If you have `metadata` (DatasetItem field) but not `data_metadata` (aliased key),
-      it will rename `metadata` -> `data_metadata` to match the DB schema.
     """
     if df.empty:
         # Preserve expected column order for downstream code paths.
         return pd.DataFrame(columns=EVALUATION_DATASET_COLUMNS)
 
     out = df.copy()
-
-    if 'data_metadata' not in out.columns and 'metadata' in out.columns:
-        out = out.rename(columns={'metadata': 'data_metadata'})
 
     keep = [c for c in EVALUATION_DATASET_COLUMNS if c in out.columns]
     out = out[keep]
@@ -146,14 +140,14 @@ def subset_evaluation_results_df_for_upload(
     df: pd.DataFrame,
     *,
     include_missing_columns: bool = False,
-    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'id',
+    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'dataset_id',
 ) -> pd.DataFrame:
     """
     Return a copy of `df` containing only columns used by `evaluation_results`.
 
     Notes:
     - `evaluation_results.dataset_id` is required for the PK/FK. If it's missing,
-      this helper can derive it from `id` (default) or `metric_id`.
+      this helper can derive it from `id` or `metric_id`.
     - Drops unknown/extra columns.
     - If `include_missing_columns=True`, adds any missing table columns with NULLs.
     """
@@ -431,7 +425,7 @@ def upload_evaluation_dataset_df(
     Returns the DataFrame that was uploaded (after subsetting/normalization).
 
     Validations:
-    - Ensures required PK column(s) exist (`id`)
+    - Ensures required PK column(s) exist (`dataset_id`)
     - Normalizes JSONB-ish columns (e.g. dict/list or JSON strings)
     """
     upload_df = subset_evaluation_dataset_df_for_upload(
@@ -465,7 +459,7 @@ def upload_evaluation_results_df(
     df: pd.DataFrame,
     *,
     include_missing_columns: bool = False,
-    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'id',
+    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'dataset_id',
     on_conflict: Literal['error', 'do_nothing', 'upsert'] = 'error',
     chunk_size: int = 1000,
 ) -> pd.DataFrame:
@@ -512,7 +506,7 @@ def subset_df_for_upload(
     *,
     table: Literal['evaluation_dataset', 'evaluation_results'],
     include_missing_columns: bool = False,
-    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'id',
+    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'dataset_id',
 ) -> pd.DataFrame:
     """
     Convenience wrapper to subset a DataFrame to exactly the DB columns.
@@ -538,7 +532,7 @@ def upload_df(
     *,
     table: Literal['evaluation_dataset', 'evaluation_results'],
     include_missing_columns: bool = False,
-    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'id',
+    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'dataset_id',
     on_conflict: Literal['error', 'do_nothing', 'upsert'] = 'error',
     chunk_size: int = 1000,
 ) -> pd.DataFrame:
@@ -581,17 +575,17 @@ class EvaluationUploader:
         with NeonConnection() as db:
             uploader = EvaluationUploader(db=db, on_conflict="do_nothing")
             uploader.upload_dataset(dataset_df)
-            uploader.upload_results(metrics_df, dataset_id_source="id")
+            uploader.upload_results(metrics_df, dataset_id_source="dataset_id")
 
     Key options:
     - `on_conflict="do_nothing"`: skip duplicates instead of raising (idempotent loads)
-    - `dataset_id_source="id"`: derive `evaluation_results.dataset_id` from a source column
+    - `dataset_id_source="dataset_id"`: derive `evaluation_results.dataset_id` from a source column
     - `chunk_size`: number of rows per `executemany()` batch
     """
 
     db: Any | None = None
     include_missing_columns: bool = False
-    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'id'
+    dataset_id_source: Literal['dataset_id', 'id', 'metric_id'] = 'dataset_id'
     on_conflict: Literal['error', 'do_nothing', 'upsert'] = 'error'
     chunk_size: int = 1000
 
@@ -702,7 +696,7 @@ class EvaluationUploader:
         Subset + upload to `evaluation_results`.
 
         `dataset_id` is required; if it's missing, it will be derived from
-        `dataset_id_source` (default: `"id"`).
+        `dataset_id_source` (default: `"dataset_id"`).
         """
         _db = self.db if db is None else db
         if _db is None:

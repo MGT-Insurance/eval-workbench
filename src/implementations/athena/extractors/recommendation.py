@@ -113,7 +113,7 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
             'context_data': context_data,
             'case_assessment': case_assessment,
         },
-        data_metadata=json.dumps(trace_metadata),
+        dataset_metadata=json.dumps(trace_metadata),
         actual_output=label,
         latency=latency,
         trace_id=trace_id,
