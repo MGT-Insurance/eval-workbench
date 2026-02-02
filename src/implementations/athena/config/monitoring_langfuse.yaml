@@ -1,13 +1,18 @@
-# Monitoring configuration for Athena recommendation monitoring
+# Monitoring configuration for Athena Langfuse Recommendation Step Monitoring
 version: "1.0"
 name: "athena_recommendation_monitor"
 environment: "${ENVIRONMENT:-preview}"
+
+# Scored items store (deduplication)
+scored_store:
+  type: db
 
 # Source configuration
 source:
   type: langfuse
   name: "athena"
   component: "recommendation"
+  eval_mode: "online"
   extractor: "implementations.athena.extractors.extract_recommendation"
   prompt_patterns: "implementations.athena.langfuse.prompt_patterns.WorkflowPromptPatterns"
   limit: 6
@@ -19,8 +24,8 @@ source:
 
 # Sampling strategy
 sampling:
-  strategy: random
-  n: 3
+  strategy: all
+  n: 10
   seed: 42
 
 # Metrics configuration
@@ -44,7 +49,7 @@ publishing:
     chunk_size: 1000         # Rows per batch upload
 
   experiment:
-    enabled: true
+    enabled: false
     dataset_name: "development"
     run_name: "online-${environment}"
-    link_to_traces: true
+    link_to_traces: false

@@ -1,15 +1,15 @@
-name: Scheduled Monitoring
+name: Scheduled Monitoring (Slack)
 
 on:
   schedule:
-    # Run every hour at minute 0
-    - cron: '0 * * * *'
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
       config_file:
         description: 'Config file to run (relative to src/implementations/athena/config/)'
         required: false
-        default: 'monitoring.yaml'
+        default: 'monitoring_slack.yaml'
       environment:
         description: 'Environment (preview, staging, production)'
         required: false
@@ -64,7 +64,7 @@ jobs:
 
       - name: Run monitoring
         run: |
-          python scripts/run_monitoring.py ${{ github.event.inputs.config_file || 'monitoring.yaml' }}
+          python scripts/run_monitoring.py ${{ github.event.inputs.config_file || 'monitoring_slack.yaml' }}
         env:
           DEDUPLICATE: ${{ github.event.inputs.deduplicate || 'true' }}
           ENVIRONMENT: ${{ inputs.environment || vars.ENVIRONMENT || 'production' }}

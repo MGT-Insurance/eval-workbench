@@ -18,6 +18,13 @@ version: "1.0"
 # Monitor name - used for deduplication tracking and experiment naming
 name: "my_monitor"
 
+# Optional scored items store (deduplication)
+# scored_store:
+#   # type: none | csv | db
+#   type: csv
+#   # file_path: "data/scored_items.csv"
+#   # connection_string: "postgresql://user:pass@host:5432/dbname"
+
 # =============================================================================
 # SOURCE CONFIGURATION
 # =============================================================================
@@ -240,16 +247,21 @@ publishing:
 #
 # Python usage:
 #
-#   from shared.monitoring import OnlineMonitor, ScoredItemsStore
+#   from shared.monitoring import OnlineMonitor, CSVScoredItemsStore
 #
 #   # Basic usage
 #   monitor = OnlineMonitor.from_yaml("config/monitoring.yaml")
 #   results = monitor.run()
 #
 #   # With deduplication store (tracks scored items across runs)
-#   store = ScoredItemsStore("data/scored_items.csv")
+#   store = CSVScoredItemsStore("data/scored_items.csv")
 #   monitor = OnlineMonitor.from_yaml("config/monitoring.yaml", scored_store=store)
 #   results = monitor.run(deduplicate=True)
+#
+#   # Or configure scored_store in YAML:
+#   # scored_store:
+#   #   type: csv
+#   #   file_path: "data/scored_items.csv"
 #
 #   # With config overrides
 #   monitor = OnlineMonitor.from_yaml(

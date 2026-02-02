@@ -67,6 +67,7 @@ EVALUATION_RESULTS_COLUMNS: list[str] = [
     'source',
     'metric_metadata',
     'evaluation_name',
+    'eval_mode',
     'cost_estimate',
     'model_name',
     'llm_provider',

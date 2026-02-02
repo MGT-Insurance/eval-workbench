@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from axion._core.logging import get_logger
-from axion._core.schema import RichBaseModel
+from axion._core.schema import RichBaseModel, StrictBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
 from axion.dataset import DatasetItem
@@ -97,7 +97,7 @@ class ReasonAnalysisResult(RichBaseModel):
     model_config = {'extra': 'forbid'}
 
 
-class ReasonExtractionInput(RichBaseModel):
+class ReasonExtractionInput(StrictBaseModel):
     """Input for the LLM reason extractor."""
 
     ai_output: str = Field(..., description="The AI's recommendation/decision text.")
@@ -106,20 +106,20 @@ class ReasonExtractionInput(RichBaseModel):
     )
 
 
-class ExtractedReason(RichBaseModel):
+class ExtractedReason(StrictBaseModel):
     """A single reason extracted by the LLM."""
 
     reason_text: str = Field(
         ..., description='The specific reason for the decline/referral.'
     )
-    category: ReasonCategory = Field(..., description='Best matching category.')
+    category: ReasonCategory
     supporting_data_path: Optional[str] = Field(
         None, description='JSON path to supporting data if identifiable.'
     )
     reasoning: str = Field(..., description='Why this was identified as a key reason.')
 
 
-class ReasonExtractionOutput(RichBaseModel):
+class ReasonExtractionOutput(StrictBaseModel):
     """Output from the LLM reason extractor."""
 
     reasons: List[ExtractedReason] = Field(
