@@ -122,9 +122,7 @@ def test_uploader_requires_db_for_upload() -> None:
     uploader = EvaluationUploader(db=None)
     with pytest.raises(ValueError, match='No db provided'):
         uploader.upload_results(
-            pd.DataFrame(
-                [{'run_id': 'r', 'dataset_id': 'x', 'metric_name': 'm'}]
-            )
+            pd.DataFrame([{'run_id': 'r', 'dataset_id': 'x', 'metric_name': 'm'}])
         )
 
 
