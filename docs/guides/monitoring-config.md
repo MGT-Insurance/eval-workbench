@@ -16,6 +16,20 @@ name: "my_monitor"
 - `version`: config schema version
 - `name`: monitor name (used for dedup + experiment naming)
 
+### Optional scored items store
+
+```yaml
+scored_store:
+  # type: none | csv | db
+  type: csv
+  # file_path: "data/scored_items.csv"
+  # connection_string: "postgresql://user:pass@host:5432/dbname"
+```
+
+- `type`: `csv` uses file-based dedup, `db` uses `evaluation_dataset`, `none` disables
+- `file_path`: only for `csv`
+- `connection_string`: only for `db`
+
 ---
 
 ## 2) Source Configuration

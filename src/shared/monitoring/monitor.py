@@ -50,7 +50,11 @@ from shared.monitoring.sampling import (
     SamplingStrategy,
     SamplingStrategyType,
 )
-from shared.monitoring.scored_items import ScoredItemsStore
+from shared.monitoring.scored_items import (
+    CSVScoredItemsStore,
+    DBScoredItemsStore,
+    ScoredItemsStore,
+)
 from shared.monitoring.sources import DataSource, LangfuseDataSource, SlackDataSource
 
 metric_registry.finalize_initial_state()
@@ -164,6 +168,8 @@ class OnlineMonitor:
                 class: "slack_analyzer"
         """
         cfg = config.load_config(path, overrides)
+        if scored_store is None:
+            scored_store = cls._build_scored_store(cfg)
 
         # Get source configuration
         source_cfg = config.get('source', cfg=cfg) or {}
@@ -194,6 +200,28 @@ class OnlineMonitor:
             sampling_strategy=sampling_strategy,
             trace_experiment=trace_experiment,
             raw_config=cfg,
+        )
+
+    @classmethod
+    def _build_scored_store(
+        cls, cfg: dict[str, Any]
+    ) -> ScoredItemsStore | None:
+        store_cfg = config.get('scored_store', cfg=cfg) or {}
+        if not store_cfg:
+            return None
+
+        store_type = store_cfg.get('type', 'none')
+        if store_type in (None, 'none'):
+            return None
+        if store_type == 'csv':
+            file_path = store_cfg.get('file_path', 'data/scored_items.csv')
+            return CSVScoredItemsStore(file_path)
+        if store_type in ('db', 'database'):
+            connection_string = store_cfg.get('connection_string')
+            return DBScoredItemsStore(connection_string=connection_string)
+
+        raise ConfigurationError(
+            f'Unknown scored_store.type: {store_type!r}. Expected csv, db, or none.'
         )
 
     @classmethod
@@ -291,9 +319,7 @@ class OnlineMonitor:
         if not self._scored_store:
             return items
 
-        scored_ids = self._scored_store.get_scored_item_ids(
-            self._source.source_key, self.name
-        )
+        scored_ids = self._scored_store.get_scored_item_ids(self._source.source_key)
         unscored = [item for item in items if item.id not in scored_ids]
 
         logger.info(
@@ -312,9 +338,7 @@ class OnlineMonitor:
             return
 
         item_ids = [str(item.id) for item in items if item.id]
-        self._scored_store.record_scored_items(
-            self._source.source_key, self.name, item_ids
-        )
+        self._scored_store.record_scored_items(self._source.source_key, item_ids)
 
     def _infer_sql_type(self, series: pd.Series) -> str:
         if ptypes.is_bool_dtype(series):
@@ -353,6 +377,7 @@ class OnlineMonitor:
         source_type = source_cfg.get('type')
         source_component = source_cfg.get('component', 'agent')
         environment = source_cfg.get('environment', 'preview')
+        eval_mode = source_cfg.get('eval_mode')
 
         for df in (dataset_df, metrics_df):
             if not df.empty:
@@ -361,6 +386,9 @@ class OnlineMonitor:
                 # Match the evaluation table schema name.
                 df['source_component'] = source_component
                 df['environment'] = environment
+
+        if not metrics_df.empty and eval_mode is not None:
+            metrics_df['eval_mode'] = eval_mode
 
         if dataset_df.empty and metrics_df.empty:
             logger.info('No rows to push to DB')

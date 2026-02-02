@@ -1,38 +1,49 @@
+# Monitoring configuration for Athena Slack monitoring
 version: "1.0"
 name: "athena_slack_monitor"
+environment: "${ENVIRONMENT:-production}"
+
+# Scored items store (deduplication)
+scored_store:
+  type: db
 
 # Data source configuration
 source:
   type: slack
   name: "support_channels"
+  component: "slack"
+  eval_mode: "online"
   channel_ids:
-    - "C09MAP9HR9D"
-    - "C09JE5SSP43"
-  limit: 50
-  scrape_threads: true
-  bot_name: "Athena"
-  workspace_domain: "mgtinsurance"
-  drop_if_first_is_user: true
-  drop_if_all_ai: true
-  max_concurrent: 2
+    - "C09MAP9HR9D" # specialty-referrals
+    - "C09JE5SSP43" # referrals
+  limit: 50 # Max messages per channel
+  scrape_threads: true # Include thread replies
+  bot_name: "Athena" # Name used to identify AI vs human messages
+  workspace_domain: "mgtinsurance" # Slack workspace subdomain
+  drop_if_first_is_user: true # Drop if first turn is from user
+  drop_if_all_ai: true # Drop if all turns are AI
+  max_concurrent: 2 # Max concurrent channel scrapes
 
 # Sampling strategy: controls which items get evaluated from fetched pool
 # Available strategies: all, random, most_recent, oldest
 sampling:
-  strategy: random
-  n: 10
-  # seed: 42  # optional: for reproducible random sampling
+  strategy: most_recent
+  n: 3
+  seed: 42  # optional: for reproducible random sampling
 
 # Metrics configuration
-# Note: Add your Slack conversation analyzer metric here
 metrics_config:
-  SlackConversationAnalyzer:
-    class: "slack_conversation_analyzer"
+  acceptance_detector:
+    class: 'acceptance_detector'
+  referral_reason:
+    class: 'referral_reason_analysis'
+  intervention_detector:
+    class: "intervention_detector"
 
 # Publishing configuration
 publishing:
   push_to_db: true
-  push_to_langfuse: false
+  push_to_langfuse: false # Always should be False for Slack
   # Whether to trace evaluation runs in Langfuse (creates observation traces)
   trace_experiment: false
 
@@ -43,4 +54,4 @@ publishing:
     chunk_size: 1000         # Rows per batch upload
 
   experiment:
-    enabled: false
+    enabled: false # More than likely not needed for Slack

@@ -1,0 +1,96 @@
+name: Scheduled Monitoring (Langfuse)
+
+on:
+  schedule:
+    # Run every hour at minute 0
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      config_file:
+        description: 'Config file to run (relative to src/implementations/athena/config/)'
+        required: false
+        default: 'monitoring_langfuse.yaml'
+      environment:
+        description: 'Environment (preview, staging, production)'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - preview
+          - staging
+          - production
+      deduplicate:
+        description: 'Skip already-scored items'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  monitor:
+    name: Run Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Default OFF for scheduled runs. Enable by setting repo variable:
+    # Settings → Secrets and variables → Actions → Variables → MONITORING_ENABLED=true
+    # Manual runs via "Run workflow" are always allowed.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.MONITORING_ENABLED == 'true' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      # Restore scored items cache from previous runs
+      - name: Restore scored items cache
+        uses: actions/cache@v4
+        with:
+          path: data/scored_items.csv
+          key: scored-items-${{ github.run_id }}
+          restore-keys: |
+            scored-items-
+
+      - name: Run monitoring
+        run: |
+          python scripts/run_monitoring.py ${{ github.event.inputs.config_file || 'monitoring_langfuse.yaml' }}
+        env:
+          DEDUPLICATE: ${{ github.event.inputs.deduplicate || 'true' }}
+          ENVIRONMENT: ${{ inputs.environment || vars.ENVIRONMENT || 'production' }}
+          # API keys from secrets
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST || 'https://us.cloud.langfuse.com' }}
+          # Slack (if using Slack data source)
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          # Database (if pushing to DB)
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Save scored items cache for next run
+      - name: Save scored items cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data/scored_items.csv
+          key: scored-items-${{ github.run_id }}
+
+      - name: Upload scored items as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scored-items-${{ github.run_id }}
+          path: data/scored_items.csv
+          retention-days: 30
