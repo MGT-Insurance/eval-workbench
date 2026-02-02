@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable, Iterable, Optional, Sequence
 
 import pandas as pd
-from axion.tracing import LangfuseTraceLoader 
+from axion.tracing import LangfuseTraceLoader
 
 from implementations.athena.langfuse.prompt_patterns import WorkflowPromptPatterns
 from shared.database.neon import NeonConnection

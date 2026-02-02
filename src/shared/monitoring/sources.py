@@ -105,7 +105,11 @@ class LangfuseDataSource(DataSource):
         loader = LangfuseTraceLoader(timeout=self._timeout)
 
         hours_back = self._hours_back
-        if self._days_back is None and hours_back is None and self._minutes_back is not None:
+        if (
+            self._days_back is None
+            and hours_back is None
+            and self._minutes_back is not None
+        ):
             hours_back = self._minutes_back / 60.0
 
         logger.info(

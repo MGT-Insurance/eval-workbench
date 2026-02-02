@@ -7,13 +7,15 @@ from typing import Any, Callable
 import pandas as pd
 from axion._core.asyncio import run_async_function
 from axion.dataset import DatasetItem
+from axion.metrics import metric_registry
 from axion.runners import evaluation_runner
 from axion.tracing import configure_tracing
-from axion.metrics import metric_registry
 from pandas.api import types as ptypes
 
 # -- need this file to be auto loaded for metrics access
-from implementations.athena.metrics import recommendation as _recommendation_metrics  # noqa: F401
+from implementations.athena.metrics import (
+    recommendation as _recommendation_metrics,  # noqa: F401
+)
 from shared import config
 from shared.config import ConfigurationError
 from shared.database.evaluation_upload import EvaluationUploader
@@ -331,9 +333,11 @@ class OnlineMonitor:
         for column in prepared.columns:
             series = prepared[column]
             if ptypes.is_object_dtype(series):
-                has_json = series.map(
-                    lambda value: isinstance(value, (dict, list))
-                ).to_numpy(dtype=bool, na_value=False).any()
+                has_json = (
+                    series.map(lambda value: isinstance(value, (dict, list)))
+                    .to_numpy(dtype=bool, na_value=False)
+                    .any()
+                )
                 if has_json:
                     prepared[column] = series.map(
                         lambda value: json.dumps(value, default=str)
