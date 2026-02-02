@@ -23,7 +23,9 @@ class ScoredItemsStore(ABC):
         """Parse source_key into (source_type, source_name)."""
         parts = source_key.split(':', 1)
         if len(parts) != 2:
-            raise ValueError(f"Invalid source_key format: {source_key}. Expected 'type:name'")
+            raise ValueError(
+                f"Invalid source_key format: {source_key}. Expected 'type:name'"
+            )
         return parts[0], parts[1]
 
     @abstractmethod
@@ -96,7 +98,9 @@ class CSVScoredItemsStore(ScoredItemsStore):
         try:
             source_type, source_name = self._parse_source_key(source_key)
             df = self._read_df()
-            mask = (df['source_type'] == source_type) & (df['source_name'] == source_name)
+            mask = (df['source_type'] == source_type) & (
+                df['source_name'] == source_name
+            )
             scored = set(df.loc[mask, 'dataset_id'].tolist())
             logger.debug(f'Found {len(scored)} scored items for {source_key}')
             return scored
@@ -155,7 +159,9 @@ class CSVScoredItemsStore(ScoredItemsStore):
                 return count
 
             source_type, source_name = self._parse_source_key(source_key)
-            mask = (df['source_type'] == source_type) & (df['source_name'] == source_name)
+            mask = (df['source_type'] == source_type) & (
+                df['source_name'] == source_name
+            )
             count = mask.sum()
             df[~mask].to_csv(self.file_path, index=False)
             logger.info(f'Cleared {count} scored items for {source_key}')
@@ -228,7 +234,9 @@ class DBScoredItemsStore(ScoredItemsStore):
             """
             rows = self._get_db().fetch_all(query, (source_type, source_name))
             scored = {row['dataset_id'] for row in rows}
-            logger.debug(f'Found {len(scored)} scored items for {source_key} in database')
+            logger.debug(
+                f'Found {len(scored)} scored items for {source_key} in database'
+            )
             return scored
         except Exception as e:
             logger.error(f'Error reading scored items from database: {e}')
@@ -244,7 +252,7 @@ class DBScoredItemsStore(ScoredItemsStore):
     def clear(self, source_key: str | None = None) -> int:
         """Clear scored items from database."""
         raise NotImplementedError(
-            "Use database admin tools to clear data from evaluation_dataset table"
+            'Use database admin tools to clear data from evaluation_dataset table'
         )
 
     def get_stats(self) -> dict[str, int]:

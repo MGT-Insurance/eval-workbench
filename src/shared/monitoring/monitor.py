@@ -203,9 +203,7 @@ class OnlineMonitor:
         )
 
     @classmethod
-    def _build_scored_store(
-        cls, cfg: dict[str, Any]
-    ) -> ScoredItemsStore | None:
+    def _build_scored_store(cls, cfg: dict[str, Any]) -> ScoredItemsStore | None:
         store_cfg = config.get('scored_store', cfg=cfg) or {}
         if not store_cfg:
             return None
