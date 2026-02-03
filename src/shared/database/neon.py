@@ -322,7 +322,7 @@ class NeonConnection:
             return False
 
 
-class AsyncNeonDatabaseManager:
+class AsyncNeonConnection:
     """
     Async database manager for Neon (PostgreSQL).
     Best for AI Agents, FastAPI, Sanic, or high-concurrency workloads.
@@ -354,7 +354,7 @@ class AsyncNeonDatabaseManager:
             self._pool_opened = False
             logger.info('Async Database connection pool closed.')
 
-    async def __aenter__(self) -> 'AsyncNeonDatabaseManager':
+    async def __aenter__(self) -> 'AsyncNeonConnection':
         if self.pool and not self._pool_opened:
             await self.pool.open()
             self._pool_opened = True

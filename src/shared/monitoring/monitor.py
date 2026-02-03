@@ -31,7 +31,12 @@ from shared.monitoring.scored_items import (
     DBScoredItemsStore,
     ScoredItemsStore,
 )
-from shared.monitoring.sources import DataSource, LangfuseDataSource, SlackDataSource
+from shared.monitoring.sources import (
+    DataSource,
+    LangfuseDataSource,
+    NeonDataSource,
+    SlackDataSource,
+)
 
 metric_registry.finalize_initial_state()
 
@@ -156,6 +161,8 @@ class OnlineMonitor:
             source = cls._build_langfuse_source(source_cfg)
         elif source_type == 'slack':
             source = cls._build_slack_source(source_cfg)
+        elif source_type == 'neon':
+            source = cls._build_neon_source(source_cfg)
         else:
             raise ConfigurationError(f'Unknown source type: {source_type}')
 
@@ -220,6 +227,7 @@ class OnlineMonitor:
             hours_back=source_cfg.get('hours_back'),
             minutes_back=source_cfg.get('minutes_back'),
             tags=source_cfg.get('tags'),
+            trace_ids=source_cfg.get('trace_ids'),
             timeout=source_cfg.get('timeout', 60),
             fetch_full_traces=source_cfg.get('fetch_full_traces', True),
             show_progress=source_cfg.get('show_progress', True),
@@ -243,6 +251,27 @@ class OnlineMonitor:
             drop_if_first_is_user=source_cfg.get('drop_if_first_is_user', False),
             drop_if_all_ai=source_cfg.get('drop_if_all_ai', False),
             max_concurrent=source_cfg.get('max_concurrent', 2),
+        )
+
+    @classmethod
+    def _build_neon_source(cls, source_cfg: dict) -> NeonDataSource:
+        """Build NeonDataSource from config."""
+        extractor_path = source_cfg.get('extractor')
+        if not extractor_path:
+            raise ConfigurationError("Neon source requires 'extractor' path")
+        extractor = _load_function(extractor_path)
+
+        query = source_cfg.get('query')
+        if not query:
+            raise ConfigurationError("Neon source requires 'query'")
+
+        return NeonDataSource(
+            name=source_cfg.get('name', 'default'),
+            query=query,
+            extractor=extractor,
+            connection_string=source_cfg.get('connection_string'),
+            params=source_cfg.get('params'),
+            limit=source_cfg.get('limit'),
         )
 
     @classmethod
@@ -356,7 +385,7 @@ class OnlineMonitor:
         source_name = source_cfg.get('name')
         source_type = source_cfg.get('type')
         source_component = source_cfg.get('component', 'agent')
-        environment = source_cfg.get('environment', 'preview')
+        environment = source_cfg.get('environment')
         eval_mode = source_cfg.get('eval_mode')
 
         for df in (dataset_df, metrics_df):

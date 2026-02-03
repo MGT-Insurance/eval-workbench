@@ -17,7 +17,7 @@ execution.
             │                                   │
             ▼                                   ▼
 ┌───────────────────────┐         ┌───────────────────────────┐
-│  NeonConnection       │         │  AsyncNeonDatabaseManager │
+│  NeonConnection       │         │  AsyncNeonConnection │
 │  (Synchronous)        │         │  (Asynchronous)           │
 │                       │         │                           │
 │  • fetch_all()        │         │  • await fetch_all()      │
@@ -286,7 +286,7 @@ db.close()  # Close the connection pool
 
 ---
 
-## AsyncNeonDatabaseManager (Asynchronous)
+## AsyncNeonConnection (Asynchronous)
 
 Async database manager for FastAPI, high-concurrency workloads, and AI agents.
 Identical API but fully async.
@@ -294,15 +294,15 @@ Identical API but fully async.
 ### Initialization
 
 ```python
-from shared.database.neon import AsyncNeonDatabaseManager
+from shared.database.neon import AsyncNeonConnection
 
-db = AsyncNeonDatabaseManager()  # Pool opens lazily
+db = AsyncNeonConnection()  # Pool opens lazily
 ```
 
 ### Async Context Manager
 
 ```python
-async with AsyncNeonDatabaseManager() as db:
+async with AsyncNeonConnection() as db:
     users = await db.fetch_all("SELECT * FROM users")
     # Pool automatically closed on exit
 ```
@@ -325,7 +325,7 @@ async def close(self) -> None: ...
 ### Concurrent Queries
 
 ```python
-async with AsyncNeonDatabaseManager() as db:
+async with AsyncNeonConnection() as db:
     # Execute multiple queries concurrently
     users, orders, products = await asyncio.gather(
         db.fetch_all("SELECT * FROM users"),
@@ -472,10 +472,10 @@ with NeonConnection() as db:
 
 ```python
 from fastapi import FastAPI
-from shared.database.neon import AsyncNeonDatabaseManager
+from shared.database.neon import AsyncNeonConnection
 
 app = FastAPI()
-db = AsyncNeonDatabaseManager()
+db = AsyncNeonConnection()
 
 @app.on_event("startup")
 async def startup():
@@ -610,7 +610,7 @@ from shared.database.neon import (
 
     # Database Managers
     NeonConnection,
-    AsyncNeonDatabaseManager,
+    AsyncNeonConnection,
 
     # Task Execution
     QueueExecutor,

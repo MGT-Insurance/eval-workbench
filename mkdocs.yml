@@ -40,8 +40,7 @@ nav:
         - Citation Accuracy: metric-registry/athena/recommendation/citation_accuracy.md
         - Citation Fidelity: metric-registry/athena/recommendation/citation_fidelity.md
         - Decision Quality: metric-registry/athena/recommendation/decision_quality.md
-        - Referral Reason: metric-registry/athena/recommendation/referral_reason.md
-        - Referral Reason Analysis: metric-registry/athena/recommendation/referral_reason_analysis.md
+        - Refer Reason: metric-registry/athena/recommendation/refer_reason.md
         - Underwriting Completeness: metric-registry/athena/recommendation/underwriting_completeness.md
         - Underwriting Faithfulness: metric-registry/athena/recommendation/underwriting_faithfulness.md
         - Underwriting Rules: metric-registry/athena/recommendation/underwriting_rules.md

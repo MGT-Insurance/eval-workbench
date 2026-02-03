@@ -1,7 +1,7 @@
 # Monitoring configuration for Athena Langfuse Recommendation Step Monitoring
 version: "1.0"
 name: "athena_recommendation_monitor"
-environment: "${ENVIRONMENT:-preview}"
+environment: "${ENVIRONMENT:-production}"
 
 # Scored items store (deduplication)
 scored_store:
@@ -9,7 +9,7 @@ scored_store:
 
 # Schedule configuration (used by MonitoringScheduler)
 schedule:
-  interval_minutes: 10
+  interval_minutes: 3
 
 # Source configuration
 source:
@@ -17,11 +17,12 @@ source:
   name: "athena"
   component: "recommendation"
   eval_mode: "online"
+  environment: "${ENVIRONMENT:-production}"
   extractor: "implementations.athena.extractors.extract_recommendation"
   prompt_patterns: "implementations.athena.langfuse.prompt_patterns.WorkflowPromptPatterns"
-  limit: 6
+  limit: 10
   minutes_back: 10
-  tags: ["preview"]
+  tags: ["production"]
   timeout: 60
   fetch_full_traces: true
   show_progress: true

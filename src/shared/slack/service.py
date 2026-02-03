@@ -7,7 +7,16 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TypedDict, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    NotRequired,
+    Optional,
+    Required,
+    TypedDict,
+    Union,
+)
 
 import aiohttp
 
@@ -53,11 +62,14 @@ class SlackResponse(TypedDict, total=False):
     user: Optional[Dict[str, Any]]
 
 
-class SimplifiedMessage(TypedDict):
-    ts: str
-    sender: str
-    is_bot: bool
-    content: str
+class SimplifiedMessage(TypedDict, total=False):
+    ts: Required[str]
+    sender: Required[str]
+    is_bot: Required[bool]
+    content: Required[str]
+    id: NotRequired[str]
+    messageUrl: NotRequired[Optional[str]]
+    threadReplies: NotRequired[List['SimplifiedMessage']]
 
 
 class ExtendedSimplifiedMessage(TypedDict):
