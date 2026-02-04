@@ -553,7 +553,7 @@ VALID_EVENT_TYPES = {
 ### Basic Message Posting
 
 ```python
-from shared.slack.service import SlackService, PostMessageOptions
+from eval_workbench.shared.slack.service import SlackService, PostMessageOptions
 
 slack = SlackService()
 
@@ -575,7 +575,7 @@ else:
 ### Posting with Block Kit
 
 ```python
-from shared.slack.service import SlackService, SlackBlockBuilder
+from eval_workbench.shared.slack.service import SlackService, SlackBlockBuilder
 
 slack = SlackService()
 
@@ -598,7 +598,7 @@ result = await slack.post_message(
 ### Reading Thread Replies
 
 ```python
-from shared.slack.service import SlackService, SlackScraper
+from eval_workbench.shared.slack.service import SlackService, SlackScraper
 
 slack = SlackService()
 
@@ -627,7 +627,7 @@ if result["success"]:
 ### Multi-Channel Broadcasting
 
 ```python
-from shared.slack.service import SlackService, PostMessageOptions
+from eval_workbench.shared.slack.service import SlackService, PostMessageOptions
 
 slack = SlackService()
 
@@ -647,7 +647,7 @@ print(f"Errors: {len(result.errors)}")
 ### Downloading Files
 
 ```python
-from shared.slack.service import SlackService, SlackFile
+from eval_workbench.shared.slack.service import SlackService, SlackFile
 
 slack = SlackService()
 
@@ -673,7 +673,7 @@ else:
 ## Exports
 
 ```python
-from shared.slack.service import (
+from eval_workbench.shared.slack.service import (
     # Configuration
     SlackConfig,
     SLACK_FORMATTING_RULES,
@@ -708,7 +708,7 @@ from shared.slack.service import (
     SlackBlockBuilder,
 )
 
-from shared.metrics.slack_compliance import (
+from eval_workbench.shared.metrics.slack_compliance import (
     SlackFormattingCompliance,
 )
 ```

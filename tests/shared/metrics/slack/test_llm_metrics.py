@@ -7,19 +7,19 @@ from axion._core.schema import AIMessage, HumanMessage
 from axion.dataset import DatasetItem
 from axion.dataset_schema import MultiTurnConversation
 
-from shared.metrics.slack.acceptance import (
+from eval_workbench.shared.metrics.slack.acceptance import (
     AcceptanceDetector,
     AcceptanceResult,
 )
-from shared.metrics.slack.escalation import (
+from eval_workbench.shared.metrics.slack.escalation import (
     EscalationDetector,
     EscalationResult,
 )
-from shared.metrics.slack.frustration import (
+from eval_workbench.shared.metrics.slack.frustration import (
     FrustrationDetector,
     FrustrationResult,
 )
-from shared.metrics.slack.override import (
+from eval_workbench.shared.metrics.slack.override import (
     OverrideDetector,
     OverrideResult,
     OverrideSatisfactionAnalyzer,

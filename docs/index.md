@@ -71,11 +71,11 @@ pip install -e .
 Prompt extraction uses an explicit strategy passed to `Trace` or
 `TraceCollection`. For Athena:
 ```
-from implementations.athena.langfuse.prompt_patterns import (
+from eval_workbench.implementations.athena.langfuse.prompt_patterns import (
     ChatPromptPatterns,
     WorkflowPromptPatterns,
 )
-from shared.langfuse.trace import TraceCollection
+from eval_workbench.shared.langfuse.trace import TraceCollection
 
 chat_traces = TraceCollection(data, prompt_patterns=ChatPromptPatterns)
 recommendation_traces = TraceCollection(data, prompt_patterns=WorkflowPromptPatterns)

@@ -16,7 +16,7 @@ from axion._core.schema import AIMessage, HumanMessage
 from axion.dataset import DatasetItem
 from axion.dataset_schema import MultiTurnConversation
 
-from shared.metrics.slack import (
+from eval_workbench.shared.metrics.slack import (
     InterventionDetector,
     ResolutionDetector,
     SentimentDetector,

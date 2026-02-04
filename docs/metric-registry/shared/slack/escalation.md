@@ -74,7 +74,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.escalation import EscalationDetector
+    from eval_workbench.shared.metrics.slack.escalation import EscalationDetector
 
     metric = EscalationDetector()
 

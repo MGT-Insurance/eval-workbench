@@ -75,7 +75,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.engagement import ThreadEngagementAnalyzer
+    from eval_workbench.shared.metrics.slack.engagement import ThreadEngagementAnalyzer
 
     metric = ThreadEngagementAnalyzer()
 

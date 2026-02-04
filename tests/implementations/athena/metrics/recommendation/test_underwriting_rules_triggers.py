@@ -14,6 +14,7 @@ def _load_underwriting_rules_module():
     module_path = (
         repo_root
         / 'src'
+        / 'eval_workbench'
         / 'implementations'
         / 'athena'
         / 'metrics'

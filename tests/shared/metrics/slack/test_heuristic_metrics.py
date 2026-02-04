@@ -5,13 +5,13 @@ from axion._core.schema import AIMessage, HumanMessage
 from axion.dataset import DatasetItem
 from axion.dataset_schema import MultiTurnConversation
 
-from shared.metrics.slack.engagement import (
+from eval_workbench.shared.metrics.slack.engagement import (
     ThreadEngagementAnalyzer,
 )
-from shared.metrics.slack.interaction import (
+from eval_workbench.shared.metrics.slack.interaction import (
     SlackInteractionAnalyzer,
 )
-from shared.metrics.slack.recommendation import (
+from eval_workbench.shared.metrics.slack.recommendation import (
     RecommendationAnalyzer,
 )
 

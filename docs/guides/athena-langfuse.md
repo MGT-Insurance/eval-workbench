@@ -398,9 +398,9 @@ The Athena implementation builds on the shared Langfuse trace module:
 ### Basic Usage: Fetch and Join
 
 ```python
-from implementations.athena.langfuse.join import AthenaNeonLangfuseJoiner, JoinSettings
-from implementations.athena.langfuse.prompt_patterns import WorkflowPromptPatterns
-from shared.database.neon import NeonConnection
+from eval_workbench.implementations.athena.langfuse.join import AthenaNeonLangfuseJoiner, JoinSettings
+from eval_workbench.implementations.athena.langfuse.prompt_patterns import WorkflowPromptPatterns
+from eval_workbench.shared.database.neon import NeonConnection
 from axion.tracing import LangfuseTraceLoader
 
 # Initialize components
@@ -476,7 +476,7 @@ joiner = AthenaNeonLangfuseJoiner(
 ### Custom Prompt Patterns
 
 ```python
-from shared.langfuse.trace import PromptPatternsBase, create_extraction_pattern
+from eval_workbench.shared.langfuse.trace import PromptPatternsBase, create_extraction_pattern
 
 class CustomPromptPatterns(PromptPatternsBase):
     @staticmethod
@@ -530,17 +530,17 @@ for trace in traces:
 ## Exports
 
 ```python
-from implementations.athena.langfuse.join import (
+from eval_workbench.implementations.athena.langfuse.join import (
     JoinSettings,
     AthenaNeonLangfuseJoiner,
 )
 
-from implementations.athena.langfuse.prompt_patterns import (
+from eval_workbench.implementations.athena.langfuse.prompt_patterns import (
     WorkflowPromptPatterns,
     ChatPromptPatterns,
 )
 
-from shared.langfuse.trace import (
+from eval_workbench.shared.langfuse.trace import (
     PromptPatternsBase,
     SmartAccess,
     SmartDict,

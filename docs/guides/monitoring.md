@@ -16,7 +16,7 @@ items that have already been evaluated. Two implementations are available:
 ### CSV-backed deduplication
 
 ```python
-from shared.monitoring import OnlineMonitor, CSVScoredItemsStore
+from eval_workbench.shared.monitoring import OnlineMonitor, CSVScoredItemsStore
 
 store = CSVScoredItemsStore("data/scored_items.csv")
 monitor = OnlineMonitor.from_yaml("config/monitoring.yaml", scored_store=store)
@@ -34,7 +34,7 @@ scored_store:
 ### Database-backed deduplication
 
 ```python
-from shared.monitoring import OnlineMonitor, DBScoredItemsStore
+from eval_workbench.shared.monitoring import OnlineMonitor, DBScoredItemsStore
 
 # Uses DATABASE_URL environment variable
 store = DBScoredItemsStore()
@@ -69,7 +69,7 @@ schedule:
 ### No deduplication
 
 ```python
-from shared.monitoring import OnlineMonitor
+from eval_workbench.shared.monitoring import OnlineMonitor
 
 monitor = OnlineMonitor.from_yaml("config/monitoring.yaml")  # scored_store=None
 results = monitor.run(deduplicate=False, publish=True)
@@ -78,7 +78,7 @@ results = monitor.run(deduplicate=False, publish=True)
 ## Example - Programmatic setup
 
 ```python
-from shared.monitoring import OnlineMonitor, LangfuseDataSource, DBScoredItemsStore
+from eval_workbench.shared.monitoring import OnlineMonitor, LangfuseDataSource, DBScoredItemsStore
 
 source = LangfuseDataSource(
     name="athena",
@@ -99,7 +99,7 @@ results = monitor.run()
 ## Example - Scheduled monitoring
 
 ```python
-from shared.monitoring import MonitoringScheduler, DBScoredItemsStore
+from eval_workbench.shared.monitoring import MonitoringScheduler, DBScoredItemsStore
 
 store = DBScoredItemsStore()
 scheduler = MonitoringScheduler(scored_store=store)

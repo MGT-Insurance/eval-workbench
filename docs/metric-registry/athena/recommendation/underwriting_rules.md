@@ -164,18 +164,18 @@ The metric detects the following referral triggers through structured data check
 
     **Hard Severity:**
 
-    - `convStoreTemp` - Convenience store/gas station indicators
+    - `convStoreTemp` - Convenience/liquor/package store indicators (often tobacco/alcohol/lottery; sometimes 24/7 or fuel)
     - `claimsHistory` - Prior claims mentions
-    - `orgEstYear` - New business indicators
+    - `orgEstYear` - New business + building coverage indicators
     - `bppValue` - Excessive BPP mentions
 
     **Soft Severity:**
 
     - `bppToSalesRatio` - Low ratio indicators
-    - `nonOwnedBuildingCoverage` - Tenant building coverage
+    - `nonOwnedBuildingCoverage` - Tenant building coverage / lease (including NNN/triple-net language)
     - `businessNOC` - Not Otherwise Classified
     - `homeBasedBPP` - Home-based business indicators
-    - `numberOfEmployees` - High employee count
+    - `numberOfEmployees` - High employee count (eligibility review)
 
 ---
 
@@ -188,7 +188,7 @@ The metric detects the following referral triggers through structured data check
     | `recommendation_column_name` | `str` | `brief_recommendation` | Field in additional_output to analyze |
 
     !!! info "LLM Fallback"
-        When a referral/decline is detected but no triggers are found, the metric uses an LLM classifier to infer the closest trigger category.
+        When a referral/decline is detected but no triggers are found, the metric uses an LLM classifier to infer the closest trigger category.\n+\n+        The LLM classifier prompt is generated from the same `TRIGGER_SPECS` catalog used by regex detection so trigger descriptions stay in sync.
 
 ---
 
@@ -198,7 +198,7 @@ The metric detects the following referral triggers through structured data check
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.underwriting_rules import UnderwritingRules
+    from eval_workbench.implementations.athena.metrics.recommendation.underwriting_rules import UnderwritingRules
 
     metric = UnderwritingRules()
 
@@ -228,7 +228,7 @@ The metric detects the following referral triggers through structured data check
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.underwriting_rules import UnderwritingRules
+    from eval_workbench.implementations.athena.metrics.recommendation.underwriting_rules import UnderwritingRules
 
     metric = UnderwritingRules()
 

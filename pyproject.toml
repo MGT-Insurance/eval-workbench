@@ -61,7 +61,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["shared*", "implementations*"]
+include = ["eval_workbench*"]
 
 [tool.setuptools_scm]
 fallback_version = "0.1.0"

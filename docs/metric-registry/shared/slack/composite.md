@@ -97,7 +97,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.composite import SlackConversationAnalyzer
+    from eval_workbench.shared.metrics.slack.composite import SlackConversationAnalyzer
 
     metric = SlackConversationAnalyzer()
 
@@ -119,7 +119,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.composite import SlackConversationAnalyzer
+    from eval_workbench.shared.metrics.slack.composite import SlackConversationAnalyzer
 
     # Only run specific metrics
     metric = SlackConversationAnalyzer(

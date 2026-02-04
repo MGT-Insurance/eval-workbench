@@ -177,7 +177,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.underwriting_faithfulness import UnderwritingFaithfulness
+    from eval_workbench.implementations.athena.metrics.recommendation.underwriting_faithfulness import UnderwritingFaithfulness
 
     metric = UnderwritingFaithfulness(verification_mode="heuristic")
 
@@ -198,7 +198,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.underwriting_faithfulness import UnderwritingFaithfulness
+    from eval_workbench.implementations.athena.metrics.recommendation.underwriting_faithfulness import UnderwritingFaithfulness
 
     metric = UnderwritingFaithfulness(
         verification_mode="llm",

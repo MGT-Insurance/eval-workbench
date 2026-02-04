@@ -182,7 +182,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.decision_quality import DecisionQuality
+    from eval_workbench.implementations.athena.metrics.recommendation.decision_quality import DecisionQuality
 
     metric = DecisionQuality()
 
@@ -200,7 +200,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.decision_quality import DecisionQuality
+    from eval_workbench.implementations.athena.metrics.recommendation.decision_quality import DecisionQuality
 
     # Prioritize reasoning over outcome
     metric = DecisionQuality(

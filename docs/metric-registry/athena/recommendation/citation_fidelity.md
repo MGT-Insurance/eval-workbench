@@ -177,7 +177,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.citation_fidelity import CitationFidelity
+    from eval_workbench.implementations.athena.metrics.recommendation.citation_fidelity import CitationFidelity
 
     metric = CitationFidelity()
 
@@ -195,7 +195,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.citation_fidelity import CitationFidelity
+    from eval_workbench.implementations.athena.metrics.recommendation.citation_fidelity import CitationFidelity
 
     metric = CitationFidelity(check_values=True, window_chars=100)
 
