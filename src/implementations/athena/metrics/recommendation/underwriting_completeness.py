@@ -47,7 +47,7 @@ class UnderwritingCompletenessResult(RichBaseModel):
 
 
 @metric(
-    name='Underwriting Completeness',
+    name='UW Completeness',
     key='uw_completeness',
     description='Evaluates completeness using dedicated LLM calls for each dimension.',
     required_fields=['actual_output'],
@@ -169,7 +169,7 @@ class UnderwritingCompleteness(BaseMetric):
             ),
         ]
 
-    @trace(name='UnderwritingCompleteness', capture_args=True, capture_response=True)
+    @trace(name='UWCompleteness', capture_args=True, capture_response=True)
     async def execute(
         self, dataset_item: DatasetItem, **kwargs
     ) -> MetricEvaluationResult:
