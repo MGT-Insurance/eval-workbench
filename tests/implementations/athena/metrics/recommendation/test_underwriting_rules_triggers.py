@@ -2,6 +2,7 @@ import importlib.util
 import re
 from pathlib import Path
 
+
 def _load_underwriting_rules_module():
     """
     Load `underwriting_rules.py` directly by file path to avoid executing

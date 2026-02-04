@@ -151,7 +151,7 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'NOC\s+class',
             r'unclear\s+business\s+type',
         ],
-        description="Business selected as NOC / unclear operations; must classify and confirm appetite.",
+        description='Business selected as NOC / unclear operations; must classify and confirm appetite.',
         priority=7,
         severity='soft',
     ),
