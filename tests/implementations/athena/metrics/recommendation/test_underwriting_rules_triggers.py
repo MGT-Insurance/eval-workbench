@@ -32,6 +32,7 @@ def _load_underwriting_rules_module():
 
 uw_rules = _load_underwriting_rules_module()
 TRIGGER_SPECS = uw_rules.TRIGGER_SPECS
+TriggerName = uw_rules.TriggerName
 UnderwritingRules = uw_rules.UnderwritingRules
 
 
