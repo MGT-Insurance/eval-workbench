@@ -132,6 +132,8 @@ publishing:
   push_to_db: false
   push_to_langfuse: false
   trace_experiment: false
+  # metric_names:
+  #   - "MyMetric"
 
   database:
     on_conflict: do_nothing
@@ -142,6 +144,12 @@ publishing:
     dataset_name: "development"
     run_name: "online-${ENVIRONMENT:-preview}"
     link_to_traces: true
+    # run_metadata: {}
+    # tags: ["monitoring", "athena"]
+    # flush: true
+    # score_on_runtime_traces: false
+    # metrics:  # legacy: prefer publishing.metric_names
+    #   - "MyMetric"
 ```
 
 ---

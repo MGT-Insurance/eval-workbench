@@ -211,6 +211,10 @@ publishing:
   # When false: uses noop tracing (no traces created, better for production)
   trace_experiment: false
 
+  # Optional metric filter for Langfuse publishing (experiment + observability)
+  # metric_names:
+  #   - "MyMetric"
+
   # Database upload configuration (used when push_to_db: true)
   database:
     # Override the DATABASE_URL environment variable (optional)
@@ -238,6 +242,18 @@ publishing:
 
     # Run name - supports environment variable substitution
     run_name: "online-${ENVIRONMENT:-preview}"
+
+    # Optional experiment run metadata (dict)
+    # run_metadata: {}
+
+    # Optional tags attached to all scores
+    # tags: ["monitoring", "athena"]
+
+    # Flush client after upload (default true)
+    # flush: true
+
+    # If true, attach scores to existing runtime traces (requires trace_id/observation_id)
+    # score_on_runtime_traces: false
 
     # Link scores back to source traces in Langfuse
     link_to_traces: true

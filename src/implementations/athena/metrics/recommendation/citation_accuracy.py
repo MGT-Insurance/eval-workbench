@@ -1,5 +1,5 @@
 import re
-from typing import Any, List, Literal, Optional, Set, Tuple
+from typing import List, Literal, Optional, Set
 
 from axion._core.logging import get_logger
 from axion._core.schema import RichBaseModel
@@ -9,7 +9,7 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SignalDescriptor
 from pydantic import Field
 
-from shared.metrics.flattening import flatten_paths as shared_flatten_paths
+from shared.metrics.flattening import flatten_paths
 
 logger = get_logger(__name__)
 
@@ -32,10 +32,6 @@ class CitationAccuracyResult(RichBaseModel):
     scorable_citations: int = Field(...)
     valid_citations: int = Field(...)
     verdicts: List[CitationAccuracyVerdict] = Field(...)
-
-
-def _flatten_paths(data: Any) -> Tuple[Set[str], Set[str]]:
-    return shared_flatten_paths(data)
 
 
 def _extract_source_fields(source: Optional[str]) -> List[str]:
@@ -104,7 +100,7 @@ def _extract_source_fields(source: Optional[str]) -> List[str]:
         'actual_reference',
     ],
     default_threshold=1.0,
-    tags=['athena'],
+    tags=['athena', 'heuristic'],
 )
 class CitationAccuracy(BaseMetric):
     CITATION_PATTERN = re.compile(r'\[(\d+)\]')
@@ -167,7 +163,7 @@ class CitationAccuracy(BaseMetric):
         keys: Set[str] = set()
         input_blob = ''
         if self.validation_mode == 'ref_plus_input' and item.additional_input:
-            paths, keys = _flatten_paths(item.additional_input)
+            paths, keys = flatten_paths(item.additional_input)
             input_blob = str(item.additional_input)
             try:
                 import json as _json

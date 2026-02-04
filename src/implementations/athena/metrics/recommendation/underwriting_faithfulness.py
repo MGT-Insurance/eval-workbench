@@ -304,7 +304,7 @@ class UnderwritingFaithfulnessResult(RichBaseModel):
 
 @metric(
     name='Underwriting Faithfulness',
-    key='underwriting_faithfulness',
+    key='uw_faithfulness',
     description='Checks if extracted claims in the recommendation exist in the source JSON.',
     required_fields=[],
     default_threshold=0.9,

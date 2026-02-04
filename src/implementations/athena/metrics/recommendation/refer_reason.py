@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 class ReasonCategory(str, Enum):
     """
-    High-level categories for referral/decline reasons.
+    High-level categories for refer to underwriter/decline reasons.
     Maps to business-meaningful buckets for analytics.
     """
 
@@ -81,13 +81,13 @@ class ExtractedReason(RichBaseModel):
 
 
 class ReasonAnalysisResult(RichBaseModel):
-    """The structured result for referral reason analysis."""
+    """The structured result for refer to underwriter reason analysis."""
 
     is_negative_outcome: bool = Field(
-        ..., description='True if the outcome is a referral or decline.'
+        ..., description='True if the outcome is a refer to underwriter or decline.'
     )
     outcome_label: str = Field(
-        ..., description='Normalized outcome: Referral/Decline/Approved/Unknown'
+        ..., description='Normalized outcome: Refer to Underwriter/Decline/Approved/Unknown'
     )
     primary_reason: Optional[ExtractedReason] = Field(
         None, description='The most significant reason for the negative outcome.'
@@ -125,11 +125,11 @@ class ReasonExtractionOutput(StrictBaseModel):
 
 
 class ReasonExtractor(BaseMetric[ReasonExtractionInput, ReasonExtractionOutput]):
-    """LLM-based extractor for decline/referral reasons."""
+    """LLM-based extractor for decline/refer to underwriter reasons."""
 
     instruction = """
 You are an Underwriting Analyst. Extract the specific reasons why this quote was
-DECLINED or REFERRED for human review.
+DECLINED or REFERRED TO UNDERWRITER for human review.
 
 For each reason you identify:
 1. Extract the exact reason text from the recommendation
@@ -151,7 +151,7 @@ For each reason you identify:
    - LOCATION_RISK: Location presents elevated catastrophe or environmental risk.
    - OPERATIONAL_MISMATCH: Operational metrics are internally inconsistent.
    - COMPLIANCE: Potential regulatory or sanctions-related concern.
-   - PROCEDURAL_HOLD: Referral is procedural rather than risk-based.
+   - PROCEDURAL_HOLD: Refer to underwriter is procedural rather than risk-based.
    - OTHER: Issue does not clearly fit a defined category.
 3. Explain briefly why this is a key reason
 
@@ -195,7 +195,7 @@ Order reasons by importance (most important first).
         (
             ReasonExtractionInput(
                 ai_output=(
-                    'This application requires referral. We cannot verify the reported '
+                    'This application requires refer to underwriter. We cannot verify the reported '
                     'annual revenue of $2.5M against any third-party sources. The business '
                     'was established in 2024 and has no financial history available.'
                 ),
@@ -247,7 +247,7 @@ Order reasons by importance (most important first).
         (
             ReasonExtractionInput(
                 ai_output=(
-                    'Recommend refer. The requested BPP limit of $3.5M appears excessive for '
+                    'Recommend refer to underwriter. The requested BPP limit of $3.5M appears excessive for '
                     'a business reporting only $800k in annual sales. Additionally, the '
                     'customer reports the building was built in 2015, but enrichment shows 1972.'
                 ),
@@ -277,16 +277,16 @@ Order reasons by importance (most important first).
 
 
 @metric(
-    name='ReferralReason',
-    key='referral_reason',
-    description='Extracts and categorizes reasons for referral/decline outcomes.',
+    name='Refer Reason',
+    key='refer_reason',
+    description='Extracts and categorizes reasons for refer to underwriter/decline outcomes.',
     metric_category=MetricCategory.CLASSIFICATION,
     required_fields=['actual_output'],
     tags=['athena', 'classification'],
 )
-class ReferralReason(BaseMetric):
+class ReferReason(BaseMetric):
     """
-    Analyzes referral/decline decisions to extract actionable reasons.
+    Analyzes refer to underwriter/decline decisions to extract actionable reasons.
 
     Returns:
         - explanation: The primary category label (e.g., "Coverage Limits")
@@ -341,7 +341,7 @@ class ReferralReason(BaseMetric):
 
         return lines
 
-    @trace(name='ReferralReason', capture_args=True, capture_response=True)
+    @trace(name='ReferReason', capture_args=True, capture_response=True)
     async def execute(
         self, dataset_item: DatasetItem, **kwargs
     ) -> MetricEvaluationResult:
@@ -446,40 +446,44 @@ class ReferralReason(BaseMetric):
         ]
 
         if result.primary_reason:
-            signals.extend([
-                SignalDescriptor(
-                    name='Primary Reason',
-                    group='Primary Reason',
-                    extractor=lambda r: r.primary_reason.reason_text
-                    if r.primary_reason
-                    else 'N/A',
-                    headline_display=False,
-                ),
-                SignalDescriptor(
-                    name='Reasoning',
-                    group='Primary Reason',
-                    extractor=lambda r: r.primary_reason.reasoning
-                    if r.primary_reason
-                    else 'N/A',
-                    headline_display=False,
-                ),
-            ])
+            signals.extend(
+                [
+                    SignalDescriptor(
+                        name='Primary Reason',
+                        group='Primary Reason',
+                        extractor=lambda r: r.primary_reason.reason_text
+                        if r.primary_reason
+                        else 'N/A',
+                        headline_display=False,
+                    ),
+                    SignalDescriptor(
+                        name='Reasoning',
+                        group='Primary Reason',
+                        extractor=lambda r: r.primary_reason.reasoning
+                        if r.primary_reason
+                        else 'N/A',
+                        headline_display=False,
+                    ),
+                ]
+            )
 
         for i, reason in enumerate(result.all_reasons):
             group_name = f'Reason {i + 1}: {reason.category.value}'
-            signals.extend([
-                SignalDescriptor(
-                    name='Reason Text',
-                    group=group_name,
-                    extractor=lambda r, idx=i: r.all_reasons[idx].reason_text,
-                    headline_display=False,
-                ),
-                SignalDescriptor(
-                    name='Reasoning',
-                    group=group_name,
-                    extractor=lambda r, idx=i: r.all_reasons[idx].reasoning,
-                    headline_display=False,
-                ),
-            ])
+            signals.extend(
+                [
+                    SignalDescriptor(
+                        name='Reason Text',
+                        group=group_name,
+                        extractor=lambda r, idx=i: r.all_reasons[idx].reason_text,
+                        headline_display=False,
+                    ),
+                    SignalDescriptor(
+                        name='Reasoning',
+                        group=group_name,
+                        extractor=lambda r, idx=i: r.all_reasons[idx].reasoning,
+                        headline_display=False,
+                    ),
+                ]
+            )
 
         return signals

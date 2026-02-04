@@ -338,8 +338,8 @@ class UnknownTriggerReasoner(
 
 
 @metric(
-    name='UnderwritingRules',
-    key='uw_rule_monitor',
+    name='Underwriting Rules',
+    key='uw_rules',
     description='Tracks Athena referral triggers live. Uses Regex with LLM fallback.',
     score_range=(0, 1),  # 1.0 = Flagged/Referral, 0.0 = Clean
     required_fields=['actual_output'],

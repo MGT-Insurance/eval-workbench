@@ -177,9 +177,9 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.refer_reason import ReferralReason
+    from implementations.athena.metrics.recommendation.refer_reason import ReferReason
 
-    metric = ReferralReason()
+    metric = ReferReason()
 
     item = DatasetItem(
         actual_output="Decline due to prior claims history and high BPP coverage request."
@@ -200,9 +200,9 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.refer_reason import ReferralReason
+    from implementations.athena.metrics.recommendation.refer_reason import ReferReason
 
-    metric = ReferralReason()
+    metric = ReferReason()
 
     item = DatasetItem(
         actual_output="""
@@ -239,10 +239,10 @@ result.signals              # Full analysis breakdown
 ```
 
 <details markdown="1">
-<summary><strong>📊 ReferralReasonResult Structure</strong></summary>
+<summary><strong>📊 ReferReasonResult Structure</strong></summary>
 
 ```python
-ReferralReasonResult(
+ReferReasonResult(
 {
     "is_negative_outcome": true,
     "outcome_label": "Referral",
