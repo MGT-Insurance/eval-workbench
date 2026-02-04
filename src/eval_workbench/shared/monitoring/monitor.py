@@ -384,19 +384,18 @@ class OnlineMonitor:
         return datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
     def filter_unscored_items(self, items: list[DatasetItem]) -> list[DatasetItem]:
-        """Filter out items that have already been scored.
+        """Filter out items that have already been scored and deduplicate within batch.
 
         Args:
             items: List of items to filter
 
         Returns:
-            List of items that haven't been scored yet
+            List of unique items that haven't been scored yet
         """
-        if not self._scored_store:
-            return items
-
-        scored_ids = self._scored_store.get_scored_item_ids(self._source.source_key)
-        scored_id_set = set(scored_ids)
+        scored_id_set: set[str] = set()
+        if self._scored_store:
+            scored_ids = self._scored_store.get_scored_item_ids(self._source.source_key)
+            scored_id_set = set(scored_ids)
 
         pulled_ids = [item.id for item in items if item.id]
         pulled_unique_ids = set(pulled_ids)
@@ -405,7 +404,14 @@ class OnlineMonitor:
         already_scored_matches = sum(
             1 for item_id in pulled_ids if item_id in scored_id_set
         )
-        unscored = [item for item in items if item.id not in scored_id_set]
+
+        # Deduplicate within batch AND filter out already-scored items
+        seen_ids: set[str] = set()
+        unscored = []
+        for item in items:
+            if item.id and item.id not in scored_id_set and item.id not in seen_ids:
+                unscored.append(item)
+                seen_ids.add(item.id)
 
         logger.info(
             f'Dedup: fetched={len(items)} (unique_ids={len(pulled_unique_ids)}, '
@@ -469,6 +475,7 @@ class OnlineMonitor:
         source_component = source_cfg.get('component', 'agent')
         environment = source_cfg.get('environment')
         eval_mode = source_cfg.get('eval_mode')
+        monitor_version = config.get('version', cfg=cfg)
 
         for df in (dataset_df, metrics_df):
             if not df.empty:
@@ -480,6 +487,8 @@ class OnlineMonitor:
 
         if not metrics_df.empty and eval_mode is not None:
             metrics_df['eval_mode'] = eval_mode
+        if not metrics_df.empty and monitor_version is not None:
+            metrics_df['version'] = monitor_version
 
         if dataset_df.empty and metrics_df.empty:
             logger.info('No rows to push to DB')
@@ -611,7 +620,15 @@ class OnlineMonitor:
             if key not in ('model', 'weights'):
                 eval_kwargs[key] = value
 
+        logger.info(
+            f'Evaluation config: max_concurrent={eval_kwargs.get("max_concurrent")}, '
+            f'throttle_delay={eval_kwargs.get("throttle_delay")}'
+        )
+
         results = evaluation_runner(**eval_kwargs)
+        if results is None:
+            logger.warning('Evaluation runner returned no results')
+            return None
 
         if not should_trace:
             configure_tracing('langfuse')
