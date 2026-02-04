@@ -133,8 +133,10 @@ class LangfuseDataSource(DataSource):
         }
         if self._days_back is not None:
             fetch_kwargs['days_back'] = self._days_back
-        if hours_back is not None:
+            fetch_kwargs['mode'] = 'days_back'
+        elif hours_back is not None:
             fetch_kwargs['hours_back'] = hours_back
+            fetch_kwargs['mode'] = 'hours_back'
 
         trace_data = loader.fetch_traces(**fetch_kwargs)
         return TraceCollection(trace_data, prompt_patterns=self._prompt_patterns)

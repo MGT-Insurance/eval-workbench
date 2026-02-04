@@ -60,8 +60,8 @@ metrics_config:
 # Evaluation runner configuration
 evaluation:
   # Concurrency
-  max_concurrent: 2
-  throttle_delay: 2
+  max_concurrent: 1
+  throttle_delay: 10
   # Metadata
   metadata:
     eval_mode: "online"
