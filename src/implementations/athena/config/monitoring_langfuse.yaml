@@ -60,8 +60,8 @@ metrics_config:
 # Evaluation runner configuration
 evaluation:
   # Concurrency
-  max_concurrent: 2      
-  throttle_delay: 2 
+  max_concurrent: 2
+  throttle_delay: 2
   # Metadata
   metadata:
     eval_mode: "online"
@@ -84,9 +84,9 @@ publishing:
 
   # Database upload configuration
   database:
-    on_conflict: do_nothing 
-    chunk_size: 1000      
-  
+    on_conflict: do_nothing
+    chunk_size: 1000
+
   # Experiment configuration
   experiment:
     enabled: false

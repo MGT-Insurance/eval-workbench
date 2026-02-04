@@ -332,8 +332,8 @@ class OnlineMonitor:
             'trace_granularity',
             'flush_per_metric',
             'thresholds',
-            'model',   # For hierarchical scoring
-            'weights', # For hierarchical scoring
+            'model',  # For hierarchical scoring
+            'weights',  # For hierarchical scoring
         ):
             if key in eval_cfg:
                 result[key] = eval_cfg[key]
@@ -613,9 +613,9 @@ class OnlineMonitor:
             pub_cfg = self._publishing_config
 
             # Publish as experiment if enabled
-            publish_metric_names = config.get('metric_names', cfg=pub_cfg) or config.get(
-                'experiment.metrics', cfg=pub_cfg
-            )
+            publish_metric_names = config.get(
+                'metric_names', cfg=pub_cfg
+            ) or config.get('experiment.metrics', cfg=pub_cfg)
             if config.get('experiment.enabled', default=True, cfg=pub_cfg):
                 results.publish_as_experiment(
                     dataset_name=dataset_name

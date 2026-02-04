@@ -87,7 +87,8 @@ class ReasonAnalysisResult(RichBaseModel):
         ..., description='True if the outcome is a refer to underwriter or decline.'
     )
     outcome_label: str = Field(
-        ..., description='Normalized outcome: Refer to Underwriter/Decline/Approved/Unknown'
+        ...,
+        description='Normalized outcome: Refer to Underwriter/Decline/Approved/Unknown',
     )
     primary_reason: Optional[ExtractedReason] = Field(
         None, description='The most significant reason for the negative outcome.'
