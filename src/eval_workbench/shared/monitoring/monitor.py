@@ -621,8 +621,8 @@ class OnlineMonitor:
                 eval_kwargs[key] = value
 
         logger.info(
-            f"Evaluation config: max_concurrent={eval_kwargs.get('max_concurrent')}, "
-            f"throttle_delay={eval_kwargs.get('throttle_delay')}"
+            f'Evaluation config: max_concurrent={eval_kwargs.get("max_concurrent")}, '
+            f'throttle_delay={eval_kwargs.get("throttle_delay")}'
         )
 
         results = evaluation_runner(**eval_kwargs)
