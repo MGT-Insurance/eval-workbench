@@ -42,7 +42,12 @@ def resolve_env_files(
     env_files: list[Path] = [repo_root / '.env']
     if impl_name:
         env_files.append(
-            repo_root / 'src' / 'eval_workbench' / 'implementations' / impl_name / '.env'
+            repo_root
+            / 'src'
+            / 'eval_workbench'
+            / 'implementations'
+            / impl_name
+            / '.env'
         )
 
     return [str(path) for path in env_files if path.exists()]

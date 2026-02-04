@@ -10,11 +10,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar
 
 import pandas as pd
 import psycopg
-from eval_workbench.shared.settings import RepoSettingsBase, build_settings_config
 from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool, ConnectionPool
 from pydantic import Field
+
+from eval_workbench.shared.settings import RepoSettingsBase, build_settings_config
 
 # Configure logging only if the application hasn't configured it yet.
 if not logging.getLogger().handlers:
