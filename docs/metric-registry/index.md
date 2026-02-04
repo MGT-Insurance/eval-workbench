@@ -13,7 +13,7 @@ Metrics are grouped by **Shared** (cross-implementation) and **Athena**
 
 <div class="grid-item">
 <strong><a href="shared/">Shared Metrics</a></strong>
-<p style="margin: 0.3rem 0; color: var(--md-text-secondary); font-size: 0.9rem;">Cross-implementation metrics (Slack KPIs)</p>
+<p style="margin: 0.3rem 0; color: var(--md-text-secondary); font-size: 0.9rem;">Cross-implementation metrics</p>
 <code>conversation</code> <code>actual_output</code>
 </div>
 

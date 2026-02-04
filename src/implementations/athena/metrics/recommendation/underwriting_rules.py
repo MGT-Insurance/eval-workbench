@@ -62,10 +62,15 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'rule.*9321',
             r'class.*CONVGAS',
             r'7[-\s]?eleven|circle\s?k|am\s?pm|wawa|sheetz',
+            r'(convenience|liquor|package|corner)\s+store',
+            r'c[-\s]?store',
+            r'mini[-\s]?mart|minimart',
+            r'bodega',
             r'(tobacco|liquor|alcohol|beer|wine|lottery).*sales?',
             r'gas\s?station|fuel\s?sales?',
+            r'(convenience|liquor|package|mini[-\s]?mart|bodega|corner\s+store).{0,50}(24/7|24x7|open\s+24|24\s*hours?)',
         ],
-        description='Convenience stores, liquor stores, gas stations, tobacco/alcohol sales.',
+        description='Convenience stores and liquor/package stores (often with tobacco/alcohol/lottery and sometimes 24/7 or fuel).',
         priority=1,
         severity='hard',
     ),
@@ -92,7 +97,7 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'new\s+organization',
             r'(founded|started|opened).*202[3-9]',
         ],
-        description='Business less than 3 years old.',
+        description='Business established within 3 years and requesting building coverage (new business + building risk).',
         priority=3,
         severity='hard',
     ),
@@ -104,7 +109,7 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'BPP.*exceeds?\s*\$?250',
             r'personal\s+property.*250',
         ],
-        description='Contents/BPP value exceeds $250k.',
+        description='BPP/contents limit exceeds $250k (requires reasonableness/security review).',
         priority=4,
         severity='hard',
     ),
@@ -117,7 +122,7 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'BPP.*to.*sales.*low',
             r'ratio.*contents.*revenue',
         ],
-        description='Contents limit vs Sales ratio is less than 10%.',
+        description='Contents-to-sales ratio is below 10% (possible inadequate contents or unusual model).',
         priority=5,
         severity='soft',
     ),
@@ -128,8 +133,12 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'tenant.*building\s+coverage',
             r'leased.*building\s+limit',
             r'renter.*requesting.*building',
+            r'(triple[-\s]?net|nnn)\s+lease',
+            r'net\s+lease',
+            r'tenant.*(does\s+not\s+own|not\s+own).*building',
+            r'building\s+coverage.*(lease|leased|tenant)',
         ],
-        description="Tenant asking for building coverage they don't own.",
+        description="Building coverage requested but applicant doesn't own building (lease / NNN requirement).",
         priority=6,
         severity='soft',
     ),
@@ -142,7 +151,7 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'NOC\s+class',
             r'unclear\s+business\s+type',
         ],
-        description="Business type unclear or 'Not Otherwise Classified'.",
+        description='Business selected as NOC / unclear operations; must classify and confirm appetite.',
         priority=7,
         severity='soft',
     ),
@@ -154,7 +163,7 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'home[-\s]?based\s+business',
             r'operates?\s+from\s+home',
         ],
-        description='Business operates from a residential address.',
+        description='Home-based business seeking contents coverage (confirm commercial readiness and controls).',
         priority=8,
         severity='soft',
     ),
@@ -165,8 +174,10 @@ TRIGGER_SPECS: List[TriggerSpec] = [
             r'employee\s+count.*>\s*20',
             r'more\s+than\s+20\s+employees',
             r'exceeds?\s+employee\s+limit',
+            r'headcount',
+            r'staff(ing)?\s+of\s+\d{2,}',
         ],
-        description='More than 20 employees or employee count mismatch.',
+        description='Employee count exceeds 20 (confirm small-business eligibility and staffing reasonableness).',
         priority=9,
         severity='soft',
     ),
@@ -237,15 +248,15 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
     Analyze the text and map it to the closest Athena Trigger.
 
     Triggers:
-    - convStoreTemp: Convenience stores, liquor stores, gas stations, tobacco/alcohol/lottery sales.
+    - convStoreTemp: Convenience stores and liquor/package stores (often with tobacco/alcohol/lottery and sometimes 24/7 or fuel).
     - claimsHistory: Prior losses or claims mentioned.
-    - orgEstYear: Business < 3 years old or recently incorporated.
-    - bppValue: Contents/BPP > $250k.
-    - bppToSalesRatio: Contents limit vs Sales is < 10%.
-    - nonOwnedBuildingCoverage: Tenant asking for building coverage.
-    - businessNOC: "Not Otherwise Classified" or unclear business type.
-    - homeBasedBPP: Residential address or home-based business.
-    - numberOfEmployees: > 20 employees or mismatch.
+    - orgEstYear: Business established within 3 years and requesting building coverage (new business + building risk).
+    - bppValue: BPP/contents limit exceeds $250k (requires reasonableness/security review).
+    - bppToSalesRatio: Contents-to-sales ratio is below 10% (possible inadequate contents or unusual model).
+    - nonOwnedBuildingCoverage: Building coverage requested but applicant doesn't own building (lease / NNN requirement).
+    - businessNOC: Business selected as NOC / unclear operations; must classify and confirm appetite.
+    - homeBasedBPP: Home-based business seeking contents coverage (confirm commercial readiness and controls).
+    - numberOfEmployees: Employee count exceeds 20 (confirm small-business eligibility and staffing reasonableness).
 
     If truly unknown, select 'unknown_trigger'.
     """
@@ -256,7 +267,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         (
             GhostReferralInput(
                 ai_output='After reviewing the application, I must refer this quote. '
-                'The business operates as a 7-Eleven franchise with 24-hour operations '
+                'The business operates as a 7-Eleven convenience store with 24-hour operations '
                 'and sells tobacco products, beer, and lottery tickets.'
             ),
             GhostReferralOutput(
@@ -264,12 +275,12 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
                 reasoning='7-Eleven franchise with tobacco, alcohol, lottery - classic convStoreTemp indicators.',
             ),
         ),
-        # Example 2: ORG_EST_YEAR - Business incorporated recently
+        # Example 2: ORG_EST_YEAR - New business requesting building coverage
         (
             GhostReferralInput(
                 ai_output='This application requires referral. The business was just '
                 'incorporated in 2024 and has less than one year of operating history. '
-                'We cannot verify their track record.'
+                'They are requesting building coverage and we cannot verify their track record.'
             ),
             GhostReferralOutput(
                 likely_trigger=TriggerName.ORG_EST_YEAR,
@@ -311,6 +322,39 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
                 reasoning='Generic decline language with no specific trigger indicators identifiable.',
             ),
         ),
+        # Example 6: NON_OWNED_BLDG - Tenant requesting building coverage without ownership
+        (
+            GhostReferralInput(
+                ai_output='Referral required. The applicant is a tenant and does not own the building, '
+                'but the agent requested building coverage. Please provide the NNN (triple-net) lease.'
+            ),
+            GhostReferralOutput(
+                likely_trigger=TriggerName.NON_OWNED_BLDG,
+                reasoning='Tenant requesting building coverage without ownership; requires lease/NNN support.',
+            ),
+        ),
+        # Example 7: NUM_EMPLOYEES - Employee count exceeds small business threshold
+        (
+            GhostReferralInput(
+                ai_output='This needs referral. The insured reports 35 employees, which exceeds our small '
+                'business eligibility threshold and requires confirmation of revenue and staffing reasonableness.'
+            ),
+            GhostReferralOutput(
+                likely_trigger=TriggerName.NUM_EMPLOYEES,
+                reasoning='Employee count exceeds 20, triggering numberOfEmployees eligibility review.',
+            ),
+        ),
+        # Example 8: BUSINESS_NOC - Not Otherwise Classified / unclear operations
+        (
+            GhostReferralInput(
+                ai_output='Referral needed. The business was submitted as NOC (Not Otherwise Classified) '
+                'and the operations are unclear from the application. We need to determine the correct class.'
+            ),
+            GhostReferralOutput(
+                likely_trigger=TriggerName.BUSINESS_NOC,
+                reasoning='NOC/unclear operations require research and classification, matching businessNOC.',
+            ),
+        ),
     ]
 
 
@@ -338,7 +382,7 @@ class UnknownTriggerReasoner(
 
 
 @metric(
-    name='Underwriting Rules',
+    name='UW Rules',
     key='uw_rules',
     description='Tracks Athena referral triggers live. Uses Regex with LLM fallback.',
     score_range=(0, 1),  # 1.0 = Flagged/Referral, 0.0 = Clean
@@ -379,6 +423,8 @@ class UnderwritingRules(BaseMetric):
 
         # Initialize the fallback LLM classifier with dynamic instruction
         self.classifier = GhostReferralClassifier(**kwargs)
+        # Keep the classifier trigger list in sync with TRIGGER_SPECS.
+        self.classifier.instruction = self._build_llm_instruction()
         self.unknown_reasoner = UnknownTriggerReasoner(**kwargs)
 
     def _build_llm_instruction(self) -> str:
@@ -500,7 +546,7 @@ class UnderwritingRules(BaseMetric):
 
         return list(best_by_trigger.values())
 
-    @trace(name='UnderwritingRules', capture_args=True, capture_response=True)
+    @trace(name='UWRules', capture_args=True, capture_response=True)
     async def execute(
         self, dataset_item: DatasetItem, **kwargs
     ) -> MetricEvaluationResult:

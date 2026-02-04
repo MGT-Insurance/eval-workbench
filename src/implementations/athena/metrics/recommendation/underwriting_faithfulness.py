@@ -303,7 +303,7 @@ class UnderwritingFaithfulnessResult(RichBaseModel):
 
 
 @metric(
-    name='Underwriting Faithfulness',
+    name='UW Faithfulness',
     key='uw_faithfulness',
     description='Checks if extracted claims in the recommendation exist in the source JSON.',
     required_fields=[],
@@ -343,7 +343,7 @@ class UnderwritingFaithfulness(BaseMetric):
         else:
             self.verifier = FactVerifier(**kwargs)
 
-    @trace(name='UnderwritingFaithfulness', capture_args=True, capture_response=True)
+    @trace(name='UWFaithfulness', capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         # Select Text Source
         text = ''
