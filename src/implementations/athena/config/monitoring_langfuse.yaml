@@ -5,11 +5,11 @@ environment: "${ENVIRONMENT:-production}"
 
 # Scored items store (deduplication)
 scored_store:
-  type: none
+  type: db
 
 # Schedule configuration (used by MonitoringScheduler)
 schedule:
-  interval_minutes: 3
+  interval_minutes: 60
 
 # Source configuration
 source:
@@ -29,8 +29,8 @@ source:
 
 # Sampling strategy
 sampling:
-  strategy: most_recent
-  n: 3
+  strategy: random
+  n: 30 # Max of 30 items to evaluate per run (never expecting to hit this)
   seed: 42
 
 # Metrics configuration
@@ -65,7 +65,7 @@ evaluation:
   # Metadata
   metadata:
     eval_mode: "online"
-    schedule: "interval_3m"
+    schedule: "interval_60m"
     source_window_minutes: 60
     pipeline_version: "athena_monitor_v1"
     run_initiator: "scheduler"
@@ -75,12 +75,6 @@ publishing:
   push_to_db: true
   push_to_langfuse: true
   trace_experiment: false
-  # metric_names:
-  #   - "Underwriting Faithfulness"
-  #   - "Refer Reason"
-  #   - "Underwriting Rules"
-  #   - "Underwriting Completeness"
-  #   - "Citation Accuracy"
 
   # Database upload configuration
   database:

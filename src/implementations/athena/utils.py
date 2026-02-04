@@ -10,7 +10,7 @@ def get_outcome_patterns(
     ] = 'refer_to_underwriter_reason',
 ) -> OutcomePatternSet:
     """
-    Return (decline, referral, approval) regex patterns for outcome detection.
+    Return (decline, refer, approval) regex patterns for outcome detection.
     """
     if variant == 'underwriting_rules':
         return (
