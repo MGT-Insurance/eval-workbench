@@ -107,6 +107,10 @@ disable_error_code = [
 ]
 ignore_missing_imports = true
 
+[tool.basedpyright]
+reportMissingImports = "none"
+reportMissingModuleSource = "none"
+
 [[tool.mypy.overrides]]
 module = "setup"
 ignore_missing_imports = true

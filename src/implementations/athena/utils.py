@@ -5,10 +5,12 @@ OutcomePatternSet = Tuple[Pattern, Pattern, Pattern]
 
 
 def get_outcome_patterns(
-    variant: Literal['referral_reason', 'underwriting_rules'] = 'referral_reason',
+    variant: Literal[
+        'refer_to_underwriter_reason', 'underwriting_rules', 'refer_reason'
+    ] = 'refer_to_underwriter_reason',
 ) -> OutcomePatternSet:
     """
-    Return (decline, referral, approval) regex patterns for outcome detection.
+    Return (decline, refer, approval) regex patterns for outcome detection.
     """
     if variant == 'underwriting_rules':
         return (
@@ -22,10 +24,16 @@ def get_outcome_patterns(
             ),
         )
 
+    # Default patterns for 'refer_to_underwriter_reason' and 'refer_reason'
     return (
         re.compile(r'\b(decline[ds]?|reject(?:ed)?)\b', re.IGNORECASE),
         re.compile(
-            r'\b(refer(?:ral|red)?|review\s+required|manual\s+review)\b', re.IGNORECASE
+            r'\b(refer(?:ral|red)?'
+            r'|refer\s+to\s+(?:underwriter|uw)'
+            r'|referral\s+to\s+uw'
+            r'|review\s+required'
+            r'|manual\s+review)\b',
+            re.IGNORECASE,
         ),
         re.compile(
             r'\b(approv(?:e[ds]?|al)|accept(?:ed)?|clear(?:ed)?|bind)\b', re.IGNORECASE
@@ -36,7 +44,9 @@ def get_outcome_patterns(
 def detect_outcome(
     text: str,
     *,
-    variant: Literal['referral_reason', 'underwriting_rules'] = 'referral_reason',
+    variant: Literal[
+        'refer_to_underwriter_reason', 'underwriting_rules', 'refer_reason'
+    ] = 'refer_to_underwriter_reason',
 ) -> Tuple[bool, str]:
     """
     Detect if the outcome is negative (referral/decline).
@@ -44,15 +54,17 @@ def detect_outcome(
     Returns:
         Tuple of (is_negative: bool, outcome_label: str)
     """
-    decline_pattern, referral_pattern, approval_pattern = get_outcome_patterns(variant)
+    decline_pattern, refer_to_underwriter_pattern, approval_pattern = (
+        get_outcome_patterns(variant)
+    )
     has_decline = bool(decline_pattern.search(text))
-    has_referral = bool(referral_pattern.search(text))
+    has_refer_to_underwriter = bool(refer_to_underwriter_pattern.search(text))
     has_approval = bool(approval_pattern.search(text))
 
     if has_decline:
         return True, 'Decline'
-    if has_referral:
-        return True, 'Referral'
+    if has_refer_to_underwriter:
+        return True, 'Refer'
     if has_approval:
         return False, 'Approved'
     return False, 'Unknown'

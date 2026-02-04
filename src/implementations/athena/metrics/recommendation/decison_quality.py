@@ -257,7 +257,7 @@ class CoverageJudge(BaseMetric[CoverageCheckInput, CoverageJudgeOutput]):
 
 
 @metric(
-    name='DecisionQuality',
+    name='Decision Quality',
     key='decision_quality',
     description='Evaluates if the AI made the right decision for the right reasons.',
     required_fields=['actual_output', 'expected_output'],

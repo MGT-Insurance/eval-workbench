@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from axion._core.asyncio import SemaphoreExecutor
 from axion._core.schema import AIMessage, HumanMessage
@@ -95,7 +95,7 @@ class SlackExporter:
             return None
         return f'https://{self.workspace_domain}.slack.com/archives/{channel_id}/p{ts.replace(".", "")}'
 
-    def _to_axion_message(self, msg: Dict[str, Any]):
+    def _to_axion_message(self, msg: Mapping[str, Any]):
         """Convert a simplified Slack message into an Axion message."""
         sender = msg.get('sender') or 'Unknown'
         text = msg.get('content') or msg.get('text') or ''

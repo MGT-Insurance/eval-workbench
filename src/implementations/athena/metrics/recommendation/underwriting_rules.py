@@ -211,6 +211,10 @@ class TriggerReport(RichBaseModel):
     has_hard_trigger: bool = Field(
         default=False, description='True if any hard-severity trigger was detected.'
     )
+    unknown_reasoning: Optional[str] = Field(
+        default=None,
+        description='LLM explanation when outcome is referral but no trigger matched.',
+    )
     model_config = {'extra': 'forbid'}
 
 
@@ -220,8 +224,8 @@ class GhostReferralInput(RichBaseModel):
 
 class GhostReferralOutput(RichBaseModel):
     likely_trigger: TriggerName = Field(
-        ..., description='The most likely rule from the known list that applies.'
-    )
+        ...
+    )  # No description - $ref can't have keywords
     reasoning: str = Field(..., description='Why this rule applies.')
 
 
@@ -310,9 +314,32 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
     ]
 
 
+class UnknownTriggerReasonInput(RichBaseModel):
+    ai_output: str = Field(..., description='The full agent response.')
+
+
+class UnknownTriggerReasonOutput(RichBaseModel):
+    reasoning: str = Field(
+        ..., description='Plain-English explanation for why this was referred.'
+    )
+
+
+class UnknownTriggerReasoner(
+    BaseMetric[UnknownTriggerReasonInput, UnknownTriggerReasonOutput]
+):
+    instruction = """
+    You are an Underwriting Analyst. The agent referred or declined a quote, but no
+    known trigger matched. Read the text and provide a concise reason for why it
+    appears to be referred. Do NOT map to a trigger code; instead summarize the
+    likely issue in one sentence.
+    """
+    input_model = UnknownTriggerReasonInput
+    output_model = UnknownTriggerReasonOutput
+
+
 @metric(
-    name='UnderwritingRules',
-    key='uw_rule_monitor',
+    name='Underwriting Rules',
+    key='uw_rules',
     description='Tracks Athena referral triggers live. Uses Regex with LLM fallback.',
     score_range=(0, 1),  # 1.0 = Flagged/Referral, 0.0 = Clean
     required_fields=['actual_output'],
@@ -323,16 +350,19 @@ class UnderwritingRules(BaseMetric):
         self,
         trigger_specs: Optional[List[TriggerSpec]] = None,
         recommendation_column_name: str = 'brief_recommendation',
+        use_unknown_reason_llm: bool = False,
         **kwargs,
     ):
         """
         Args:
             trigger_specs: Optional custom trigger specifications. Uses TRIGGER_SPECS if not provided.
             recommendation_column_name: The column name in the dataset item to use for the recommendation text.
+            use_unknown_reason_llm: Whether to use the LLM to reason about why the outcome is referred.
             **kwargs: Additional arguments passed to BaseMetric.
         """
         super().__init__(**kwargs)
         self.recommendation_column_name = recommendation_column_name
+        self.use_unknown_reason_llm = use_unknown_reason_llm
         # Use provided specs or fall back to default
         self._trigger_specs = trigger_specs or TRIGGER_SPECS
 
@@ -349,6 +379,7 @@ class UnderwritingRules(BaseMetric):
 
         # Initialize the fallback LLM classifier with dynamic instruction
         self.classifier = GhostReferralClassifier(**kwargs)
+        self.unknown_reasoner = UnknownTriggerReasoner(**kwargs)
 
     def _build_llm_instruction(self) -> str:
         """Generate LLM instruction dynamically from trigger specs."""
@@ -484,6 +515,7 @@ class UnderwritingRules(BaseMetric):
 
         detected_events: List[TriggerEvent] = []
         llm_fallback_used = False
+        unknown_reasoning: Optional[str] = None
 
         # Structured Checks (based on additional_input)
         flat_map = self._flatten_additional_input(dataset_item.additional_input or {})
@@ -674,6 +706,8 @@ class UnderwritingRules(BaseMetric):
                         confidence=0.8,
                     )
                 )
+            else:
+                unknown_reasoning = llm_result.reasoning
 
         # Compute Enhanced Signals
         trigger_count = len(detected_events)
@@ -703,6 +737,11 @@ class UnderwritingRules(BaseMetric):
         if primary_reason == TriggerName.NONE and is_referral:
             primary_reason = TriggerName.UNKNOWN
 
+        if self.use_unknown_reason_llm and primary_reason == TriggerName.UNKNOWN:
+            reason_input = UnknownTriggerReasonInput(ai_output=full_text)
+            reason_output = await self.unknown_reasoner.execute(reason_input)
+            unknown_reasoning = reason_output.reasoning
+
         summary_str = ', '.join([t.trigger_name.value for t in detected_events])
 
         # Score Definition:
@@ -711,6 +750,8 @@ class UnderwritingRules(BaseMetric):
         # - approval/unknown AND no triggers present
         # 0.0 for mismatches (approve with triggers, refer without triggers)
         score = 1.0 if (is_referral == bool(detected_events)) else 0.0
+        if primary_reason == TriggerName.UNKNOWN:
+            score = 0.0
 
         # Build Enriched TriggerReport
         result_data = TriggerReport(
@@ -723,13 +764,18 @@ class UnderwritingRules(BaseMetric):
             llm_fallback_used=llm_fallback_used,
             min_confidence=min_confidence,
             has_hard_trigger=has_hard_trigger,
+            unknown_reasoning=unknown_reasoning,
         )
 
         # Compute cost estimate only if LLM fallback was used
         if llm_fallback_used:
             self.compute_cost_estimate([self.classifier])
+        if self.use_unknown_reason_llm and primary_reason == TriggerName.UNKNOWN:
+            self.compute_cost_estimate([self.unknown_reasoner])
 
-        return MetricEvaluationResult(score=score, signals=result_data)
+        return MetricEvaluationResult(
+            score=score, explanation=primary_reason, signals=result_data
+        )
 
     def get_signals(self, result: TriggerReport) -> List[SignalDescriptor]:
         """
@@ -773,6 +819,15 @@ class UnderwritingRules(BaseMetric):
                 name='LLM Fallback Used',
                 group='Debug',
                 extractor=lambda r: 'Yes' if r.llm_fallback_used else 'No',
+                headline_display=False,
+            )
+        )
+
+        signals.append(
+            SignalDescriptor(
+                name='Unknown Trigger Reason',
+                group='Debug',
+                extractor=lambda r: r.unknown_reasoning or 'N/A',
                 headline_display=False,
             )
         )

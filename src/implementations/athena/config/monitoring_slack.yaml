@@ -13,6 +13,7 @@ source:
   name: "support_channels"
   component: "slack"
   eval_mode: "online"
+  environment: "${ENVIRONMENT:-production}"
   channel_ids:
     - "C09MAP9HR9D" # specialty-referrals
     - "C09JE5SSP43" # referrals

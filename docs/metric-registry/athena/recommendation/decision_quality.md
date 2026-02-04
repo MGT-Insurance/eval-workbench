@@ -1,52 +1,381 @@
 # Decision Quality
 
+<div style="border-left: 4px solid #8B9F4F; padding-left: 1rem; margin-bottom: 1.5rem;">
+<strong style="font-size: 1.1rem;">Evaluate AI decision accuracy and reasoning alignment</strong><br>
+<span class="badge" style="margin-top: 0.5rem;">LLM-Powered</span>
+<span class="badge" style="background: #667eea;">Quality</span>
+<span class="badge" style="background: #6B7A3A;">Athena</span>
+</div>
+
 ## At a Glance
 
-- Score range: `0.0` to `1.0`
-- Default threshold: none (uses `score_range` only)
-- Required inputs: `actual_output`, `expected_output`
+<div class="grid-container">
 
-## What It Measures
+<div class="grid-item" style="text-align: center;">
+<span style="font-size: 2rem;">🎯</span><br>
+<strong>Score Range</strong><br>
+<code style="font-size: 1.1rem;">0.0</code> ──────── <code style="font-size: 1.1rem;">1.0</code><br>
+<small style="color: var(--md-text-muted);">Weighted quality score</small>
+</div>
 
-Evaluates whether the AI made the correct underwriting decision and whether its
-reasoning aligns with the human notes.
+<div class="grid-item" style="text-align: center;">
+<span style="font-size: 2rem;">⚡</span><br>
+<strong>Default Threshold</strong><br>
+<code style="font-size: 1.5rem; color: var(--md-primary);">—</code><br>
+<small style="color: var(--md-text-muted);">Uses score_range only</small>
+</div>
 
-## How It Works
+<div class="grid-item" style="text-align: center;">
+<span style="font-size: 2rem;">📋</span><br>
+<strong>Required Inputs</strong><br>
+<code>actual_output</code> <code>expected_output</code><br>
+<small style="color: var(--md-text-muted);">Human decision + AI recommendation</small>
+</div>
 
-- Extract the human decision and AI decision.
-- Score the decision match.
-- Optionally score reasoning coverage using extracted risk factors.
-- Combine into an overall score with configurable weights.
+</div>
+
+!!! abstract "What It Measures"
+    Decision Quality evaluates whether the AI made the **correct underwriting decision** (approve/decline/refer) and whether its **reasoning aligns** with the human underwriter's notes. It combines decision match scoring with reasoning coverage analysis.
+
+    | Score | Interpretation |
+    |-------|----------------|
+    | **1.0** | :material-check-all: Correct decision + complete reasoning |
+    | **0.7+** | :material-check: Correct decision, reasoning mostly aligned |
+    | **0.5** | :material-alert: Decision match but reasoning gaps |
+    | **0.0** | :material-close: Wrong decision (hard fail enabled) |
+
+<div class="grid-container">
+
+<div class="grid-item" style="border-left: 4px solid #10b981;">
+<strong style="color: #10b981;">✅ Use When</strong>
+<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
+<li>Comparing AI to human decisions</li>
+<li>Both decision and reasoning matter</li>
+<li>Evaluating underwriting recommendations</li>
+<li>Training data has human annotations</li>
+</ul>
+</div>
+
+<div class="grid-item" style="border-left: 4px solid #ef4444;">
+<strong style="color: #ef4444;">❌ Don't Use When</strong>
+<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
+<li>No ground truth decision available</li>
+<li>Only measuring completeness</li>
+<li>Decisions are always exploratory</li>
+<li>No reasoning comparison needed</li>
+</ul>
+</div>
+
+</div>
+
+---
+
+<details markdown="1">
+<summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
+
+=== ":material-cog: Computation"
+
+    The metric extracts decisions from both human and AI outputs, scores the match, and analyzes reasoning coverage.
+
+    ### Step-by-Step Process
+
+    ```mermaid
+    flowchart TD
+        subgraph INPUT["📥 Inputs"]
+            A[AI Recommendation]
+            B[Human Decision/Notes]
+        end
+
+        subgraph EXTRACT["🔍 Step 1: Decision Extraction"]
+            C[Detect Human Decision]
+            D[Detect AI Decision]
+            E["Approve / Decline / Refer"]
+        end
+
+        subgraph MATCH["⚖️ Step 2: Decision Match"]
+            F[Compare Decisions]
+            G["outcome_score"]
+        end
+
+        subgraph REASON["📝 Step 3: Reasoning Coverage"]
+            H[Extract Risk Factors]
+            I[Check Coverage in AI Output]
+            J["reasoning_score"]
+        end
+
+        subgraph COMBINE["📊 Step 4: Final Score"]
+            K[Apply Weights]
+            L[Hard Fail Check]
+            M["overall_score"]
+        end
+
+        A --> D
+        B --> C
+        C & D --> E
+        E --> F
+        F --> G
+        B --> H
+        A --> I
+        H --> I
+        I --> J
+        G & J --> K
+        K --> L
+        L --> M
+
+        style INPUT stroke:#8B9F4F,stroke-width:2px
+        style EXTRACT stroke:#3b82f6,stroke-width:2px
+        style MATCH stroke:#f59e0b,stroke-width:2px
+        style REASON stroke:#8b5cf6,stroke-width:2px
+        style COMBINE stroke:#10b981,stroke-width:2px
+        style M fill:#8B9F4F,stroke:#6B7A3A,stroke-width:3px,color:#fff
+    ```
+
+=== ":material-scale-balance: Scoring System"
+
+    <div class="grid-container">
+
+    <div class="grid-item" style="border-left: 4px solid #10b981; padding-left: 1rem;">
+    <strong style="color: #10b981;">✅ DECISION MATCH</strong>
+    <div style="float: right; font-size: 1.5rem; font-weight: bold; color: #10b981;">1.0</div>
+    <br><small>AI decision matches human decision exactly.</small>
+    </div>
+
+    <div class="grid-item" style="border-left: 4px solid #ef4444; padding-left: 1rem;">
+    <strong style="color: #ef4444;">❌ DECISION MISMATCH</strong>
+    <div style="float: right; font-size: 1.5rem; font-weight: bold; color: #ef4444;">0.0</div>
+    <br><small>AI decision differs from human decision.</small>
+    </div>
+
+    </div>
+
+    !!! tip "Score Formula"
+        ```
+        overall_score = (outcome_weight × outcome_score) + (reasoning_weight × reasoning_score)
+
+        # If hard_fail_on_outcome_mismatch=True and decisions differ:
+        overall_score = 0.0
+        ```
+
+</details>
+
+---
 
 ## Configuration
 
-- `outcome_weight`: weight for decision match
-- `reasoning_weight`: weight for reasoning coverage
-- `hard_fail_on_outcome_mismatch`: force score 0.0 if decision mismatch
-- `recommendation_column_name`: additional output field to analyze
+=== ":material-tune: Parameters"
 
-## Signals and Diagnostics
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `outcome_weight` | `float` | `0.6` | Weight for decision match component |
+    | `reasoning_weight` | `float` | `0.4` | Weight for reasoning coverage |
+    | `hard_fail_on_outcome_mismatch` | `bool` | `True` | Force score to 0.0 if decisions differ |
+    | `recommendation_column_name` | `str` | `None` | Additional output field to analyze |
 
-`DecisionQualityResult` with:
+    !!! warning "Hard Fail Mode"
+        When `hard_fail_on_outcome_mismatch=True` (default), any decision mismatch results in a score of 0.0, regardless of reasoning quality. Disable this for softer evaluation.
 
-- `overall_score`
-- `outcome_match`, `outcome_score`
-- `human_decision_detected`, `ai_decision_detected`
-- `reasoning_score`
-- `missing_concepts`, `matched_concepts`
+---
 
-## Example
+## Code Examples
+
+=== ":material-play: Basic Usage"
+
+    ```python
+    from axion.dataset import DatasetItem
+    from implementations.athena.metrics.recommendation.decision_quality import DecisionQuality
+
+    metric = DecisionQuality()
+
+    item = DatasetItem(
+        actual_output="Recommend Decline due to building age exceeding 30 years.",
+        expected_output="Decline - roof age and building condition are concerns.",
+    )
+
+    result = await metric.execute(item)
+    print(result.pretty())
+    # Overall: 0.85 (decision match + partial reasoning coverage)
+    ```
+
+=== ":material-cog-outline: Custom Weights"
+
+    ```python
+    from axion.dataset import DatasetItem
+    from implementations.athena.metrics.recommendation.decision_quality import DecisionQuality
+
+    # Prioritize reasoning over outcome
+    metric = DecisionQuality(
+        outcome_weight=0.4,
+        reasoning_weight=0.6,
+        hard_fail_on_outcome_mismatch=False,
+    )
+
+    item = DatasetItem(
+        actual_output="Approve with conditions for roof repair.",
+        expected_output="Approve - good risk profile, minor roof concerns noted.",
+    )
+
+    result = await metric.execute(item)
+    print(f"Overall: {result.signals.overall_score}")
+    print(f"Outcome Match: {result.signals.outcome_match}")
+    print(f"Reasoning: {result.signals.reasoning_score}")
+    ```
+
+---
+
+## Metric Diagnostics
+
+Every evaluation is **fully interpretable**. Access detailed diagnostic results via `result.signals`.
 
 ```python
-from axion.dataset import DatasetItem
-from implementations.athena.metrics.recommendation.decison_quality import DecisionQuality
-
-metric = DecisionQuality()
-item = DatasetItem(actual_output="Recommend Decline", expected_output="Decline due to roof age")
 result = await metric.execute(item)
+print(result.pretty())      # Human-readable summary
+result.signals              # Full diagnostic breakdown
 ```
+
+<details markdown="1">
+<summary><strong>📊 DecisionQualityResult Structure</strong></summary>
+
+```python
+DecisionQualityResult(
+{
+    "overall_score": 0.85,
+    "outcome_match": true,
+    "outcome_score": 1.0,
+    "human_decision_detected": "decline",
+    "ai_decision_detected": "decline",
+    "reasoning_score": 0.625,
+    "matched_concepts": ["building age", "condition"],
+    "missing_concepts": ["roof age"]
+}
+)
+```
+
+### Signal Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `overall_score` | `float` | Combined weighted score |
+| `outcome_match` | `bool` | Whether decisions matched |
+| `outcome_score` | `float` | Decision match score (0 or 1) |
+| `human_decision_detected` | `str` | Extracted human decision |
+| `ai_decision_detected` | `str` | Extracted AI decision |
+| `reasoning_score` | `float` | Reasoning coverage score |
+| `matched_concepts` | `List[str]` | Risk factors mentioned by AI |
+| `missing_concepts` | `List[str]` | Risk factors AI missed |
+
+</details>
+
+---
+
+## Example Scenarios
+
+<details markdown="1">
+<summary><strong>✅ Scenario 1: Perfect Match (Score: 1.0)</strong></summary>
+
+!!! success "Decision + Reasoning Aligned"
+
+    **Human Decision:**
+    > "Decline - prior claims history and high BPP value are concerns."
+
+    **AI Recommendation:**
+    > "Recommend Decline. The applicant has prior claims on record and the BPP coverage requested exceeds typical thresholds."
+
+    **Analysis:**
+
+    | Component | Score | Details |
+    |-----------|-------|---------|
+    | Decision Match | 1.0 | Both: Decline |
+    | Reasoning Coverage | 1.0 | All factors mentioned |
+
+    **Final Score:** `(0.6 × 1.0) + (0.4 × 1.0) = 1.0` :material-check-all:
+
+</details>
+
+<details markdown="1">
+<summary><strong>⚠️ Scenario 2: Decision Match, Incomplete Reasoning (Score: 0.7)</strong></summary>
+
+!!! warning "Correct Decision, Missing Factors"
+
+    **Human Decision:**
+    > "Approve - good claims history, reasonable BPP, building in good condition."
+
+    **AI Recommendation:**
+    > "Recommend Approve based on clean claims history."
+
+    **Analysis:**
+
+    | Component | Score | Details |
+    |-----------|-------|---------|
+    | Decision Match | 1.0 | Both: Approve |
+    | Reasoning Coverage | 0.33 | Only 1 of 3 factors mentioned |
+
+    **Final Score:** `(0.6 × 1.0) + (0.4 × 0.33) = 0.73` :material-alert:
+
+</details>
+
+<details markdown="1">
+<summary><strong>❌ Scenario 3: Decision Mismatch (Score: 0.0)</strong></summary>
+
+!!! failure "Wrong Decision (Hard Fail)"
+
+    **Human Decision:**
+    > "Decline - too many risk factors."
+
+    **AI Recommendation:**
+    > "Recommend Approve based on revenue metrics."
+
+    **Analysis:**
+
+    | Component | Score | Details |
+    |-----------|-------|---------|
+    | Decision Match | 0.0 | Human: Decline, AI: Approve |
+    | Hard Fail | Triggered | Score forced to 0.0 |
+
+    **Final Score:** `0.0` :material-close:
+
+</details>
+
+---
+
+## Why It Matters
+
+<div class="grid-container">
+
+<div class="grid-item">
+<span style="font-size: 1.5rem;">🎯</span>
+<strong>Decision Accuracy</strong>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Measures whether AI reaches the same conclusions as human experts.</p>
+</div>
+
+<div class="grid-item">
+<span style="font-size: 1.5rem;">📝</span>
+<strong>Reasoning Quality</strong>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Ensures AI considers the same risk factors as human underwriters.</p>
+</div>
+
+<div class="grid-item">
+<span style="font-size: 1.5rem;">🔄</span>
+<strong>Calibration</strong>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Helps identify where AI and human judgment diverge for retraining.</p>
+</div>
+
+</div>
+
+---
 
 ## Quick Reference
 
-- Metric key: `decision_quality`
-- Category: Athena
+!!! note "TL;DR"
+    **Decision Quality** = Does AI make the right decision for the right reasons?
+
+    - **Use it when:** You have ground truth decisions and want to evaluate both outcome and reasoning
+    - **Score interpretation:** Higher = better decision + reasoning alignment
+    - **Key feature:** Configurable hard-fail on decision mismatch
+
+<div class="grid cards" markdown>
+
+- :material-link-variant: **Related Metrics**
+
+    [:octicons-arrow-right-24: Underwriting Completeness](./underwriting_completeness.md) · Underwriting Faithfulness
+
+</div>

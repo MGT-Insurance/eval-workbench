@@ -12,7 +12,11 @@ logger = logging.getLogger(__name__)
 
 # Regex to extract recommendation label
 RE_LABEL = re.compile(
-    r'Recommend\s+(Approve|Decline|Refer to Underwriter)',
+    r'Recommend\s+('
+    r'Approve'
+    r'|Decline'
+    r'|Refer(?:ral)?(?:\s+to\s+(?:Underwriter|UW))?'
+    r')',
     re.IGNORECASE,
 )
 
@@ -21,7 +25,10 @@ def extract_recommendation_label(s: str) -> str:
     """Extract recommendation label from brief recommendation text."""
     m = RE_LABEL.search(s)
     if m:
-        return m.group(1).upper()
+        label = m.group(1).strip().upper()
+        if label.startswith('REFER'):
+            return 'REFER'
+        return label
     return 'UNKNOWN'
 
 
@@ -143,3 +150,64 @@ def _safe_get(obj: Any, path: str, default: Any = None) -> Any:
             return default
 
     return current if current is not None else default
+
+
+def extract_recommendation_from_row(row: dict[str, Any]) -> DatasetItem:
+    """Extract a DatasetItem from an athena_cases database row."""
+    quote_locator = row.get('quote_locator', 'unknown')
+
+    # Parse recommendation_entries (JSONB returns list, may be str)
+    recommendation_entries = row.get('recommendation_entries', [])
+    if isinstance(recommendation_entries, str):
+        try:
+            recommendation_entries = json.loads(recommendation_entries)
+        except json.JSONDecodeError:
+            recommendation_entries = []
+
+    # Get most recent entry
+    latest_entry = {}
+    if recommendation_entries:
+        sorted_entries = sorted(
+            recommendation_entries,
+            key=lambda x: x.get('executedAt', ''),
+            reverse=True,
+        )
+        latest_entry = sorted_entries[0] if sorted_entries else {}
+
+    brief_recommendation = latest_entry.get('briefRecommendation', '')
+    detailed_recommendation = latest_entry.get('detailedRecommendation', '')
+    underwriting_flags = latest_entry.get('underwritingFlags', [])
+    label = extract_recommendation_label(brief_recommendation)
+
+    latency = latest_entry.get('executionTimeMs')
+    if latency:
+        latency = latency / 1000.0  # ms to seconds
+
+    entry_metadata = {
+        'model': latest_entry.get('model'),
+        'claude_cost': latest_entry.get('claudeCost'),
+        'claude_tokens': latest_entry.get('claudeTokens'),
+        'prompt_version': latest_entry.get('promptVersion'),
+        'executed_at': latest_entry.get('executedAt'),
+    }
+
+    trace_id = row.get('langfuse_trace_id', '')
+
+    return DatasetItem(
+        id=quote_locator,
+        query=f'Provide a risk assessment for {quote_locator}',
+        expected_output=None,
+        acceptance_criteria=None,
+        additional_input={
+            'underwriting_flags': underwriting_flags,
+            'all_entries': recommendation_entries,
+        },
+        dataset_metadata=json.dumps(entry_metadata),
+        actual_output=label,
+        latency=latency,
+        trace_id=trace_id,
+        additional_output={
+            'brief_recommendation': brief_recommendation,
+            'detailed_recommendation': detailed_recommendation,
+        },
+    )

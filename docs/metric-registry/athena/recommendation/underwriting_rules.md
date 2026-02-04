@@ -1,203 +1,426 @@
-## UnderwritingRules Metric
+# Underwriting Rules
 
-This document describes the `UnderwritingRules` metric in
-`src/implementations/athena/metrics/recommendation/underwriting_rules.py`,
-including detection logic and exact formulas used for each rule.
+<div style="border-left: 4px solid #8B9F4F; padding-left: 1rem; margin-bottom: 1.5rem;">
+<strong style="font-size: 1.1rem;">Track referral triggers and validate outcome consistency</strong><br>
+<span class="badge" style="margin-top: 0.5rem;">Hybrid</span>
+<span class="badge" style="background: #667eea;">Rules</span>
+<span class="badge" style="background: #6B7A3A;">Athena</span>
+</div>
 
-### Purpose
+## At a Glance
 
-Track underwriting referral triggers in agent output and source data, and flag
-whether the agent outcome (approve vs refer/decline) is consistent with those
-triggers.
+<div class="grid-container">
 
-### Inputs
+<div class="grid-item" style="text-align: center;">
+<span style="font-size: 2rem;">🎯</span><br>
+<strong>Score Range</strong><br>
+<code style="font-size: 1.1rem;">0.0</code> ──────── <code style="font-size: 1.1rem;">1.0</code><br>
+<small style="color: var(--md-text-muted);">Consistency score</small>
+</div>
 
-- `DatasetItem.actual_output` via `get_field("actual_output")`
-- `DatasetItem.additional_output[recommendation_column_name]`
-  - Default column name: `brief_recommendation`
-- `DatasetItem.additional_input` (structured data, flattened)
+<div class="grid-item" style="text-align: center;">
+<span style="font-size: 2rem;">⚡</span><br>
+<strong>Default Threshold</strong><br>
+<code style="font-size: 1.5rem; color: var(--md-primary);">1.0</code><br>
+<small style="color: var(--md-text-muted);">Outcome must match triggers</small>
+</div>
 
-### Outcome Detection
+<div class="grid-item" style="text-align: center;">
+<span style="font-size: 2rem;">📋</span><br>
+<strong>Required Inputs</strong><br>
+<code>actual_output</code> <code>additional_input</code><br>
+<small style="color: var(--md-text-muted);">Recommendation + source data</small>
+</div>
 
-Outcome is derived from `detect_outcome(actual_output, variant="underwriting_rules")`:
+</div>
 
-- `is_referral`: `True` when the outcome is referral/decline
-- `outcome_label`: normalized label for reporting
+!!! abstract "What It Measures"
+    Underwriting Rules tracks **referral triggers** in both the source data and AI output, then validates whether the AI's outcome (approve/refer/decline) is **consistent** with those triggers. If a referral trigger is present, the AI should refer; if no triggers, it should approve.
 
-### Detection Pipeline
+    | Score | Interpretation |
+    |-------|----------------|
+    | **1.0** | :material-check-all: Outcome matches trigger presence |
+    | **0.0** | :material-close: Mismatch between triggers and outcome |
 
-1. Structured checks on `additional_input` (deterministic rules)
-2. Regex scan on `full_text` (recommendation text)
-3. Deduplication per trigger (highest confidence kept)
-4. LLM fallback if referral/decline and no triggers detected
+<div class="grid-container">
 
-### Structured Checks (Exact Formulas)
+<div class="grid-item" style="border-left: 4px solid #10b981;">
+<strong style="color: #10b981;">✅ Use When</strong>
+<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
+<li>Enforcing underwriting guidelines</li>
+<li>Tracking referral reasons</li>
+<li>Auditing decision consistency</li>
+<li>Validating rule compliance</li>
+</ul>
+</div>
 
-Structured fields are extracted from `additional_input` by flattening JSON and
-looking up these keys (first match wins, suffix matches allowed):
+<div class="grid-item" style="border-left: 4px solid #ef4444;">
+<strong style="color: #ef4444;">❌ Don't Use When</strong>
+<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
+<li>No structured input data</li>
+<li>Rules don't apply</li>
+<li>Evaluating reasoning quality</li>
+<li>Non-underwriting decisions</li>
+</ul>
+</div>
 
-- `bpp_limit` keys:
-  - `context_data.auxData.rateData.output.input.bop_bpp_limit`
-  - `context_data.auxData.rateData.output.bop_bpp_limit`
-  - `bop_bpp_limit`
-- `gross_sales` keys:
-  - `context_data.auxData.rateData.output.input.bop_gross_sales`
-  - `context_data.auxData.rateData.output.bop_gross_sales`
-  - `bop_gross_sales`
-- `num_employees` keys:
-  - `context_data.auxData.rateData.output.input.bop_number_of_employees`
-  - `context_data.auxData.rateData.output.bop_number_of_employees`
-  - `bop_number_of_employees`
-- `year_established` keys:
-  - `context_data.auxData.rateData.output.input.bop_business_year_established`
-  - `context_data.auxData.rateData.output.bop_business_year_established`
-  - `bop_business_year_established`
-- `claims_count` keys:
-  - `context_data.auxData.rateData.output.input.bop_number_of_claims`
-  - `context_data.auxData.rateData.output.bop_number_of_claims`
-  - `bop_number_of_claims`
-- `home_based` keys:
-  - `context_data.auxData.rateData.output.input.bop_home_based_business`
-  - `context_data.auxData.rateData.output.bop_home_based_business`
-  - `bop_home_based_business`
-- `building_owned` keys:
-  - `context_data.auxData.rateData.output.input.bop_building_owned`
-  - `context_data.auxData.rateData.output.bop_building_owned`
-  - `bop_building_owned`
-- `insure_building` keys:
-  - `context_data.auxData.rateData.output.input.bop_insure_buildings`
-  - `context_data.auxData.rateData.output.input.bop_insure_building`
-  - `context_data.auxData.rateData.output.bop_insure_buildings`
-  - `context_data.auxData.rateData.output.bop_insure_building`
-  - `bop_insure_buildings`
-  - `bop_insure_building`
+</div>
 
-Field parsing logic:
+---
 
-- `parse_number`: first numeric value in the string (commas ignored)
-- `parse_bool`: `true/yes/1` -> `True`, `false/no/0` -> `False`
-- `parse_building_coverage(insure_building)`:
-  - returns `False` if text contains `contents only` or equals `contents`
-  - returns `True` if text contains `building`
-  - otherwise returns `None`
+<details markdown="1">
+<summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 
-Derived flags:
+=== ":material-cog: Detection Pipeline"
 
-- `building_coverage_requested = parse_building_coverage(insure_building)`
-- `contents_only = None if building_coverage_requested is None else (not building_coverage_requested)`
+    The metric uses a three-stage pipeline: structured checks, regex scanning, and LLM fallback.
 
-Structured rule formulas (exact):
+    ```mermaid
+    flowchart TD
+        subgraph INPUT["📥 Inputs"]
+            A[AI Recommendation]
+            B[Source Data JSON]
+        end
 
-- `bppValue`:
-  - Trigger when `bpp_limit is not None and bpp_limit > 250000`
-- `bppToSalesRatio`:
-  - Trigger when `bpp_limit is not None and gross_sales is not None and gross_sales > 0`
-  - Ratio formula: `bpp_limit / gross_sales`
-  - Trigger when `ratio < 0.10`
-- `numberOfEmployees`:
-  - Trigger when `num_employees is not None and num_employees > 20`
-- `orgEstYear`:
-  - Trigger when:
-    - `year_established is not None`
-    - `building_coverage_requested is True`
-    - `(current_utc_year - int(year_established)) < 3`
-- `nonOwnedBuildingCoverage`:
-  - Trigger when `building_coverage_requested is True and building_owned is False`
-- `homeBasedBPP`:
-  - Trigger when `home_based is True and contents_only is True`
-- `claimsHistory`:
-  - Trigger when `claims_count is not None and claims_count > 0`
+        subgraph OUTCOME["🎯 Step 1: Outcome Detection"]
+            C[Detect AI Decision]
+            D["Approve / Refer / Decline"]
+        end
 
-### Regex Rules (Text Scan)
+        subgraph RULES["⚖️ Step 2: Trigger Detection"]
+            E[Structured Checks]
+            F[Regex Scan]
+            G[LLM Fallback]
+            H["Detected Triggers"]
+        end
 
-Each trigger also has regex patterns used against the recommendation text.
-If any pattern matches, the trigger fires with `DetectionMethod.REGEX`.
+        subgraph VALIDATE["✓ Step 3: Consistency Check"]
+            I{Referral + Triggers?}
+            J{Approval + No Triggers?}
+            K["Score: 1.0 or 0.0"]
+        end
 
-Hard severity:
+        A --> C
+        C --> D
+        B --> E
+        A --> F
+        E & F --> H
+        D --> I
+        H --> I
+        I -->|Match| K
+        I -->|No Triggers| G
+        G --> H
+        J --> K
 
-- `convStoreTemp`:
-  - `convStoreTemp`
-  - `Convenience Store.*Rule`
-  - `rule.*9321`
-  - `class.*CONVGAS`
-  - `7[-\s]?eleven|circle\s?k|am\s?pm|wawa|sheetz`
-  - `(tobacco|liquor|alcohol|beer|wine|lottery).*sales?`
-  - `gas\s?station|fuel\s?sales?`
-- `claimsHistory`:
-  - `claimsHistory`
-  - `prior\s+claim`
-  - `loss\s+history`
-  - `previous\s+(claim|loss)`
-  - `claim(s)?\s+(in|over)\s+the\s+(past|last)`
-- `orgEstYear`:
-  - `orgEstYear`
-  - `established.*202[3-9]`
-  - `incorporated.*202[3-9]`
-  - `business.*<\s*3\s*years?`
-  - `new\s+organization`
-  - `(founded|started|opened).*202[3-9]`
-- `bppValue`:
-  - `bppValue`
-  - `contents.*>\s*\$?250[,.]?000`
-  - `BPP.*exceeds?\s*\$?250`
-  - `personal\s+property.*250`
+        style INPUT stroke:#8B9F4F,stroke-width:2px
+        style OUTCOME stroke:#3b82f6,stroke-width:2px
+        style RULES stroke:#f59e0b,stroke-width:2px
+        style VALIDATE stroke:#10b981,stroke-width:2px
+        style K fill:#8B9F4F,stroke:#6B7A3A,stroke-width:3px,color:#fff
+    ```
 
-Soft severity:
+=== ":material-scale-balance: Scoring Logic"
 
-- `bppToSalesRatio`:
-  - `bppToSalesRatio`
-  - `contents.*sales.*ratio`
-  - `<\s*10\s*%.*ratio`
-  - `BPP.*to.*sales.*low`
-  - `ratio.*contents.*revenue`
-- `nonOwnedBuildingCoverage`:
-  - `nonOwnedBuildingCoverage`
-  - `tenant.*building\s+coverage`
-  - `leased.*building\s+limit`
-  - `renter.*requesting.*building`
-- `businessNOC`:
-  - `businessNOC`
-  - `Not\s+Otherwise\s+Classified`
-  - `classification\s+mismatch`
-  - `NOC\s+class`
-  - `unclear\s+business\s+type`
-- `homeBasedBPP`:
-  - `homeBasedBPP`
-  - `residential.*location`
-  - `home[-\s]?based\s+business`
-  - `operates?\s+from\s+home`
-- `numberOfEmployees`:
-  - `numberOfEmployees`
-  - `employee\s+count.*>\s*20`
-  - `more\s+than\s+20\s+employees`
-  - `exceeds?\s+employee\s+limit`
+    <div class="grid-container">
 
-### LLM Fallback (Ghost Referral)
+    <div class="grid-item" style="border-left: 4px solid #10b981; padding-left: 1rem;">
+    <strong style="color: #10b981;">✅ Score = 1.0</strong>
+    <br><small>Referral/decline WITH triggers detected, OR approval WITH no triggers.</small>
+    </div>
 
-If `is_referral` is `True` and no triggers were detected, the metric calls
-`GhostReferralClassifier` to infer the closest trigger. If the classifier
-returns `unknown_trigger`, no event is added.
+    <div class="grid-item" style="border-left: 4px solid #ef4444; padding-left: 1rem;">
+    <strong style="color: #ef4444;">❌ Score = 0.0</strong>
+    <br><small>Referral/decline WITHOUT triggers, OR approval WITH triggers present.</small>
+    </div>
 
-LLM fallback confidence is set to `0.8` and detection method is `llm_fallback`.
+    </div>
 
-### Primary Trigger Selection
+    !!! tip "Score Formula"
+        ```
+        score = 1.0 if (is_referral == bool(detected_triggers)) else 0.0
+        ```
 
-Primary trigger is selected by:
+</details>
 
-1. Lowest `priority` (1 = highest)
-2. Highest `confidence` (secondary tie-break)
+---
 
-If `is_referral` is `True` and the primary trigger is `none`, it is forced to
-`unknown_trigger`.
+## Referral Triggers
 
-### Score Formula
+The metric detects the following referral triggers through structured data checks and regex patterns:
 
+=== ":material-database: Structured Rules"
+
+    | Trigger | Condition | Severity |
+    |---------|-----------|----------|
+    | **bppValue** | BPP limit > $250,000 | Hard |
+    | **bppToSalesRatio** | BPP / sales < 10% | Soft |
+    | **numberOfEmployees** | Employees > 20 | Soft |
+    | **orgEstYear** | Business < 3 years + building coverage | Hard |
+    | **nonOwnedBuildingCoverage** | Building coverage requested but not owned | Soft |
+    | **homeBasedBPP** | Home-based + contents-only | Soft |
+    | **claimsHistory** | Prior claims count > 0 | Hard |
+
+=== ":material-regex: Regex Rules"
+
+    **Hard Severity:**
+
+    - `convStoreTemp` - Convenience store/gas station indicators
+    - `claimsHistory` - Prior claims mentions
+    - `orgEstYear` - New business indicators
+    - `bppValue` - Excessive BPP mentions
+
+    **Soft Severity:**
+
+    - `bppToSalesRatio` - Low ratio indicators
+    - `nonOwnedBuildingCoverage` - Tenant building coverage
+    - `businessNOC` - Not Otherwise Classified
+    - `homeBasedBPP` - Home-based business indicators
+    - `numberOfEmployees` - High employee count
+
+---
+
+## Configuration
+
+=== ":material-tune: Parameters"
+
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `recommendation_column_name` | `str` | `brief_recommendation` | Field in additional_output to analyze |
+
+    !!! info "LLM Fallback"
+        When a referral/decline is detected but no triggers are found, the metric uses an LLM classifier to infer the closest trigger category.
+
+---
+
+## Code Examples
+
+=== ":material-play: Basic Usage"
+
+    ```python
+    from axion.dataset import DatasetItem
+    from implementations.athena.metrics.recommendation.underwriting_rules import UnderwritingRules
+
+    metric = UnderwritingRules()
+
+    item = DatasetItem(
+        actual_output="Recommend Refer due to high BPP coverage request.",
+        additional_input={
+            "context_data": {
+                "auxData": {
+                    "rateData": {
+                        "output": {
+                            "input": {
+                                "bop_bpp_limit": 300000  # > $250k threshold
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    )
+
+    result = await metric.execute(item)
+    print(result.pretty())
+    # Score: 1.0 (referral with trigger present)
+    ```
+
+=== ":material-cog-outline: Multiple Triggers"
+
+    ```python
+    from axion.dataset import DatasetItem
+    from implementations.athena.metrics.recommendation.underwriting_rules import UnderwritingRules
+
+    metric = UnderwritingRules()
+
+    item = DatasetItem(
+        actual_output="Decline - prior claims and new business.",
+        additional_input={
+            "bop_number_of_claims": 2,
+            "bop_business_year_established": 2024,  # < 3 years
+            "bop_insure_building": "building"
+        }
+    )
+
+    result = await metric.execute(item)
+    # Score: 1.0 (decline with multiple triggers)
+    ```
+
+---
+
+## Metric Diagnostics
+
+Every evaluation is **fully interpretable**. Access detailed diagnostic results via `result.signals`.
+
+```python
+result = await metric.execute(item)
+print(result.pretty())      # Human-readable summary
+result.signals              # Full diagnostic breakdown
 ```
-score = 1.0 if (is_referral == bool(detected_events)) else 0.0
+
+<details markdown="1">
+<summary><strong>📊 UnderwritingRulesResult Structure</strong></summary>
+
+```python
+UnderwritingRulesResult(
+{
+    "score": 1.0,
+    "is_referral": true,
+    "outcome_label": "Referral",
+    "primary_trigger": "bppValue",
+    "detected_events": [
+        {
+            "trigger": "bppValue",
+            "severity": "hard",
+            "confidence": 0.95,
+            "detection_method": "structured",
+            "details": "BPP limit $300,000 exceeds $250,000 threshold"
+        }
+    ],
+    "structured_values": {
+        "bpp_limit": 300000,
+        "gross_sales": 1500000
+    }
+}
+)
 ```
 
-Meaning:
+### Signal Fields
 
-- Referral/decline with at least one trigger -> score 1.0
-- Approval/unknown with no triggers -> score 1.0
-- Any mismatch -> score 0.0
+| Field | Type | Description |
+|-------|------|-------------|
+| `score` | `float` | 1.0 if consistent, 0.0 if not |
+| `is_referral` | `bool` | Whether outcome is referral/decline |
+| `outcome_label` | `str` | Normalized outcome label |
+| `primary_trigger` | `str` | Most significant trigger |
+| `detected_events` | `List` | All detected triggers with details |
+| `structured_values` | `dict` | Extracted field values |
+
+</details>
+
+---
+
+## Example Scenarios
+
+<details markdown="1">
+<summary><strong>✅ Scenario 1: Consistent Referral (Score: 1.0)</strong></summary>
+
+!!! success "Referral Matches Triggers"
+
+    **Recommendation:**
+    > "Refer to underwriting - BPP coverage of $300,000 exceeds threshold."
+
+    **Source Data:**
+    ```json
+    {"bop_bpp_limit": 300000}
+    ```
+
+    **Analysis:**
+
+    | Component | Finding |
+    |-----------|---------|
+    | Outcome | Referral |
+    | Trigger | bppValue (BPP > $250k) |
+    | Match | ✅ Referral with trigger |
+
+    **Final Score:** `1.0` :material-check-all:
+
+</details>
+
+<details markdown="1">
+<summary><strong>✅ Scenario 2: Consistent Approval (Score: 1.0)</strong></summary>
+
+!!! success "Approval with No Triggers"
+
+    **Recommendation:**
+    > "Approve - all criteria within guidelines."
+
+    **Source Data:**
+    ```json
+    {
+        "bop_bpp_limit": 150000,
+        "bop_number_of_claims": 0,
+        "bop_number_of_employees": 10
+    }
+    ```
+
+    **Analysis:**
+
+    | Component | Finding |
+    |-----------|---------|
+    | Outcome | Approval |
+    | Triggers | None detected |
+    | Match | ✅ Approval with no triggers |
+
+    **Final Score:** `1.0` :material-check-all:
+
+</details>
+
+<details markdown="1">
+<summary><strong>❌ Scenario 3: Inconsistent (Score: 0.0)</strong></summary>
+
+!!! failure "Approval Despite Trigger"
+
+    **Recommendation:**
+    > "Approve this application."
+
+    **Source Data:**
+    ```json
+    {"bop_bpp_limit": 400000}
+    ```
+
+    **Analysis:**
+
+    | Component | Finding |
+    |-----------|---------|
+    | Outcome | Approval |
+    | Trigger | bppValue (BPP > $250k) |
+    | Match | ❌ Approval despite trigger |
+
+    **Final Score:** `0.0` :material-close:
+
+</details>
+
+---
+
+## Why It Matters
+
+<div class="grid-container">
+
+<div class="grid-item">
+<span style="font-size: 1.5rem;">📋</span>
+<strong>Guideline Compliance</strong>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Ensures AI follows established underwriting rules and thresholds.</p>
+</div>
+
+<div class="grid-item">
+<span style="font-size: 1.5rem;">🔍</span>
+<strong>Audit Trail</strong>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Tracks exactly which triggers led to referral decisions.</p>
+</div>
+
+<div class="grid-item">
+<span style="font-size: 1.5rem;">⚠️</span>
+<strong>Risk Detection</strong>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Catches cases where AI approves despite red flags.</p>
+</div>
+
+</div>
+
+---
+
+## Quick Reference
+
+!!! note "TL;DR"
+    **Underwriting Rules** = Is the AI's decision consistent with detected referral triggers?
+
+    - **Use it when:** Validating that AI follows underwriting guidelines
+    - **Score interpretation:** 1.0 = consistent, 0.0 = inconsistent
+    - **Key feature:** Multi-stage detection (structured + regex + LLM fallback)
+
+<div class="grid cards" markdown>
+
+- :material-link-variant: **Related Metrics**
+
+    [:octicons-arrow-right-24: Decision Quality](./decision_quality.md) · Refer Reason
+
+</div>

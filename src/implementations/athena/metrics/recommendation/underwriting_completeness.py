@@ -47,7 +47,7 @@ class UnderwritingCompletenessResult(RichBaseModel):
 
 
 @metric(
-    name='UnderwritingCompleteness',
+    name='Underwriting Completeness',
     key='uw_completeness',
     description='Evaluates completeness using dedicated LLM calls for each dimension.',
     required_fields=['actual_output'],

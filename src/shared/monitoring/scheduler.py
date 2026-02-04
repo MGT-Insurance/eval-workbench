@@ -40,6 +40,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
+from shared import config
 from shared.monitoring.monitor import OnlineMonitor
 from shared.monitoring.scored_items import ScoredItemsStore
 
@@ -100,8 +101,16 @@ class MonitoringScheduler:
             # Daily at 2am
             scheduler.add_monitor("config.yaml", cron="0 2 * * *")
         """
-        if not interval_minutes and not cron:
-            raise ValueError('Must specify either interval_minutes or cron')
+        if interval_minutes is None and cron is None:
+            cfg = config.load_config(config_path, overrides)
+            schedule_cfg = config.get('schedule', cfg=cfg) or {}
+            interval_minutes = schedule_cfg.get('interval_minutes')
+            cron = schedule_cfg.get('cron')
+
+        if interval_minutes is None and cron is None:
+            raise ValueError(
+                'Must specify interval_minutes or cron (or set schedule in YAML)'
+            )
         if interval_minutes and cron:
             raise ValueError('Cannot specify both interval_minutes and cron')
 

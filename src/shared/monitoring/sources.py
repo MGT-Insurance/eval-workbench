@@ -28,7 +28,7 @@ Example:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Any, Callable
 
 from axion.dataset import DatasetItem
 from axion.tracing import LangfuseTraceLoader
@@ -64,6 +64,7 @@ class LangfuseDataSource(DataSource):
         days_back: Fetch traces from last N days
         hours_back: Fetch traces from last N hours
         tags: Filter traces by tags
+        trace_ids: Specific trace IDs to fetch (bypasses time-based fetch)
         timeout: API timeout in seconds (default: 60)
         fetch_full_traces: Whether to fetch full trace data (default: True)
         show_progress: Show progress bar during fetch (default: True)
@@ -77,7 +78,9 @@ class LangfuseDataSource(DataSource):
         limit: int = 100,
         days_back: int | None = None,
         hours_back: int | None = None,
+        minutes_back: int | None = None,
         tags: list[str] | None = None,
+        trace_ids: list[str] | None = None,
         timeout: int = 60,
         fetch_full_traces: bool = True,
         show_progress: bool = True,
@@ -88,7 +91,9 @@ class LangfuseDataSource(DataSource):
         self._limit = limit
         self._days_back = days_back
         self._hours_back = hours_back
+        self._minutes_back = minutes_back
         self._tags = tags
+        self._trace_ids = trace_ids
         self._timeout = timeout
         self._fetch_full_traces = fetch_full_traces
         self._show_progress = show_progress
@@ -98,26 +103,58 @@ class LangfuseDataSource(DataSource):
         """Return source key in format 'langfuse:{name}'."""
         return f'langfuse:{self._name}'
 
-    async def fetch_items(self) -> list[DatasetItem]:
-        """Fetch traces from Langfuse and extract DatasetItems."""
+    def _fetch_traces_by_time(self) -> TraceCollection:
+        """Fetch traces using time-based filtering."""
         loader = LangfuseTraceLoader(timeout=self._timeout)
+
+        hours_back = self._hours_back
+        if (
+            self._days_back is None
+            and hours_back is None
+            and self._minutes_back is not None
+        ):
+            hours_back = self._minutes_back / 60.0
 
         logger.info(
             f'Fetching traces: name={self._name}, limit={self._limit}, '
-            f'days_back={self._days_back}, hours_back={self._hours_back}, tags={self._tags}'
+            f'days_back={self._days_back}, hours_back={hours_back}, tags={self._tags}'
         )
 
+        fetch_kwargs = {
+            'limit': self._limit,
+            'name': self._name,
+            'tags': self._tags,
+            'fetch_full_traces': self._fetch_full_traces,
+            'show_progress': self._show_progress,
+        }
+        if self._days_back is not None:
+            fetch_kwargs['days_back'] = self._days_back
+        if hours_back is not None:
+            fetch_kwargs['hours_back'] = hours_back
+
+        trace_data = loader.fetch_traces(**fetch_kwargs)
+        return TraceCollection(trace_data, prompt_patterns=self._prompt_patterns)
+
+    def _fetch_traces_by_ids(self, trace_ids: list[str]) -> TraceCollection:
+        """Fetch specific traces by their IDs."""
+        logger.info(f'Fetching {len(trace_ids)} traces by ID')
+
+        loader = LangfuseTraceLoader(timeout=self._timeout)
         trace_data = loader.fetch_traces(
-            limit=self._limit,
-            days_back=self._days_back,
-            hours_back=self._hours_back,
-            name=self._name,
-            tags=self._tags,
-            fetch_full_traces=self._fetch_full_traces,
+            trace_ids=trace_ids,
             show_progress=self._show_progress,
         )
 
-        collection = TraceCollection(trace_data, prompt_patterns=self._prompt_patterns)
+        return TraceCollection(trace_data, prompt_patterns=self._prompt_patterns)
+
+    async def fetch_items(self) -> list[DatasetItem]:
+        """Fetch traces from Langfuse and extract DatasetItems."""
+        # If specific trace_ids provided, fetch those directly
+        if self._trace_ids:
+            collection = self._fetch_traces_by_ids(self._trace_ids)
+        else:
+            collection = self._fetch_traces_by_time()
+
         logger.info(f'Fetched {len(collection)} traces')
 
         items = []
@@ -204,4 +241,69 @@ class SlackDataSource(DataSource):
 
         items = await exporter.execute()
         logger.info(f'Fetched {len(items)} items from Slack')
+        return items
+
+
+class NeonDataSource(DataSource):
+    """Fetch rows from Neon (PostgreSQL) database and extract DatasetItems.
+
+    Args:
+        name: Name identifier for this source (e.g., "athena_cases")
+        query: SQL query to execute
+        extractor: Function to convert row dict -> DatasetItem
+        connection_string: Optional database URL (falls back to DATABASE_URL env var)
+        params: Optional query parameters (tuple or dict)
+        limit: Optional limit to append if query lacks LIMIT clause
+    """
+
+    def __init__(
+        self,
+        name: str,
+        query: str,
+        extractor: Callable[[dict[str, Any]], DatasetItem],
+        connection_string: str | None = None,
+        params: tuple | dict | None = None,
+        limit: int | None = None,
+        has_field: str | None = None,
+    ):
+        self._name = name
+        self._query = query
+        self._extractor = extractor
+        self._connection_string = connection_string
+        self._params = params
+        self._limit = limit
+        self._has_field = has_field
+
+    @property
+    def source_key(self) -> str:
+        return f'neon:{self._name}'
+
+    async def fetch_items(self) -> list[DatasetItem]:
+        from shared.database.neon import AsyncNeonConnection
+
+        query = self._query
+        if self._limit is not None and 'LIMIT' not in query.upper():
+            query = f'{query} LIMIT {self._limit}'
+
+        logger.info(f'Executing query for neon source {self._name}')
+
+        async with AsyncNeonConnection(self._connection_string) as db:
+            rows = await db.fetch_all(query, self._params)
+
+        logger.info(f'Fetched {len(rows)} rows from database')
+
+        items = []
+        for row in rows:
+            try:
+                if self._has_field and len(row.get(self._has_field, [])) == 0:
+                    continue
+                item = self._extractor(row)
+                if not item.id:
+                    item.id = str(row.get('id', ''))
+                items.append(item)
+            except Exception as e:
+                row_id = row.get('id', 'unknown')
+                logger.warning(f'Failed to extract row {row_id}: {e}')
+
+        logger.info(f'Extracted {len(items)} items from {len(rows)} rows')
         return items

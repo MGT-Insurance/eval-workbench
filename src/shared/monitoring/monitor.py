@@ -1,45 +1,22 @@
-"""
-OnlineMonitor that supports pluggable data sources and deduplication.
-
-Supports multiple data sources (Langfuse, Slack, etc.) and tracks scored
-items to avoid re-processing.
-
-Example usage:
-    from shared.monitoring import OnlineMonitor
-    from shared.monitoring.sources import LangfuseDataSource
-    from shared.monitoring.scored_items import ScoredItemsStore
-
-    # From YAML config
-    store = ScoredItemsStore("data/scored_items.csv")
-    monitor = OnlineMonitor.from_yaml("config/monitoring.yaml", scored_store=store)
-    results = monitor.run()
-
-    # Programmatic setup
-    source = LangfuseDataSource(name="athena", extractor=extract_fn, limit=100)
-    monitor = OnlineMonitor(
-        name="athena_monitor",
-        source=source,
-        metrics_config={"Metric": {"class": "metric_class"}},
-        scored_store=store,
-    )
-    results = monitor.run()
-"""
-
 import importlib
 import json
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
 import pandas as pd
 from axion._core.asyncio import run_async_function
 from axion.dataset import DatasetItem
+from axion.metrics import metric_registry
 from axion.runners import evaluation_runner
 from axion.tracing import configure_tracing
 from pandas.api import types as ptypes
 
 # -- need this file to be auto loaded for metrics access
-from implementations.athena.metrics.recommendation import metric_registry
+from implementations.athena.metrics import (
+    recommendation as _recommendation_metrics,  # noqa: F401
+)
 from shared import config
 from shared.config import ConfigurationError
 from shared.database.evaluation_upload import EvaluationUploader
@@ -55,7 +32,12 @@ from shared.monitoring.scored_items import (
     DBScoredItemsStore,
     ScoredItemsStore,
 )
-from shared.monitoring.sources import DataSource, LangfuseDataSource, SlackDataSource
+from shared.monitoring.sources import (
+    DataSource,
+    LangfuseDataSource,
+    NeonDataSource,
+    SlackDataSource,
+)
 
 metric_registry.finalize_initial_state()
 
@@ -102,6 +84,7 @@ class OnlineMonitor:
         sampling_strategy: SamplingStrategy | None = None,
         trace_experiment: bool = False,
         raw_config: dict[str, Any] | None = None,
+        evaluation_config: dict[str, Any] | None = None,
     ):
         """Initialize monitor with data source and configuration.
 
@@ -114,6 +97,7 @@ class OnlineMonitor:
             sampling_strategy: Strategy for sampling items before evaluation
             trace_experiment: Whether to trace evaluations in Langfuse
             raw_config: Raw configuration dictionary
+            evaluation_config: Configuration for evaluation_runner parameters
         """
         self.name = name
         self._source = source
@@ -123,6 +107,7 @@ class OnlineMonitor:
         self._sampling_strategy = sampling_strategy or AllSampling()
         self._trace_experiment = trace_experiment
         self._raw_config = raw_config or {}
+        self._evaluation_config = evaluation_config or {}
 
     @classmethod
     def from_yaml(
@@ -153,8 +138,8 @@ class OnlineMonitor:
               limit: 100
               hours_back: 2
             metrics_config:
-              UnderwritingFaithfulness:
-                class: "underwriting_faithfulness"
+              UWFaithfulness:
+                class: "uw_faithfulness"
 
         Example config (slack):
             name: "slack_monitor"
@@ -180,6 +165,8 @@ class OnlineMonitor:
             source = cls._build_langfuse_source(source_cfg)
         elif source_type == 'slack':
             source = cls._build_slack_source(source_cfg)
+        elif source_type == 'neon':
+            source = cls._build_neon_source(source_cfg)
         else:
             raise ConfigurationError(f'Unknown source type: {source_type}')
 
@@ -191,6 +178,10 @@ class OnlineMonitor:
         pub_cfg = config.get('publishing', cfg=cfg) or {}
         trace_experiment = config.get('trace_experiment', default=False, cfg=pub_cfg)
 
+        # Build evaluation config
+        evaluation_cfg = config.get('evaluation', cfg=cfg) or {}
+        evaluation_config = cls._build_evaluation_config(evaluation_cfg)
+
         return cls(
             name=config.get('name', cfg=cfg) or 'online_monitoring',
             source=source,
@@ -200,6 +191,7 @@ class OnlineMonitor:
             sampling_strategy=sampling_strategy,
             trace_experiment=trace_experiment,
             raw_config=cfg,
+            evaluation_config=evaluation_config,
         )
 
     @classmethod
@@ -242,7 +234,9 @@ class OnlineMonitor:
             limit=source_cfg.get('limit', 100),
             days_back=source_cfg.get('days_back'),
             hours_back=source_cfg.get('hours_back'),
+            minutes_back=source_cfg.get('minutes_back'),
             tags=source_cfg.get('tags'),
+            trace_ids=source_cfg.get('trace_ids'),
             timeout=source_cfg.get('timeout', 60),
             fetch_full_traces=source_cfg.get('fetch_full_traces', True),
             show_progress=source_cfg.get('show_progress', True),
@@ -269,6 +263,27 @@ class OnlineMonitor:
         )
 
     @classmethod
+    def _build_neon_source(cls, source_cfg: dict) -> NeonDataSource:
+        """Build NeonDataSource from config."""
+        extractor_path = source_cfg.get('extractor')
+        if not extractor_path:
+            raise ConfigurationError("Neon source requires 'extractor' path")
+        extractor = _load_function(extractor_path)
+
+        query = source_cfg.get('query')
+        if not query:
+            raise ConfigurationError("Neon source requires 'query'")
+
+        return NeonDataSource(
+            name=source_cfg.get('name', 'default'),
+            query=query,
+            extractor=extractor,
+            connection_string=source_cfg.get('connection_string'),
+            params=source_cfg.get('params'),
+            limit=source_cfg.get('limit'),
+        )
+
+    @classmethod
     def _build_sampling_strategy(cls, sampling_cfg: dict) -> SamplingStrategy:
         """Build SamplingStrategy from config.
 
@@ -292,6 +307,65 @@ class OnlineMonitor:
             seed=sampling_cfg.get('seed'),
         )
 
+    @classmethod
+    def _build_evaluation_config(cls, eval_cfg: dict) -> dict[str, Any]:
+        """Build evaluation_runner kwargs from config.
+
+        Args:
+            eval_cfg: Evaluation configuration dict from YAML
+
+        Returns:
+            Dict of kwargs to pass to evaluation_runner
+        """
+        from axion._core.cache.schema import CacheConfig
+        from axion.schema import ErrorConfig
+
+        result: dict[str, Any] = {}
+
+        # Simple params that map directly
+        for key in (
+            'max_concurrent',
+            'throttle_delay',
+            'show_progress',
+            'scoring_strategy',
+            'scoring_key_mapping',
+            'trace_granularity',
+            'flush_per_metric',
+            'thresholds',
+            'model',  # For hierarchical scoring
+            'weights',  # For hierarchical scoring
+        ):
+            if key in eval_cfg:
+                result[key] = eval_cfg[key]
+
+        # Rename mappings
+        if 'description' in eval_cfg:
+            result['evaluation_description'] = eval_cfg['description']
+        if 'metadata' in eval_cfg:
+            result['evaluation_metadata'] = eval_cfg['metadata']
+
+        # Cache config
+        cache_cfg = eval_cfg.get('cache', {})
+        if cache_cfg:
+            result['enable_internal_caching'] = cache_cfg.get('enabled', True)
+            result['cache_config'] = CacheConfig(
+                use_cache=cache_cfg.get('use_cache', True),
+                write_cache=cache_cfg.get('write_cache', True),
+                cache_type=cache_cfg.get('cache_type', 'memory'),
+                cache_dir=cache_cfg.get('cache_dir', '.cache'),
+                cache_task=cache_cfg.get('cache_task', True),
+            )
+
+        # Error config
+        errors_cfg = eval_cfg.get('errors', {})
+        if errors_cfg:
+            result['error_config'] = ErrorConfig(
+                ignore_errors=errors_cfg.get('ignore_errors', True),
+                skip_on_missing_params=errors_cfg.get('skip_on_missing_params', False),
+            )
+
+        return result
+
     def sample_items(self, items: list[DatasetItem]) -> list[DatasetItem]:
         """Apply sampling strategy to items.
 
@@ -304,6 +378,10 @@ class OnlineMonitor:
         sampled = self._sampling_strategy.sample(items)
         logger.info(f'Sampling: {len(items)} available, {len(sampled)} sampled')
         return sampled
+
+    @staticmethod
+    def _run_timestamp() -> str:
+        return datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
     def filter_unscored_items(self, items: list[DatasetItem]) -> list[DatasetItem]:
         """Filter out items that have already been scored.
@@ -356,7 +434,12 @@ class OnlineMonitor:
         for column in prepared.columns:
             series = prepared[column]
             if ptypes.is_object_dtype(series):
-                if series.map(lambda value: isinstance(value, (dict, list))).any():
+                has_json = (
+                    series.map(lambda value: isinstance(value, (dict, list)))
+                    .to_numpy(dtype=bool, na_value=False)
+                    .any()
+                )
+                if has_json:
                     prepared[column] = series.map(
                         lambda value: json.dumps(value, default=str)
                         if value is not None
@@ -374,7 +457,7 @@ class OnlineMonitor:
         source_name = source_cfg.get('name')
         source_type = source_cfg.get('type')
         source_component = source_cfg.get('component', 'agent')
-        environment = source_cfg.get('environment', 'preview')
+        environment = source_cfg.get('environment')
         eval_mode = source_cfg.get('eval_mode')
 
         for df in (dataset_df, metrics_df):
@@ -398,7 +481,6 @@ class OnlineMonitor:
         connection_string = db_cfg.get('connection_string')
         on_conflict = db_cfg.get('on_conflict', 'do_nothing')
         chunk_size = db_cfg.get('chunk_size', 1000)
-        print(f'Pushing to DB: {connection_string}, {on_conflict}, {chunk_size}')
         with NeonConnection(connection_string=connection_string) as db:
             uploader = EvaluationUploader(
                 db=db, on_conflict=on_conflict, chunk_size=chunk_size
@@ -497,13 +579,29 @@ class OnlineMonitor:
         else:
             configure_tracing('noop')
 
-        results = evaluation_runner(
-            evaluation_inputs=items,
-            scoring_strategy='flat',
-            scoring_config={'metric': self._metrics_config},
-            evaluation_name=self.name,
-            trace_granularity='single',
-        )
+        # Build scoring_config (start with metrics, add model/weights if present)
+        scoring_config: dict[str, Any] = {'metric': self._metrics_config}
+        if 'model' in self._evaluation_config:
+            scoring_config['model'] = self._evaluation_config['model']
+        if 'weights' in self._evaluation_config:
+            scoring_config['weights'] = self._evaluation_config['weights']
+
+        # Build base kwargs with defaults
+        eval_kwargs: dict[str, Any] = {
+            'evaluation_inputs': items,
+            'scoring_config': scoring_config,
+            'evaluation_name': self.name,
+            'scoring_strategy': 'flat',
+            'trace_granularity': 'single',
+            'run_id': f'{self.name}-{self._run_timestamp()}',
+        }
+
+        # Merge config-based settings (exclude model/weights as they're in scoring_config)
+        for key, value in self._evaluation_config.items():
+            if key not in ('model', 'weights'):
+                eval_kwargs[key] = value
+
+        results = evaluation_runner(**eval_kwargs)
 
         if not should_trace:
             configure_tracing('langfuse')
@@ -515,19 +613,31 @@ class OnlineMonitor:
             pub_cfg = self._publishing_config
 
             # Publish as experiment if enabled
+            publish_metric_names = config.get(
+                'metric_names', cfg=pub_cfg
+            ) or config.get('experiment.metrics', cfg=pub_cfg)
             if config.get('experiment.enabled', default=True, cfg=pub_cfg):
                 results.publish_as_experiment(
                     dataset_name=dataset_name
                     or config.get('experiment.dataset_name', cfg=pub_cfg),
                     run_name=run_name or config.get('experiment.run_name', cfg=pub_cfg),
+                    run_metadata=config.get('experiment.run_metadata', cfg=pub_cfg),
+                    flush=config.get('experiment.flush', default=True, cfg=pub_cfg),
+                    tags=config.get('experiment.tags', cfg=pub_cfg),
+                    score_on_runtime_traces=config.get(
+                        'experiment.score_on_runtime_traces',
+                        default=False,
+                        cfg=pub_cfg,
+                    ),
                     link_to_traces=link_to_traces,
-                    metric_names=metric_names
-                    or config.get('experiment.metrics', cfg=pub_cfg),
+                    metric_names=metric_names or publish_metric_names,
                 )
                 logger.info('Published as experiment')
             elif config.get('push_to_langfuse', cfg=pub_cfg):
-                results.publish_to_observability()
-                logger.info('Published to Langfuse')
+                try:
+                    results.publish_to_observability(metric_names=publish_metric_names)
+                except TypeError:
+                    results.publish_to_observability()
             else:
                 logger.info('No publishing configuration found')
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass
-from typing import Any, Iterable, Literal, Sequence
+from typing import Any, Iterable, Literal, Sequence, cast
 
 import pandas as pd
 
@@ -121,7 +121,7 @@ def subset_evaluation_dataset_df_for_upload(
     """
     if df.empty:
         # Preserve expected column order for downstream code paths.
-        return pd.DataFrame(columns=EVALUATION_DATASET_COLUMNS)
+        return pd.DataFrame(columns=pd.Index(EVALUATION_DATASET_COLUMNS))
 
     out = df.copy()
 
@@ -134,7 +134,7 @@ def subset_evaluation_dataset_df_for_upload(
                 out[col] = None
         out = out[EVALUATION_DATASET_COLUMNS]
 
-    return out
+    return cast(pd.DataFrame, out)
 
 
 def subset_evaluation_results_df_for_upload(
@@ -153,7 +153,7 @@ def subset_evaluation_results_df_for_upload(
     - If `include_missing_columns=True`, adds any missing table columns with NULLs.
     """
     if df.empty:
-        return pd.DataFrame(columns=EVALUATION_RESULTS_COLUMNS)
+        return pd.DataFrame(columns=pd.Index(EVALUATION_RESULTS_COLUMNS))
 
     out = df.copy()
 
@@ -175,7 +175,7 @@ def subset_evaluation_results_df_for_upload(
                 out[col] = None
         out = out[EVALUATION_RESULTS_COLUMNS]
 
-    return out
+    return cast(pd.DataFrame, out)
 
 
 def _require_columns(df: pd.DataFrame, *, required: set[str], table_name: str) -> None:

@@ -1,11 +1,15 @@
 # Monitoring configuration for Athena Langfuse Recommendation Step Monitoring
 version: "1.0"
 name: "athena_recommendation_monitor"
-environment: "${ENVIRONMENT:-preview}"
+environment: "${ENVIRONMENT:-production}"
 
 # Scored items store (deduplication)
 scored_store:
   type: db
+
+# Schedule configuration (used by MonitoringScheduler)
+schedule:
+  interval_minutes: 60
 
 # Source configuration
 source:
@@ -13,28 +17,58 @@ source:
   name: "athena"
   component: "recommendation"
   eval_mode: "online"
+  environment: "${ENVIRONMENT:-production}"
   extractor: "implementations.athena.extractors.extract_recommendation"
   prompt_patterns: "implementations.athena.langfuse.prompt_patterns.WorkflowPromptPatterns"
-  limit: 6
-  days_back: 10
-  tags: ["preview"]
+  limit: 5
+  minutes_back: 60
+  tags: ["production"]
   timeout: 60
   fetch_full_traces: true
   show_progress: true
 
 # Sampling strategy
 sampling:
-  strategy: all
-  n: 10
+  strategy: random
+  n: 30 # Max of 30 items to evaluate per run (never expecting to hit this)
   seed: 42
 
 # Metrics configuration
 metrics_config:
-  UnderwritingFaithfulness:
-    class: "underwriting_faithfulness"
-    # llm_provider: 'openai'
-    # model_name: 'gpt-4o'
+  UWFaithfulness:
+    class: "uw_faithfulness"
+    llm_provider: 'openai'
+    model_name: 'gpt-4o'
     verification_mode: 'heuristic_then_llm'
+  ReferReason:
+    class: "refer_reason"
+    llm_provider: 'anthropic'
+    model_name: 'claude-sonnet-4-5-20250929'
+  UWRules:
+    class: "uw_rules"
+    llm_provider: 'openai'
+    model_name: 'gpt-4o'
+    use_unknown_reason_llm: true
+  UWCompleteness:
+    class: "uw_completeness"
+    llm_provider: 'openai'
+    model_name: 'gpt-4o'
+  CitationAccuracy:
+    class: "citation_accuracy"
+    validation_mode: 'ref_plus_input'
+
+# Evaluation runner configuration
+evaluation:
+  # Concurrency
+  max_concurrent: 2
+  throttle_delay: 2
+  # Metadata
+  metadata:
+    eval_mode: "online"
+    schedule: "interval_60m"
+    source_window_minutes: 60
+    pipeline_version: "athena_monitor_v1"
+    run_initiator: "scheduler"
 
 # Publishing configuration
 publishing:
@@ -42,14 +76,14 @@ publishing:
   push_to_langfuse: true
   trace_experiment: false
 
-  # Database upload configuration (used when push_to_db: true)
+  # Database upload configuration
   database:
-    connection_string: "postgresql://mattevanoff@localhost:5432/eval"  # Override DATABASE_URL env var
-    on_conflict: do_nothing  # do_nothing | upsert | error
-    chunk_size: 1000         # Rows per batch upload
+    on_conflict: do_nothing
+    chunk_size: 1000
 
+  # Experiment configuration
   experiment:
     enabled: false
     dataset_name: "development"
     run_name: "online-${environment}"
-    link_to_traces: false
+    link_to_traces: true

@@ -30,6 +30,18 @@ scored_store:
 - `file_path`: only for `csv`
 - `connection_string`: only for `db`
 
+### Optional schedule (for MonitoringScheduler)
+
+```yaml
+schedule:
+  # Use ONE of these
+  interval_minutes: 10
+  # cron: "*/10 * * * *"
+```
+
+- `interval_minutes`: run every N minutes
+- `cron`: cron expression for aligned schedules
+
 ---
 
 ## 2) Source Configuration
@@ -55,7 +67,7 @@ Key fields:
 
 - `extractor`: python path to a `(Trace) -> DatasetItem` function
 - `limit`: max traces to fetch
-- `days_back` / `hours_back`: time window (days_back wins if both set)
+- `days_back` / `hours_back` / `minutes_back`: time window (days_back wins if both set; hours_back wins over minutes_back)
 - `tags`: filter by Langfuse tags
 - `fetch_full_traces`: include observations/scores (slower but richer)
 
@@ -120,6 +132,8 @@ publishing:
   push_to_db: false
   push_to_langfuse: false
   trace_experiment: false
+  # metric_names:
+  #   - "MyMetric"
 
   database:
     on_conflict: do_nothing
@@ -130,6 +144,12 @@ publishing:
     dataset_name: "development"
     run_name: "online-${ENVIRONMENT:-preview}"
     link_to_traces: true
+    # run_metadata: {}
+    # tags: ["monitoring", "athena"]
+    # flush: true
+    # score_on_runtime_traces: false
+    # metrics:  # legacy: prefer publishing.metric_names
+    #   - "MyMetric"
 ```
 
 ---
