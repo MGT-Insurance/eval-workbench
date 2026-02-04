@@ -84,8 +84,8 @@ cp .env.example .env
 ### 2. Run an Evaluation
 
 ```python
-from shared.langfuse.trace import TraceCollection
-from implementations.athena.langfuse.prompt_patterns import ChatPromptPatterns
+from eval_workbench.shared.langfuse.trace import TraceCollection
+from eval_workbench.implementations.athena.langfuse.prompt_patterns import ChatPromptPatterns
 
 # Load and process traces
 traces = TraceCollection(data, prompt_patterns=ChatPromptPatterns)
@@ -126,19 +126,20 @@ pytest tests/shared/metrics/slack/test_engagement.py -v
 ```
 eval-workbench/
 ├── src/
-│   ├── shared/                    # Reusable utilities and base classes
-│   │   ├── langfuse/              # Langfuse integration (prompts, traces, webhooks)
-│   │   ├── metrics/               # Metric base classes and Slack analyzers
-│   │   ├── monitoring/            # Online monitoring and scheduling
-│   │   ├── database/              # Neon/Postgres connection management
-│   │   └── slack/                 # Slack API utilities
-│   │
-│   └── implementations/           # Product-specific implementations
-│       └── athena/                # Athena evaluation metrics
-│           ├── config/            # YAML configuration files
-│           ├── extractors/        # Data extraction logic
-│           ├── langfuse/          # Prompt patterns and joins
-│           └── metrics/           # Athena-specific metrics
+│   └── eval_workbench/            # Main package
+│       ├── shared/                # Reusable utilities and base classes
+│       │   ├── langfuse/          # Langfuse integration (prompts, traces, webhooks)
+│       │   ├── metrics/           # Metric base classes and Slack analyzers
+│       │   ├── monitoring/        # Online monitoring and scheduling
+│       │   ├── database/          # Neon/Postgres connection management
+│       │   └── slack/             # Slack API utilities
+│       │
+│       └── implementations/       # Product-specific implementations
+│           └── athena/            # Athena evaluation metrics
+│               ├── config/        # YAML configuration files
+│               ├── extractors/    # Data extraction logic
+│               ├── langfuse/      # Prompt patterns and joins
+│               └── metrics/       # Athena-specific metrics
 │
 ├── scripts/                       # CLI tools and runners
 │   ├── run_monitoring.py          # Main monitoring script
@@ -232,7 +233,7 @@ metrics:
   model: gpt-4o
 ```
 
-Config files are located in `src/implementations/<name>/config/`.
+Config files are located in `src/eval_workbench/implementations/<name>/config/`.
 
 ---
 
@@ -310,7 +311,7 @@ ruff check --fix .
 
 ### Adding a New Implementation
 
-1. Create directory: `src/implementations/<name>/`
+1. Create directory: `src/eval_workbench/implementations/<name>/`
 2. Add `settings.py` extending `RepoSettingsBase`
 3. Add `langfuse/prompt_patterns.py` for trace extraction
 4. Add metrics in `metrics/` directory
@@ -319,15 +320,15 @@ ruff check --fix .
 
 ### Notebook Development
 
-For notebooks under `src/implementations/<name>/notebooks/`:
+For notebooks under `src/eval_workbench/implementations/<name>/notebooks/`:
 
 ```bash
 # Install in editable mode (one-time setup)
 pip install -e .
 
 # Imports will work without sys.path hacks:
-from shared.langfuse.trace import TraceCollection
-from implementations.athena.settings import AthenaSettings
+from eval_workbench.shared.langfuse.trace import TraceCollection
+from eval_workbench.implementations.athena.settings import AthenaSettings
 ```
 
 ---

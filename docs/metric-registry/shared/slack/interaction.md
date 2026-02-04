@@ -75,7 +75,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.interaction import SlackInteractionAnalyzer
+    from eval_workbench.shared.metrics.slack.interaction import SlackInteractionAnalyzer
 
     metric = SlackInteractionAnalyzer()
 

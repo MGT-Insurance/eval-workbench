@@ -177,7 +177,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.refer_reason import ReferReason
+    from eval_workbench.implementations.athena.metrics.recommendation.refer_reason import ReferReason
 
     metric = ReferReason()
 
@@ -200,7 +200,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.refer_reason import ReferReason
+    from eval_workbench.implementations.athena.metrics.recommendation.refer_reason import ReferReason
 
     metric = ReferReason()
 

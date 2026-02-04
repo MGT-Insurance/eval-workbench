@@ -1,0 +1,305 @@
+# =============================================================================
+# OnlineMonitor Configuration Example
+# =============================================================================
+# This file documents all available configuration options for OnlineMonitor.
+# Copy this file and modify for your use case.
+#
+# Pipeline flow:
+#   1. Fetch items from source (up to `limit`)
+#   2. Filter out already-scored items (deduplication)
+#   3. Apply sampling strategy
+#   4. Evaluate sampled items with metrics
+#   5. Record scored items
+#   6. Publish results (optional)
+# =============================================================================
+
+version: "1.0"
+
+# Monitor name - used for deduplication tracking and experiment naming
+name: "my_monitor"
+
+# Optional scored items store (deduplication)
+# scored_store:
+#   # type: none | csv | db
+#   type: csv
+#   # file_path: "data/scored_items.csv"
+#   # connection_string: "postgresql://user:pass@host:5432/dbname"
+
+# Schedule configuration (optional, used by MonitoringScheduler)
+# schedule:
+#   # Use ONE of these
+#   interval_minutes: 10
+#   # cron: "*/10 * * * *"
+
+# =============================================================================
+# SOURCE CONFIGURATION
+# =============================================================================
+# Defines where to fetch items from. Two types supported: langfuse, slack
+
+source:
+  # --- LANGFUSE SOURCE ---
+  # Fetches traces from Langfuse observability platform
+  type: langfuse
+
+  # Source name - used as key for deduplication tracking
+  name: "my_agent"
+
+  # Component identifier - used for DB tagging (optional)
+  component: "my_component"
+
+  # Python path to extractor function: (Trace) -> DatasetItem
+  # This function transforms raw Langfuse traces into evaluation inputs
+  extractor: "implementations.my_agent.extractors.extract_trace"
+
+  # Python path to prompt patterns class (optional)
+  # Used for extracting specific prompts from traces
+  # prompt_patterns: "implementations.my_agent.langfuse.prompt_patterns.MyPromptPatterns"
+
+  # Maximum number of traces to fetch from Langfuse
+  # Set higher than sampling.n to ensure good sampling pool
+  limit: 100
+
+  # Time window - use ONE of these (days_back takes precedence)
+  days_back: 7        # Fetch traces from last N days
+  # hours_back: 24    # OR fetch traces from last N hours
+  # minutes_back: 10  # OR fetch traces from last N minutes
+
+  # Filter by tags (optional) - only fetch traces with these tags
+  tags: ["production"]
+
+  # Timeout in seconds for Langfuse API calls
+  timeout: 60
+
+  # Whether to fetch full trace data (observations, scores, etc.)
+  # Set to false for faster fetching if you only need basic trace info
+  fetch_full_traces: true
+
+  # Show progress bar during fetch
+  show_progress: true
+
+  # --- SLACK SOURCE (alternative) ---
+  # Uncomment below and comment out langfuse config above to use Slack
+  #
+  # type: slack
+  # name: "my_slack_channels"
+  #
+  # # Slack channel IDs to fetch from (required)
+  # channel_ids:
+  #   - "C0XXXXXXXXX"
+  #   - "C0YYYYYYYYY"
+  #
+  # # Maximum conversations to fetch
+  # limit: 50
+  #
+  # # Whether to fetch thread replies
+  # scrape_threads: true
+  #
+  # # Bot name to identify AI responses
+  # bot_name: "MyBot"
+  #
+  # # Slack workspace domain (for generating links)
+  # workspace_domain: "myworkspace"
+  #
+  # # Filter options
+  # drop_if_first_is_user: true   # Skip if conversation starts with user (not bot)
+  # drop_if_all_ai: true          # Skip if no human messages in thread
+  #
+  # # Concurrency for API calls
+  # max_concurrent: 2
+  #
+  # # Filter by sender (optional)
+  # # filter_sender: "U1234567890"
+
+# =============================================================================
+# SAMPLING CONFIGURATION (optional)
+# =============================================================================
+# Controls which items get evaluated from the fetched pool.
+# If omitted, defaults to "all" (evaluate everything).
+#
+# Available strategies:
+#   - all:         Evaluate all items (default behavior)
+#   - random:      Random sample of N items
+#   - most_recent: N most recent items (assumes time-ordered data)
+#   - oldest:      N oldest items
+#
+# Best practices:
+#   - Set source.limit significantly higher than sampling.n (5-10x)
+#   - Fetching is cheap, evaluation (LLM calls) is expensive
+#   - Deduplication happens BEFORE sampling
+
+sampling:
+  # Strategy name: all | random | most_recent | oldest
+  strategy: random
+
+  # Number of items to sample (ignored for "all" strategy)
+  n: 10
+
+  # Random seed for reproducible sampling (optional, random strategy only)
+  # Useful for debugging or ensuring consistent samples across runs
+  # seed: 42
+
+# --- SAMPLING EXAMPLES ---
+#
+# Evaluate all items (default):
+# sampling:
+#   strategy: all
+#
+# Random 10 items:
+# sampling:
+#   strategy: random
+#   n: 10
+#
+# Random 10 items with reproducible seed:
+# sampling:
+#   strategy: random
+#   n: 10
+#   seed: 42
+#
+# 5 most recent items:
+# sampling:
+#   strategy: most_recent
+#   n: 5
+#
+# 5 oldest items:
+# sampling:
+#   strategy: oldest
+#   n: 5
+
+# =============================================================================
+# METRICS CONFIGURATION
+# =============================================================================
+# Defines which metrics to run on each item.
+# Each metric is a key with configuration options.
+
+metrics_config:
+  # Metric name (used in results)
+  MyMetric:
+    # Metric class identifier (registered in metric_registry)
+    class: "my_metric_class"
+
+    # LLM provider for metric evaluation
+    llm_provider: "openai"    # or: anthropic, azure, etc.
+
+    # Model to use for evaluation
+    model_name: "gpt-4o"      # or: gpt-4-turbo, claude-3-opus, etc.
+
+  # Add more metrics as needed:
+  # AnotherMetric:
+  #   class: "another_metric"
+  #   llm_provider: "openai"
+  #   model_name: "gpt-4o"
+  #
+  # ThirdMetric:
+  #   class: "third_metric"
+  #   llm_provider: "anthropic"
+  #   model_name: "claude-3-opus"
+
+# =============================================================================
+# PUBLISHING CONFIGURATION (optional)
+# =============================================================================
+# Controls where results are published after evaluation.
+
+publishing:
+  # Push results to Neon database
+  push_to_db: false
+
+  # Push scores directly to Langfuse (outside of experiments)
+  push_to_langfuse: false
+
+  # Whether to trace evaluation runs in Langfuse
+  # When true: creates observation traces for each evaluation (useful for debugging)
+  # When false: uses noop tracing (no traces created, better for production)
+  trace_experiment: false
+
+  # Optional metric filter for Langfuse publishing (experiment + observability)
+  # metric_names:
+  #   - "MyMetric"
+
+  # Database upload configuration (used when push_to_db: true)
+  database:
+    # Override the DATABASE_URL environment variable (optional)
+    # If not specified, uses DATABASE_URL from environment
+    # connection_string: "postgresql://user:pass@host:5432/dbname"
+
+    # Conflict handling strategy for duplicate records
+    # Options:
+    #   - do_nothing: Skip duplicates silently (default)
+    #   - upsert: Update/overwrite all non-key columns on duplicate
+    #   - error: Raise an error on duplicates
+    on_conflict: do_nothing
+
+    # Number of rows per batch upload
+    # Higher values = faster uploads but more memory usage
+    chunk_size: 1000
+
+  # Experiment configuration (Langfuse experiments)
+  experiment:
+    # Enable publishing as Langfuse experiment
+    enabled: true
+
+    # Dataset name in Langfuse (will be created if doesn't exist)
+    dataset_name: "development"
+
+    # Run name - supports environment variable substitution
+    run_name: "online-${ENVIRONMENT:-preview}"
+
+    # Optional experiment run metadata (dict)
+    # run_metadata: {}
+
+    # Optional tags attached to all scores
+    # tags: ["monitoring", "athena"]
+
+    # Flush client after upload (default true)
+    # flush: true
+
+    # If true, attach scores to existing runtime traces (requires trace_id/observation_id)
+    # score_on_runtime_traces: false
+
+    # Link scores back to source traces in Langfuse
+    link_to_traces: true
+
+    # Filter which metrics to publish (optional)
+    # If omitted, all metrics are published
+    # metrics:
+    #   - "MyMetric"
+    #   - "AnotherMetric"
+
+# =============================================================================
+# USAGE EXAMPLES
+# =============================================================================
+#
+# Python usage:
+#
+#   from eval_workbench.shared.monitoring import OnlineMonitor, CSVScoredItemsStore
+#
+#   # Basic usage
+#   monitor = OnlineMonitor.from_yaml("config/monitoring.yaml")
+#   results = monitor.run()
+#
+#   # With deduplication store (tracks scored items across runs)
+#   store = CSVScoredItemsStore("data/scored_items.csv")
+#   monitor = OnlineMonitor.from_yaml("config/monitoring.yaml", scored_store=store)
+#   results = monitor.run(deduplicate=True)
+#
+#   # Or configure scored_store in YAML:
+#   # scored_store:
+#   #   type: csv
+#   #   file_path: "data/scored_items.csv"
+#
+#   # With config overrides
+#   monitor = OnlineMonitor.from_yaml(
+#       "config/monitoring.yaml",
+#       overrides={
+#           "source.limit": 50,
+#           "sampling.strategy": "most_recent",
+#           "sampling.n": 5,
+#       }
+#   )
+#
+#   # Run with publishing
+#   results = monitor.run(publish=True)
+#
+#   # Run without deduplication (re-evaluate all items)
+#   results = monitor.run(deduplicate=False)
+#
+# =============================================================================

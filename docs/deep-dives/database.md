@@ -78,7 +78,7 @@ class NeonSettings(RepoSettingsBase):
 ### Settings Access
 
 ```python
-from shared.database.neon import get_neon_settings, reset_neon_settings_cache
+from eval_workbench.shared.database.neon import get_neon_settings, reset_neon_settings_cache
 
 # Get cached settings
 settings = get_neon_settings()
@@ -96,7 +96,7 @@ Synchronous database manager for scripts, data analysis, and standard web apps.
 ### Initialization
 
 ```python
-from shared.database.neon import NeonConnection
+from eval_workbench.shared.database.neon import NeonConnection
 
 # Using environment variable
 db = NeonConnection()
@@ -294,7 +294,7 @@ Identical API but fully async.
 ### Initialization
 
 ```python
-from shared.database.neon import AsyncNeonConnection
+from eval_workbench.shared.database.neon import AsyncNeonConnection
 
 db = AsyncNeonConnection()  # Pool opens lazily
 ```
@@ -343,7 +343,7 @@ Worker pool pattern using `asyncio.Queue` for concurrent task execution.
 ### Initialization
 
 ```python
-from shared.database.neon import QueueExecutor
+from eval_workbench.shared.database.neon import QueueExecutor
 
 executor = QueueExecutor(
     num_workers=5,      # Number of worker coroutines
@@ -444,7 +444,7 @@ except psycopg.Error as e:
 ### Pattern 1: Simple Synchronous Queries
 
 ```python
-from shared.database.neon import NeonConnection
+from eval_workbench.shared.database.neon import NeonConnection
 
 db = NeonConnection()
 
@@ -472,7 +472,7 @@ with NeonConnection() as db:
 
 ```python
 from fastapi import FastAPI
-from shared.database.neon import AsyncNeonConnection
+from eval_workbench.shared.database.neon import AsyncNeonConnection
 
 app = FastAPI()
 db = AsyncNeonConnection()
@@ -511,7 +511,7 @@ with NeonConnection() as db:
 ### Pattern 5: Parallel Processing with QueueExecutor
 
 ```python
-from shared.database.neon import QueueExecutor
+from eval_workbench.shared.database.neon import QueueExecutor
 
 async def fetch_and_process(user_id: int):
     # Could be CPU-intensive or I/O work
@@ -532,8 +532,8 @@ results = asyncio.run(main())
 ### Pattern 6: Integration with Langfuse Joiner
 
 ```python
-from shared.database.neon import NeonConnection
-from implementations.athena.langfuse.join import AthenaNeonLangfuseJoiner
+from eval_workbench.shared.database.neon import NeonConnection
+from eval_workbench.implementations.athena.langfuse.join import AthenaNeonLangfuseJoiner
 
 db = NeonConnection()
 joiner = AthenaNeonLangfuseJoiner(neon_db=db, trace_loader=loader)
@@ -602,7 +602,7 @@ pydantic-settings>=2.0       # Environment loading
 ## Exports
 
 ```python
-from shared.database.neon import (
+from eval_workbench.shared.database.neon import (
     # Configuration
     NeonSettings,
     get_neon_settings,

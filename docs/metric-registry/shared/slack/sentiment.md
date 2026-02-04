@@ -84,7 +84,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.sentiment import SentimentDetector
+    from eval_workbench.shared.metrics.slack.sentiment import SentimentDetector
 
     metric = SentimentDetector(frustration_threshold=0.4)
 

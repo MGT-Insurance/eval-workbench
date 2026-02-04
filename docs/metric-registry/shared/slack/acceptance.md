@@ -75,7 +75,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.acceptance import AcceptanceDetector
+    from eval_workbench.shared.metrics.slack.acceptance import AcceptanceDetector
 
     metric = AcceptanceDetector()
 

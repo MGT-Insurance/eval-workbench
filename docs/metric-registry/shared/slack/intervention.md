@@ -75,7 +75,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.intervention import InterventionDetector
+    from eval_workbench.shared.metrics.slack.intervention import InterventionDetector
 
     metric = InterventionDetector()
 

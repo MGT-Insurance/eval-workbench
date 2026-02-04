@@ -98,7 +98,7 @@ class _FakeSettings:
 
 
 def test_neon_connection_requires_database_url(monkeypatch) -> None:
-    from shared.database import neon
+    from eval_workbench.shared.database import neon
 
     monkeypatch.setattr(neon, 'ConnectionPool', _FakePool)
     monkeypatch.setattr(
@@ -110,7 +110,7 @@ def test_neon_connection_requires_database_url(monkeypatch) -> None:
 
 
 def test_neon_connection_validates_pool_sizes(monkeypatch) -> None:
-    from shared.database import neon
+    from eval_workbench.shared.database import neon
 
     monkeypatch.setattr(neon, 'ConnectionPool', _FakePool)
     monkeypatch.setattr(
@@ -124,7 +124,7 @@ def test_neon_connection_validates_pool_sizes(monkeypatch) -> None:
 
 
 def test_neon_connection_builds_pool_kwargs(monkeypatch) -> None:
-    from shared.database import neon
+    from eval_workbench.shared.database import neon
 
     settings = _FakeSettings(
         database_url='postgresql://from-settings',
@@ -150,7 +150,7 @@ def test_neon_connection_builds_pool_kwargs(monkeypatch) -> None:
 
 
 def test_statement_timeout_applied_per_connection_when_not_startup(monkeypatch) -> None:
-    from shared.database import neon
+    from eval_workbench.shared.database import neon
 
     settings = _FakeSettings(
         db_statement_timeout_ms=5000, db_use_startup_statement_timeout=False
@@ -167,7 +167,7 @@ def test_statement_timeout_applied_per_connection_when_not_startup(monkeypatch) 
 
 
 def test_create_table_columns_validates_sql_type(monkeypatch) -> None:
-    from shared.database import neon
+    from eval_workbench.shared.database import neon
 
     monkeypatch.setattr(neon, 'ConnectionPool', _FakePool)
     monkeypatch.setattr(neon, 'get_neon_settings', lambda: _FakeSettings())
@@ -184,7 +184,7 @@ def test_create_table_columns_validates_sql_type(monkeypatch) -> None:
 
 
 def test_create_table_columns_executes_and_commits(monkeypatch) -> None:
-    from shared.database import neon
+    from eval_workbench.shared.database import neon
 
     # Disable statement-timeout execute call to simplify assertions
     settings = _FakeSettings(db_statement_timeout_ms=0)
@@ -207,7 +207,7 @@ def test_create_table_columns_executes_and_commits(monkeypatch) -> None:
 
 
 def test_upload_dataframe_batches_and_converts_nan_to_none(monkeypatch) -> None:
-    from shared.database import neon
+    from eval_workbench.shared.database import neon
 
     settings = _FakeSettings(db_statement_timeout_ms=0, db_upload_chunk_size=2)
     monkeypatch.setattr(neon, 'ConnectionPool', _FakePool)

@@ -14,7 +14,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 from axion._core.schema import AIMessage, HumanMessage
 from axion.dataset import DatasetItem
 from axion.dataset_schema import MultiTurnConversation
-from implementations.athena.metrics.feedback import FeedbackConversationAnalyzer
+from eval_workbench.implementations.athena.metrics.feedback import (
+    FeedbackConversationAnalyzer,
+)
 
 # =============================================================================
 # Sample Data

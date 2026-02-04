@@ -74,7 +74,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.override import OverrideDetector
+    from eval_workbench.shared.metrics.slack.override import OverrideDetector
 
     metric = OverrideDetector()
 

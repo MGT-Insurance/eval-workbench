@@ -84,7 +84,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.override import OverrideSatisfactionAnalyzer
+    from eval_workbench.shared.metrics.slack.override import OverrideSatisfactionAnalyzer
 
     metric = OverrideSatisfactionAnalyzer()
 

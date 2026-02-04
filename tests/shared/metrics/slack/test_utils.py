@@ -3,8 +3,7 @@
 import pytest
 from axion._core.schema import AIMessage, HumanMessage
 from axion.dataset_schema import MultiTurnConversation
-
-from shared.metrics.slack.utils import (
+from eval_workbench.shared.metrics.slack.utils import (
     build_transcript,
     count_questions,
     detect_ai_sender,

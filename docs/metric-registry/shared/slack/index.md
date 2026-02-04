@@ -146,7 +146,7 @@ pass, extracting all KPI-relevant signals efficiently.
 
 **Usage:**
 ```python
-from shared.metrics.slack.composite import SlackConversationAnalyzer
+from eval_workbench.shared.metrics.slack.composite import SlackConversationAnalyzer
 
 analyzer = SlackConversationAnalyzer(
     frustration_threshold=0.6,

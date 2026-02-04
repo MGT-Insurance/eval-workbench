@@ -74,7 +74,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.slack_compliance import SlackFormattingCompliance
+    from eval_workbench.shared.metrics.slack.slack_compliance import SlackFormattingCompliance
 
     metric = SlackFormattingCompliance()
 
@@ -91,7 +91,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.slack_compliance import SlackFormattingCompliance
+    from eval_workbench.shared.metrics.slack.slack_compliance import SlackFormattingCompliance
 
     metric = SlackFormattingCompliance()
 

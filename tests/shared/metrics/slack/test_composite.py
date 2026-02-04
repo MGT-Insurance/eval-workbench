@@ -6,8 +6,7 @@ import pytest
 from axion._core.schema import AIMessage, HumanMessage
 from axion.dataset import DatasetItem
 from axion.dataset_schema import MultiTurnConversation
-
-from shared.metrics.slack.composite import (
+from eval_workbench.shared.metrics.slack.composite import (
     AcceptanceSignals,
     EngagementSignals,
     EscalationSignals,

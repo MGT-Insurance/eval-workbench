@@ -176,7 +176,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.citation_accuracy import CitationAccuracy
+    from eval_workbench.implementations.athena.metrics.recommendation.citation_accuracy import CitationAccuracy
 
     metric = CitationAccuracy(validation_mode="ref_only")
 
@@ -194,7 +194,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.citation_accuracy import CitationAccuracy
+    from eval_workbench.implementations.athena.metrics.recommendation.citation_accuracy import CitationAccuracy
 
     metric = CitationAccuracy(validation_mode="ref_plus_input")
 

@@ -157,7 +157,7 @@ publishing:
 ## Usage Examples
 
 ```python
-from shared.monitoring import OnlineMonitor, ScoredItemsStore
+from eval_workbench.shared.monitoring import OnlineMonitor, ScoredItemsStore
 
 # Basic usage
 monitor = OnlineMonitor.from_yaml("config/monitoring.yaml")

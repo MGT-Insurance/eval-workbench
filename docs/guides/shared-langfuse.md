@@ -92,7 +92,7 @@ invalidation, and change notifications.
 ### Initialization
 
 ```python
-from shared.langfuse.prompt import LangfusePromptManager
+from eval_workbench.shared.langfuse.prompt import LangfusePromptManager
 
 manager = LangfusePromptManager(
     public_key="pk-...",      # Optional, uses env if not provided
@@ -366,7 +366,7 @@ class PromptPatternsBase:
 ### Creating Custom Patterns
 
 ```python
-from shared.langfuse.trace import PromptPatternsBase, create_extraction_pattern
+from eval_workbench.shared.langfuse.trace import PromptPatternsBase, create_extraction_pattern
 
 class CustomPromptPatterns(PromptPatternsBase):
     @staticmethod
@@ -458,7 +458,7 @@ When configured, posts formatted alerts to Slack on prompt changes:
 Parses raw string chat transcript into structured messages.
 
 ```python
-from shared.langfuse.utils import parse_chat_transcript
+from eval_workbench.shared.langfuse.utils import parse_chat_transcript
 
 transcript = """
 Athena: Hello, how can I help?
@@ -481,7 +481,7 @@ messages = parse_chat_transcript(transcript, agent_name="Athena")
 ### Prompt Management
 
 ```python
-from shared.langfuse.prompt import LangfusePromptManager
+from eval_workbench.shared.langfuse.prompt import LangfusePromptManager
 
 manager = LangfusePromptManager()
 
@@ -503,8 +503,8 @@ manager.on_prompt_change(on_update)
 ### Trace Analysis
 
 ```python
-from shared.langfuse.trace import Trace, TraceCollection
-from implementations.athena.langfuse.prompt_patterns import WorkflowPromptPatterns
+from eval_workbench.shared.langfuse.trace import Trace, TraceCollection
+from eval_workbench.implementations.athena.langfuse.prompt_patterns import WorkflowPromptPatterns
 
 # Single trace
 trace = Trace(trace_data, prompt_patterns=WorkflowPromptPatterns)
@@ -548,13 +548,13 @@ print(trace.name)
 ## Exports
 
 ```python
-from shared.langfuse.prompt import (
+from eval_workbench.shared.langfuse.prompt import (
     LangfuseSettings,
     get_langfuse_settings,
     LangfusePromptManager,
 )
 
-from shared.langfuse.trace import (
+from eval_workbench.shared.langfuse.trace import (
     # Enums
     ModelUsageUnit,
     ObservationLevel,
@@ -581,12 +581,12 @@ from shared.langfuse.trace import (
     TraceCollection,
 )
 
-from shared.langfuse.webhook import (
+from eval_workbench.shared.langfuse.webhook import (
     verify_signature,
     langfuse_webhook,
 )
 
-from shared.langfuse.utils import (
+from eval_workbench.shared.langfuse.utils import (
     parse_chat_transcript,
 )
 ```

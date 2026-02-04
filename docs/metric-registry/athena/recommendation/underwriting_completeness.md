@@ -187,7 +187,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.underwriting_completeness import UnderwritingCompleteness
+    from eval_workbench.implementations.athena.metrics.recommendation.underwriting_completeness import UnderwritingCompleteness
 
     metric = UnderwritingCompleteness()
 
@@ -213,7 +213,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from implementations.athena.metrics.recommendation.underwriting_completeness import UnderwritingCompleteness
+    from eval_workbench.implementations.athena.metrics.recommendation.underwriting_completeness import UnderwritingCompleteness
 
     # Prioritize evidence over next steps
     metric = UnderwritingCompleteness(

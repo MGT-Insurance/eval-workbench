@@ -75,7 +75,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.recommendation import RecommendationAnalyzer
+    from eval_workbench.shared.metrics.slack.recommendation import RecommendationAnalyzer
 
     metric = RecommendationAnalyzer()
 

@@ -87,7 +87,7 @@
 
     ```python
     from axion.dataset import DatasetItem
-    from shared.metrics.slack.resolution import ResolutionDetector
+    from eval_workbench.shared.metrics.slack.resolution import ResolutionDetector
 
     metric = ResolutionDetector(stalemate_hours=72.0)
 
