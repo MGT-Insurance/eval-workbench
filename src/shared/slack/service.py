@@ -72,17 +72,21 @@ class SimplifiedMessage(TypedDict, total=False):
     threadReplies: NotRequired[List['SimplifiedMessage']]
 
 
-class ExtendedSimplifiedMessage(TypedDict):
+class ExtendedSimplifiedMessage(TypedDict, total=False):
     """Extended message format with timestamp parsing and user ID."""
 
-    ts: str
+    ts: Required[str]
     timestamp_utc: Optional[datetime]
-    sender: str
+    sender: Required[str]
     user_id: Optional[str]
-    is_bot: bool
-    content: str
+    is_bot: Required[bool]
+    content: Required[str]
     reply_count: int
     message_url: Optional[str]
+    # Keep parity with SimplifiedMessage optional fields (some call sites merge dicts).
+    id: NotRequired[str]
+    messageUrl: NotRequired[Optional[str]]
+    threadReplies: NotRequired[List['SimplifiedMessage']]
 
 
 class PostMessageOptions(TypedDict, total=False):
