@@ -27,7 +27,7 @@ dependencies = [
     "numpy",
     "pydantic",
     "pydantic-settings",
-    "psycopg-binary>=3.3.2",
+    "psycopg[binary]>=3.3.2",
     "psycopg-pool>=3.3.0",
 ]
 
