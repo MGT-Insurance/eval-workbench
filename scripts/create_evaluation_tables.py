@@ -130,8 +130,8 @@ JOIN evaluation_dataset d ON r.dataset_id = d.dataset_id;
 
 
 def create_evaluation_tables_and_view(db: NeonConnection) -> None:
-    db.create_table("evaluation_dataset", schema=EVALUATION_DATASET_SCHEMA)
-    db.create_table("evaluation_results", schema=EVALUATION_RESULTS_SCHEMA)
+    db.create_table('evaluation_dataset', schema=EVALUATION_DATASET_SCHEMA)
+    db.create_table('evaluation_results', schema=EVALUATION_RESULTS_SCHEMA)
     db.execute_commit(EVALUATION_VIEW_SQL)
 
 
@@ -164,6 +164,6 @@ def create_evaluation_tables_and_view(db: NeonConnection) -> None:
 #     db.execute_commit(TRUNCATE_EVALUATION_TABLES_SQL)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     with NeonConnection() as db:
         create_evaluation_tables_and_view(db)

@@ -789,9 +789,7 @@ class UnderwritingRules(BaseMetric):
 
         if self.use_unknown_reason_llm and primary_reason == TriggerName.UNKNOWN:
             reason_input = UnknownTriggerReasonInput(ai_output=full_text)
-            reason_eval = await self.unknown_reasoner.execute(
-                reason_input.model_dump()
-            )
+            reason_eval = await self.unknown_reasoner.execute(reason_input.model_dump())
             reason_output = cast(
                 Optional[UnknownTriggerReasonOutput], reason_eval.signals
             )
@@ -923,7 +921,8 @@ class UnderwritingRules(BaseMetric):
                     (
                         e.detection_method.value
                         for e in cast(TriggerReport, r).active_triggers
-                        if e.trigger_name == cast(TriggerReport, r).primary_referral_reason
+                        if e.trigger_name
+                        == cast(TriggerReport, r).primary_referral_reason
                     ),
                     'None',
                 ),
@@ -940,9 +939,9 @@ class UnderwritingRules(BaseMetric):
                 SignalDescriptor(
                     name=f'trigger_{i}',
                     group=f'Rule: {event.trigger_name.value}',
-                    extractor=lambda r, idx=i: cast(TriggerReport, r).active_triggers[
-                        idx
-                    ].context,
+                    extractor=lambda r, idx=i: cast(TriggerReport, r)
+                    .active_triggers[idx]
+                    .context,
                     description=f'Detected via {event.detection_method.value} | Severity: {severity}',
                 )
             )
