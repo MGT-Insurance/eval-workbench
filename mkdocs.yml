@@ -48,6 +48,7 @@ nav:
     - deep-dives/index.md
     - Architecture: deep-dives/architecture.md
     - Database: deep-dives/database.md
+    - Schema: deep-dives/schema.md
 
 theme:
   name: material

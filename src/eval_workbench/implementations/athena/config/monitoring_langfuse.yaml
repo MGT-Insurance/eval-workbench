@@ -85,5 +85,5 @@ publishing:
   experiment:
     enabled: false
     dataset_name: "development"
-    run_name: "online-${environment}"
+    run_name: "online-${ENVIRONMENT:-production}"
     link_to_traces: true

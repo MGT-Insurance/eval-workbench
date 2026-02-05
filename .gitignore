@@ -79,7 +79,7 @@ src/eval_workbench/implementations/athena/data/
 src/eval_workbench/implementations/athena/notebooks/
 
 # scripts
-scripts/
+private_scripts/
 
 # Documentation build output
 site/

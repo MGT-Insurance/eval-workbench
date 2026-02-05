@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Pattern, Tuple
+from typing import Any, Dict, List, Literal, Optional, Pattern, Tuple, cast
 
 from axion._core.logging import get_logger
 from axion._core.schema import RichBaseModel
@@ -548,8 +548,11 @@ class UnderwritingRules(BaseMetric):
 
     @trace(name='UWRules', capture_args=True, capture_response=True)
     async def execute(
-        self, dataset_item: DatasetItem, **kwargs
+        self, item: DatasetItem | dict, callbacks: Any = None, **kwargs
     ) -> MetricEvaluationResult:
+        # Axion's BaseMetric.execute supports DatasetItem or dict. Normalize to DatasetItem.
+        dataset_item = item if isinstance(item, DatasetItem) else DatasetItem(**item)
+
         actual_output = self.get_field(dataset_item, 'actual_output') or ''
         full_text = dataset_item.additional_output.get(
             self.recommendation_column_name, ''
@@ -741,9 +744,10 @@ class UnderwritingRules(BaseMetric):
         if is_referral and not detected_events:
             llm_fallback_used = True
             llm_input = GhostReferralInput(ai_output=full_text)
-            llm_result = await self.classifier.execute(llm_input)
+            llm_eval = await self.classifier.execute(llm_input.model_dump())
+            llm_result = cast(Optional[GhostReferralOutput], llm_eval.signals)
 
-            if llm_result.likely_trigger != TriggerName.UNKNOWN:
+            if llm_result and llm_result.likely_trigger != TriggerName.UNKNOWN:
                 detected_events.append(
                     TriggerEvent(
                         trigger_name=llm_result.likely_trigger,
@@ -753,7 +757,7 @@ class UnderwritingRules(BaseMetric):
                     )
                 )
             else:
-                unknown_reasoning = llm_result.reasoning
+                unknown_reasoning = llm_result.reasoning if llm_result else None
 
         # Compute Enhanced Signals
         trigger_count = len(detected_events)
@@ -785,8 +789,12 @@ class UnderwritingRules(BaseMetric):
 
         if self.use_unknown_reason_llm and primary_reason == TriggerName.UNKNOWN:
             reason_input = UnknownTriggerReasonInput(ai_output=full_text)
-            reason_output = await self.unknown_reasoner.execute(reason_input)
-            unknown_reasoning = reason_output.reasoning
+            reason_eval = await self.unknown_reasoner.execute(reason_input.model_dump())
+            reason_output = cast(
+                Optional[UnknownTriggerReasonOutput], reason_eval.signals
+            )
+            if reason_output:
+                unknown_reasoning = reason_output.reasoning
 
         summary_str = ', '.join([t.trigger_name.value for t in detected_events])
 
@@ -834,7 +842,9 @@ class UnderwritingRules(BaseMetric):
             SignalDescriptor(
                 name='Primary Trigger',
                 group='Overview',
-                extractor=lambda r: r.primary_referral_reason.value,
+                extractor=lambda r: cast(
+                    TriggerReport, r
+                ).primary_referral_reason.value,
                 headline_display=True,
             )
         )
@@ -844,7 +854,7 @@ class UnderwritingRules(BaseMetric):
             SignalDescriptor(
                 name='Outcome Status',
                 group='Overview',
-                extractor=lambda r: r.outcome_label,
+                extractor=lambda r: cast(TriggerReport, r).outcome_label,
                 headline_display=False,
             )
         )
@@ -854,7 +864,7 @@ class UnderwritingRules(BaseMetric):
             SignalDescriptor(
                 name='Trigger Count',
                 group='Overview',
-                extractor=lambda r: r.trigger_count,
+                extractor=lambda r: cast(TriggerReport, r).trigger_count,
                 headline_display=False,
             )
         )
@@ -864,7 +874,9 @@ class UnderwritingRules(BaseMetric):
             SignalDescriptor(
                 name='LLM Fallback Used',
                 group='Debug',
-                extractor=lambda r: 'Yes' if r.llm_fallback_used else 'No',
+                extractor=lambda r: 'Yes'
+                if cast(TriggerReport, r).llm_fallback_used
+                else 'No',
                 headline_display=False,
             )
         )
@@ -873,7 +885,7 @@ class UnderwritingRules(BaseMetric):
             SignalDescriptor(
                 name='Unknown Trigger Reason',
                 group='Debug',
-                extractor=lambda r: r.unknown_reasoning or 'N/A',
+                extractor=lambda r: cast(TriggerReport, r).unknown_reasoning or 'N/A',
                 headline_display=False,
             )
         )
@@ -883,7 +895,7 @@ class UnderwritingRules(BaseMetric):
             SignalDescriptor(
                 name='Min Confidence',
                 group='Debug',
-                extractor=lambda r: f'{r.min_confidence:.0%}',
+                extractor=lambda r: f'{cast(TriggerReport, r).min_confidence:.0%}',
                 headline_display=False,
             )
         )
@@ -893,7 +905,9 @@ class UnderwritingRules(BaseMetric):
             SignalDescriptor(
                 name='Has Hard Trigger',
                 group='Overview',
-                extractor=lambda r: 'Yes' if r.has_hard_trigger else 'No',
+                extractor=lambda r: 'Yes'
+                if cast(TriggerReport, r).has_hard_trigger
+                else 'No',
                 headline_display=False,
             )
         )
@@ -906,8 +920,9 @@ class UnderwritingRules(BaseMetric):
                 extractor=lambda r: next(
                     (
                         e.detection_method.value
-                        for e in r.active_triggers
-                        if e.trigger_name == r.primary_referral_reason
+                        for e in cast(TriggerReport, r).active_triggers
+                        if e.trigger_name
+                        == cast(TriggerReport, r).primary_referral_reason
                     ),
                     'None',
                 ),
@@ -924,7 +939,9 @@ class UnderwritingRules(BaseMetric):
                 SignalDescriptor(
                     name=f'trigger_{i}',
                     group=f'Rule: {event.trigger_name.value}',
-                    extractor=lambda r, idx=i: r.active_triggers[idx].context,
+                    extractor=lambda r, idx=i: cast(TriggerReport, r)
+                    .active_triggers[idx]
+                    .context,
                     description=f'Detected via {event.detection_method.value} | Severity: {severity}',
                 )
             )
