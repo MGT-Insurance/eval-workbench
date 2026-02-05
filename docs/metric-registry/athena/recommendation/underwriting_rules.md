@@ -35,12 +35,15 @@
 </div>
 
 !!! abstract "What It Measures"
-    Underwriting Rules tracks **referral triggers** in both the source data and AI output, then validates whether the AI's outcome (approve/refer/decline) is **consistent** with those triggers. If a referral trigger is present, the AI should refer; if no triggers, it should approve.
+    Underwriting Rules tracks **referral triggers**, but it is now **scoped to explicit `Refer` outcomes**.
+
+    - If the detected outcome is **not** `Refer` (e.g. Approved / Decline / Unknown), the metric **returns early** with `score=1.0` and does **not** run trigger detection.
+    - If the detected outcome **is** `Refer`, the metric requires at least one trigger to be found; otherwise it is treated as `unknown_trigger`.
 
     | Score | Interpretation |
     |-------|----------------|
-    | **1.0** | :material-check-all: Outcome matches trigger presence |
-    | **0.0** | :material-close: Mismatch between triggers and outcome |
+    | **1.0** | :material-check-all: Outcome is not `Refer` (skipped) **or** `Refer` with a trigger found |
+    | **0.0** | :material-close: Outcome is `Refer` but **no** trigger could be detected (`unknown_trigger`) |
 
 <div class="grid-container">
 
@@ -73,7 +76,7 @@
 
 === ":material-cog: Detection Pipeline"
 
-    The metric uses a three-stage pipeline: structured checks, regex scanning, and LLM fallback.
+    The metric first detects the outcome label. Only **explicit `Refer`** outcomes proceed to trigger detection (structured checks → regex scan → LLM fallback).
 
     ```mermaid
     flowchart TD
@@ -87,33 +90,41 @@
             D["Approve / Refer / Decline"]
         end
 
-        subgraph RULES["⚖️ Step 2: Trigger Detection"]
+        subgraph GATE["🚦 Step 2: Scope Gate"]
+            X{Outcome = Refer?}
+            Y["Return early\nScore: 1.0"]
+        end
+
+        subgraph RULES["⚖️ Step 3: Trigger Detection"]
             E[Structured Checks]
             F[Regex Scan]
             G[LLM Fallback]
             H["Detected Triggers"]
         end
 
-        subgraph VALIDATE["✓ Step 3: Consistency Check"]
-            I{Referral + Triggers?}
-            J{Approval + No Triggers?}
-            K["Score: 1.0 or 0.0"]
+        subgraph VALIDATE["✓ Step 4: Refer Validation"]
+            I{Triggers found?}
+            K["Score: 1.0"]
+            Z["Score: 0.0\nunknown_trigger"]
         end
 
         A --> C
         C --> D
+        D --> X
+        X -->|No| Y
+        X -->|Yes| E
         B --> E
         A --> F
         E & F --> H
-        D --> I
         H --> I
-        I -->|Match| K
-        I -->|No Triggers| G
+        I -->|Yes| K
+        I -->|No triggers after structured/regex| G
         G --> H
-        J --> K
+        I -->|No triggers after fallback| Z
 
         style INPUT stroke:#8B9F4F,stroke-width:2px
         style OUTCOME stroke:#3b82f6,stroke-width:2px
+        style GATE stroke:#64748b,stroke-width:2px
         style RULES stroke:#f59e0b,stroke-width:2px
         style VALIDATE stroke:#10b981,stroke-width:2px
         style K fill:#8B9F4F,stroke:#6B7A3A,stroke-width:3px,color:#fff
@@ -125,19 +136,22 @@
 
     <div class="grid-item" style="border-left: 4px solid #10b981; padding-left: 1rem;">
     <strong style="color: #10b981;">✅ Score = 1.0</strong>
-    <br><small>Referral/decline WITH triggers detected, OR approval WITH no triggers.</small>
+    <br><small>Outcome is not <code>Refer</code> (skipped), OR outcome is <code>Refer</code> and at least one trigger is detected.</small>
     </div>
 
     <div class="grid-item" style="border-left: 4px solid #ef4444; padding-left: 1rem;">
     <strong style="color: #ef4444;">❌ Score = 0.0</strong>
-    <br><small>Referral/decline WITHOUT triggers, OR approval WITH triggers present.</small>
+    <br><small>Outcome is <code>Refer</code> but no trigger could be detected (falls back to <code>unknown_trigger</code>).</small>
     </div>
 
     </div>
 
     !!! tip "Score Formula"
         ```
-        score = 1.0 if (is_referral == bool(detected_triggers)) else 0.0
+        if outcome_label != "Refer":
+            score = 1.0
+        else:
+            score = 1.0 if bool(detected_triggers) else 0.0
         ```
 
 </details>
@@ -188,7 +202,11 @@ The metric detects the following referral triggers through structured data check
     | `recommendation_column_name` | `str` | `brief_recommendation` | Field in additional_output to analyze |
 
     !!! info "LLM Fallback"
-        When a referral/decline is detected but no triggers are found, the metric uses an LLM classifier to infer the closest trigger category.\n+\n+        The LLM classifier prompt is generated from the same `TRIGGER_SPECS` catalog used by regex detection so trigger descriptions stay in sync.
+        When a <strong>Refer</strong> outcome is detected but no triggers are found, the metric uses an LLM classifier to infer the closest trigger category.
+
+        If the LLM cannot map to a known trigger, the metric records <code>unknown_trigger</code> and scores the case as <code>0.0</code>.
+
+        The LLM classifier prompt is generated from the same `TRIGGER_SPECS` catalog used by regex detection so trigger descriptions stay in sync.
 
 ---
 
@@ -233,7 +251,7 @@ The metric detects the following referral triggers through structured data check
     metric = UnderwritingRules()
 
     item = DatasetItem(
-        actual_output="Decline - prior claims and new business.",
+        actual_output="Refer - prior claims and new business.",
         additional_input={
             "bop_number_of_claims": 2,
             "bop_business_year_established": 2024,  # < 3 years
@@ -242,7 +260,7 @@ The metric detects the following referral triggers through structured data check
     )
 
     result = await metric.execute(item)
-    # Score: 1.0 (decline with multiple triggers)
+    # Score: 1.0 (refer with multiple triggers)
     ```
 
 ---
@@ -327,9 +345,9 @@ UnderwritingRulesResult(
 </details>
 
 <details markdown="1">
-<summary><strong>✅ Scenario 2: Consistent Approval (Score: 1.0)</strong></summary>
+<summary><strong>✅ Scenario 2: Non-Refer Outcome (Score: 1.0)</strong></summary>
 
-!!! success "Approval with No Triggers"
+!!! success "Skipped (Not in Scope)"
 
     **Recommendation:**
     > "Approve - all criteria within guidelines."
@@ -347,34 +365,33 @@ UnderwritingRulesResult(
 
     | Component | Finding |
     |-----------|---------|
-    | Outcome | Approval |
-    | Triggers | None detected |
-    | Match | ✅ Approval with no triggers |
+    | Outcome | Approved (not `Refer`) |
+    | Metric behavior | Returns early; does not run trigger detection |
 
     **Final Score:** `1.0` :material-check-all:
 
 </details>
 
 <details markdown="1">
-<summary><strong>❌ Scenario 3: Inconsistent (Score: 0.0)</strong></summary>
+<summary><strong>❌ Scenario 3: Refer with No Detected Trigger (Score: 0.0)</strong></summary>
 
-!!! failure "Approval Despite Trigger"
+!!! failure "Unknown Trigger"
 
     **Recommendation:**
-    > "Approve this application."
+    > "Refer to underwriting for review."
 
     **Source Data:**
     ```json
-    {"bop_bpp_limit": 400000}
+    {"bop_bpp_limit": 150000}
     ```
 
     **Analysis:**
 
     | Component | Finding |
     |-----------|---------|
-    | Outcome | Approval |
-    | Trigger | bppValue (BPP > $250k) |
-    | Match | ❌ Approval despite trigger |
+    | Outcome | Refer |
+    | Triggers | None detected |
+    | Result | ❌ `unknown_trigger` |
 
     **Final Score:** `0.0` :material-close:
 
@@ -401,7 +418,7 @@ UnderwritingRulesResult(
 <div class="grid-item">
 <span style="font-size: 1.5rem;">⚠️</span>
 <strong>Risk Detection</strong>
-<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Catches cases where AI approves despite red flags.</p>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Catches <code>Refer</code> cases that can’t be mapped to a known trigger (<code>unknown_trigger</code>).</p>
 </div>
 
 </div>
@@ -411,10 +428,10 @@ UnderwritingRulesResult(
 ## Quick Reference
 
 !!! note "TL;DR"
-    **Underwriting Rules** = Is the AI's decision consistent with detected referral triggers?
+    **Underwriting Rules** = For **`Refer`** outcomes, did we detect a valid referral trigger?
 
     - **Use it when:** Validating that AI follows underwriting guidelines
-    - **Score interpretation:** 1.0 = consistent, 0.0 = inconsistent
+    - **Score interpretation:** 1.0 = not `Refer` (skipped) or `Refer` with trigger; 0.0 = `Refer` with no trigger (`unknown_trigger`)
     - **Key feature:** Multi-stage detection (structured + regex + LLM fallback)
 
 <div class="grid cards" markdown>

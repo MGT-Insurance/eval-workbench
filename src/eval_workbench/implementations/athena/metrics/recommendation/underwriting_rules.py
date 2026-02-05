@@ -562,6 +562,26 @@ class UnderwritingRules(BaseMetric):
             actual_output, variant='underwriting_rules'
         )
 
+        # Optional fast-path: if this wasn't a "Refer" decision, skip trigger detection.
+        # This metric is primarily intended to explain and validate "Refer" outcomes.
+        if outcome_label.upper() != 'REFER':
+            primary_reason = TriggerName.NONE
+            result_data = TriggerReport(
+                is_referral=is_referral,
+                active_triggers=[],
+                primary_referral_reason=primary_reason,
+                summary_text='',
+                outcome_label=outcome_label,
+                trigger_count=0,
+                llm_fallback_used=False,
+                min_confidence=1.0,
+                has_hard_trigger=False,
+                unknown_reasoning=None,
+            )
+            return MetricEvaluationResult(
+                score=1.0, explanation=primary_reason, signals=result_data
+            )
+
         detected_events: List[TriggerEvent] = []
         llm_fallback_used = False
         unknown_reasoning: Optional[str] = None
