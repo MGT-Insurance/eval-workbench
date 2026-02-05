@@ -5,7 +5,7 @@ Run a single OnlineMonitor pass from a YAML config and exit.
 Designed for GitHub Actions cron runs (run-once per schedule).
 
 Usage:
-  python scripts/monitoring/run_once.py monitoring_langfuse.yaml
+  python scripts/monitoring/monitoring_entrypoint.py monitoring_langfuse.yaml
 
 Environment variables:
   - DEDUPLICATE: 'true'/'false' to enable deduplication (default: true)
@@ -107,3 +107,4 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
+

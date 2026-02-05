@@ -64,7 +64,7 @@ jobs:
 
       - name: Run monitoring
         run: |
-          python scripts/monitoring/run_once.py ${{ github.event.inputs.config_file || 'monitoring_langfuse.yaml' }}
+          python scripts/monitoring/monitoring_entrypoint.py ${{ github.event.inputs.config_file || 'monitoring_langfuse.yaml' }}
         env:
           DEDUPLICATE: ${{ github.event.inputs.deduplicate || 'true' }}
           ENVIRONMENT: ${{ github.event.inputs.environment || vars.ENVIRONMENT || 'production' }}
