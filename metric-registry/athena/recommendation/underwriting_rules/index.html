@@ -2244,7 +2244,11 @@
 
 <div class="admonition abstract">
 <p class="admonition-title">What It Measures</p>
-<p>Underwriting Rules tracks <strong>referral triggers</strong> in both the source data and AI output, then validates whether the AI's outcome (approve/refer/decline) is <strong>consistent</strong> with those triggers. If a referral trigger is present, the AI should refer; if no triggers, it should approve.</p>
+<p>Underwriting Rules tracks <strong>referral triggers</strong>, but it is now <strong>scoped to explicit <code>Refer</code> outcomes</strong>.</p>
+<ul>
+<li>If the detected outcome is <strong>not</strong> <code>Refer</code> (e.g. Approved / Decline / Unknown), the metric <strong>returns early</strong> with <code>score=1.0</code> and does <strong>not</strong> run trigger detection.</li>
+<li>If the detected outcome <strong>is</strong> <code>Refer</code>, the metric requires at least one trigger to be found; otherwise it is treated as <code>unknown_trigger</code>.</li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -2255,11 +2259,11 @@
 <tbody>
 <tr>
 <td><strong>1.0</strong></td>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M.41 13.41 6 19l1.41-1.42L1.83 12m20.41-6.42L11.66 16.17 7.5 12l-1.43 1.41L11.66 19l12-12M18 7l-1.41-1.42-6.35 6.35 1.42 1.41z"/></svg></span> Outcome matches trigger presence</td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M.41 13.41 6 19l1.41-1.42L1.83 12m20.41-6.42L11.66 16.17 7.5 12l-1.43 1.41L11.66 19l12-12M18 7l-1.41-1.42-6.35 6.35 1.42 1.41z"/></svg></span> Outcome is not <code>Refer</code> (skipped) <strong>or</strong> <code>Refer</code> with a trigger found</td>
 </tr>
 <tr>
 <td><strong>0.0</strong></td>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span> Mismatch between triggers and outcome</td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span> Outcome is <code>Refer</code> but <strong>no</strong> trigger could be detected (<code>unknown_trigger</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -2294,7 +2298,7 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64z"/></svg></span> Detection Pipeline</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3c-1.27 0-2.4.8-2.82 2H3v2h1.95L2 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3L6.05 7h3.12c.33.85.98 1.5 1.83 1.83V20H2v2h20v-2h-9V8.82c.85-.32 1.5-.97 1.82-1.82h3.13L15 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3l-2.95-7H21V5h-6.17C14.4 3.8 13.27 3 12 3m0 2a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m-6.5 5.25L7 14H4zm13 0L20 14h-3z"/></svg></span> Scoring Logic</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>The metric uses a three-stage pipeline: structured checks, regex scanning, and LLM fallback.</p>
+<p>The metric first detects the outcome label. Only <strong>explicit <code>Refer</code></strong> outcomes proceed to trigger detection (structured checks → regex scan → LLM fallback).</p>
 <pre class="mermaid"><code>flowchart TD
     subgraph INPUT["📥 Inputs"]
         A[AI Recommendation]
@@ -2306,33 +2310,41 @@
         D["Approve / Refer / Decline"]
     end
 
-    subgraph RULES["⚖️ Step 2: Trigger Detection"]
+    subgraph GATE["🚦 Step 2: Scope Gate"]
+        X{Outcome = Refer?}
+        Y["Return early\nScore: 1.0"]
+    end
+
+    subgraph RULES["⚖️ Step 3: Trigger Detection"]
         E[Structured Checks]
         F[Regex Scan]
         G[LLM Fallback]
         H["Detected Triggers"]
     end
 
-    subgraph VALIDATE["✓ Step 3: Consistency Check"]
-        I{Referral + Triggers?}
-        J{Approval + No Triggers?}
-        K["Score: 1.0 or 0.0"]
+    subgraph VALIDATE["✓ Step 4: Refer Validation"]
+        I{Triggers found?}
+        K["Score: 1.0"]
+        Z["Score: 0.0\nunknown_trigger"]
     end
 
     A --&gt; C
     C --&gt; D
+    D --&gt; X
+    X --&gt;|No| Y
+    X --&gt;|Yes| E
     B --&gt; E
     A --&gt; F
     E &amp; F --&gt; H
-    D --&gt; I
     H --&gt; I
-    I --&gt;|Match| K
-    I --&gt;|No Triggers| G
+    I --&gt;|Yes| K
+    I --&gt;|No triggers after structured/regex| G
     G --&gt; H
-    J --&gt; K
+    I --&gt;|No triggers after fallback| Z
 
     style INPUT stroke:#8B9F4F,stroke-width:2px
     style OUTCOME stroke:#3b82f6,stroke-width:2px
+    style GATE stroke:#64748b,stroke-width:2px
     style RULES stroke:#f59e0b,stroke-width:2px
     style VALIDATE stroke:#10b981,stroke-width:2px
     style K fill:#8B9F4F,stroke:#6B7A3A,stroke-width:3px,color:#fff</code></pre>
@@ -2341,16 +2353,19 @@
 <div class="grid-container">
 <p><div class="grid-item" style="border-left: 4px solid #10b981; padding-left: 1rem;">
 <strong style="color: #10b981;">✅ Score = 1.0</strong>
-<br><small>Referral/decline WITH triggers detected, OR approval WITH no triggers.</small>
+<br><small>Outcome is not <code>Refer</code> (skipped), OR outcome is <code>Refer</code> and at least one trigger is detected.</small>
 </div></p>
 <p><div class="grid-item" style="border-left: 4px solid #ef4444; padding-left: 1rem;">
 <strong style="color: #ef4444;">❌ Score = 0.0</strong>
-<br><small>Referral/decline WITHOUT triggers, OR approval WITH triggers present.</small>
+<br><small>Outcome is <code>Refer</code> but no trigger could be detected (falls back to <code>unknown_trigger</code>).</small>
 </div></p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Score Formula</p>
-<div class="highlight"><pre><span></span><code>score = 1.0 if (is_referral == bool(detected_triggers)) else 0.0
+<div class="highlight"><pre><span></span><code>if outcome_label != &quot;Refer&quot;:
+    score = 1.0
+else:
+    score = 1.0 if bool(detected_triggers) else 0.0
 </code></pre></div>
 </div>
 </div>
@@ -2454,7 +2469,9 @@
 </table>
 <div class="admonition info">
 <p class="admonition-title">LLM Fallback</p>
-<p>When a referral/decline is detected but no triggers are found, the metric uses an LLM classifier to infer the closest trigger category.\n+\n+        The LLM classifier prompt is generated from the same <code>TRIGGER_SPECS</code> catalog used by regex detection so trigger descriptions stay in sync.</p>
+<p>When a <strong>Refer</strong> outcome is detected but no triggers are found, the metric uses an LLM classifier to infer the closest trigger category.</p>
+<p>If the LLM cannot map to a known trigger, the metric records <code>unknown_trigger</code> and scores the case as <code>0.0</code>.</p>
+<p>The LLM classifier prompt is generated from the same <code>TRIGGER_SPECS</code> catalog used by regex detection so trigger descriptions stay in sync.</p>
 </div>
 </div>
 </div>
@@ -2498,7 +2515,7 @@
 <span class="n">metric</span> <span class="o">=</span> <span class="n">UnderwritingRules</span><span class="p">()</span>
 
 <span class="n">item</span> <span class="o">=</span> <span class="n">DatasetItem</span><span class="p">(</span>
-    <span class="n">actual_output</span><span class="o">=</span><span class="s2">&quot;Decline - prior claims and new business.&quot;</span><span class="p">,</span>
+    <span class="n">actual_output</span><span class="o">=</span><span class="s2">&quot;Refer - prior claims and new business.&quot;</span><span class="p">,</span>
     <span class="n">additional_input</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">&quot;bop_number_of_claims&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
         <span class="s2">&quot;bop_business_year_established&quot;</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span>  <span class="c1"># &lt; 3 years</span>
@@ -2507,7 +2524,7 @@
 <span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">metric</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-<span class="c1"># Score: 1.0 (decline with multiple triggers)</span>
+<span class="c1"># Score: 1.0 (refer with multiple triggers)</span>
 </code></pre></div>
 </div>
 </div>
@@ -2626,9 +2643,9 @@
 </div>
 </details>
 <details>
-<summary><strong>✅ Scenario 2: Consistent Approval (Score: 1.0)</strong></summary>
+<summary><strong>✅ Scenario 2: Non-Refer Outcome (Score: 1.0)</strong></summary>
 <div class="admonition success">
-<p class="admonition-title">Approval with No Triggers</p>
+<p class="admonition-title">Skipped (Not in Scope)</p>
 <p><strong>Recommendation:</strong></p>
 <blockquote>
 <p>"Approve - all criteria within guidelines."</p>
@@ -2651,15 +2668,11 @@
 <tbody>
 <tr>
 <td>Outcome</td>
-<td>Approval</td>
+<td>Approved (not <code>Refer</code>)</td>
 </tr>
 <tr>
-<td>Triggers</td>
-<td>None detected</td>
-</tr>
-<tr>
-<td>Match</td>
-<td>✅ Approval with no triggers</td>
+<td>Metric behavior</td>
+<td>Returns early; does not run trigger detection</td>
 </tr>
 </tbody>
 </table>
@@ -2667,15 +2680,15 @@
 </div>
 </details>
 <details>
-<summary><strong>❌ Scenario 3: Inconsistent (Score: 0.0)</strong></summary>
+<summary><strong>❌ Scenario 3: Refer with No Detected Trigger (Score: 0.0)</strong></summary>
 <div class="admonition failure">
-<p class="admonition-title">Approval Despite Trigger</p>
+<p class="admonition-title">Unknown Trigger</p>
 <p><strong>Recommendation:</strong></p>
 <blockquote>
-<p>"Approve this application."</p>
+<p>"Refer to underwriting for review."</p>
 </blockquote>
 <p><strong>Source Data:</strong>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;bop_bpp_limit&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">400000</span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;bop_bpp_limit&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">150000</span><span class="p">}</span>
 </code></pre></div></p>
 <p><strong>Analysis:</strong></p>
 <table>
@@ -2688,15 +2701,15 @@
 <tbody>
 <tr>
 <td>Outcome</td>
-<td>Approval</td>
+<td>Refer</td>
 </tr>
 <tr>
-<td>Trigger</td>
-<td>bppValue (BPP &gt; $250k)</td>
+<td>Triggers</td>
+<td>None detected</td>
 </tr>
 <tr>
-<td>Match</td>
-<td>❌ Approval despite trigger</td>
+<td>Result</td>
+<td>❌ <code>unknown_trigger</code></td>
 </tr>
 </tbody>
 </table>
@@ -2722,7 +2735,7 @@
 <div class="grid-item">
 <span style="font-size: 1.5rem;">⚠️</span>
 <strong>Risk Detection</strong>
-<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Catches cases where AI approves despite red flags.</p>
+<p style="margin-top: 0.5rem; color: var(--md-text-secondary);">Catches <code>Refer</code> cases that can’t be mapped to a known trigger (<code>unknown_trigger</code>).</p>
 </div>
 
 </div>
@@ -2731,10 +2744,10 @@
 <h2 id="quick-reference">Quick Reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
 <div class="admonition note">
 <p class="admonition-title">TL;DR</p>
-<p><strong>Underwriting Rules</strong> = Is the AI's decision consistent with detected referral triggers?</p>
+<p><strong>Underwriting Rules</strong> = For <strong><code>Refer</code></strong> outcomes, did we detect a valid referral trigger?</p>
 <ul>
 <li><strong>Use it when:</strong> Validating that AI follows underwriting guidelines</li>
-<li><strong>Score interpretation:</strong> 1.0 = consistent, 0.0 = inconsistent</li>
+<li><strong>Score interpretation:</strong> 1.0 = not <code>Refer</code> (skipped) or <code>Refer</code> with trigger; 0.0 = <code>Refer</code> with no trigger (<code>unknown_trigger</code>)</li>
 <li><strong>Key feature:</strong> Multi-stage detection (structured + regex + LLM fallback)</li>
 </ul>
 </div>
@@ -2768,7 +2781,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 4, 2026 21:34:04 UTC">February 4, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 5, 2026 04:04:55 UTC">February 5, 2026</span>
   </span>
 
     
