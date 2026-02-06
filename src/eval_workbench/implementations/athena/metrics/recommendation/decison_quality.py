@@ -167,7 +167,7 @@ class CoverageCheckInput(RichBaseModel):
     required_factors: List[HumanRiskFactor] = Field(
         ..., description='Checklist extracted from human notes.'
     )
-    ai_output: str = Field(..., description="The AI agent's full recommendation.")
+    actual_output: str = Field(..., description="The AI agent's full recommendation.")
     model_config = {'extra': 'forbid'}
 
 
@@ -210,7 +210,7 @@ class CoverageJudge(BaseMetric[CoverageCheckInput, CoverageJudgeOutput]):
                         impact='Medium',
                     ),
                 ],
-                ai_output=(
+                actual_output=(
                     'We noted a revenue discrepancy versus third-party data and the payroll figures do not align. '
                     'Recommend placing this account into a pre-renewal audit bucket.'
                 ),
@@ -240,7 +240,7 @@ class CoverageJudge(BaseMetric[CoverageCheckInput, CoverageJudgeOutput]):
                         impact='High',
                     ),
                 ],
-                ai_output=(
+                actual_output=(
                     'This is a new business; recommend issuing contents-only coverage and '
                     'triggering an inspection upon bind.'
                 ),
@@ -327,7 +327,7 @@ class DecisionQuality(BaseMetric):
             missing_concepts: List[ReasoningGap] = []
         else:
             check_input = CoverageCheckInput(
-                required_factors=required_factors, ai_output=ai_text
+                required_factors=required_factors, actual_output=ai_text
             )
             coverage_result = await self.coverage_judge.execute(check_input)
 

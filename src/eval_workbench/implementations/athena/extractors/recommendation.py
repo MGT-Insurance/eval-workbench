@@ -1,6 +1,7 @@
 import ast
 import json
 import logging
+import math
 import re
 from typing import Any
 
@@ -44,10 +45,16 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
     Returns:
         DatasetItem ready for evaluation_runner
     """
+    selected_span = _select_recommendation_span(trace)
+
     # Input fields
     quote_locator = _safe_get(
-        trace, 'recommendation.span.input.quote_locator', 'unknown'
+        selected_span, 'input.quote_locator', 'unknown'
     )
+    if quote_locator == 'unknown':
+        quote_locator = _safe_get(
+            trace, 'recommendation.span.input.quote_locator', 'unknown'
+        )
 
     # Parse underwriting flags (stored as string repr of list)
     underwriting_flags_raw = _safe_get(
@@ -78,19 +85,34 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
         trace, 'recommendation.variables.swallow_debug_data', ''
     )
     # Performance
-    latency = _safe_get(trace, 'recommendation.span.latency')
+    latency = _safe_get(selected_span, 'latency')
+    if latency is None:
+        latency = _safe_get(trace, 'recommendation.span.latency')
 
     # Output fields
     brief_recommendation = _safe_get(
-        trace, 'recommendation.span.output.brief_recommendation', ''
+        selected_span, 'output.brief_recommendation', ''
     )
     detailed_recommendation = _safe_get(
-        trace, 'recommendation.span.output.detailed_recommendation', ''
+        selected_span, 'output.detailed_recommendation', ''
     )
+    if _is_invalid_value(brief_recommendation) and _is_invalid_value(
+        detailed_recommendation
+    ):
+        brief_recommendation = _safe_get(
+            trace, 'recommendation.span.output.brief_recommendation', ''
+        )
+        detailed_recommendation = _safe_get(
+            trace, 'recommendation.span.output.detailed_recommendation', ''
+        )
     label = extract_recommendation_label(brief_recommendation)
 
     # Citations
-    citations_raw = _safe_get(trace, 'recommendation.span.output.citations', [])
+    citations_raw = _safe_get(selected_span, 'output.citations', [])
+    if not citations_raw:
+        citations_raw = _safe_get(
+            trace, 'recommendation.span.output.citations', []
+        )
     citations = []
     if citations_raw:
         for c in citations_raw:
@@ -101,7 +123,9 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
 
     # Langfuse metadata
     trace_id = str(getattr(trace, 'id', ''))
-    observation_id = _safe_get(trace, 'recommendation.span.id', '')
+    observation_id = _safe_get(selected_span, 'id', '')
+    if not observation_id:
+        observation_id = _safe_get(trace, 'recommendation.span.id', '')
 
     # Trace metadata
     trace_metadata = {}
@@ -153,6 +177,36 @@ def _safe_get(obj: Any, path: str, default: Any = None) -> Any:
             return default
 
     return current if current is not None else default
+
+
+def _is_invalid_value(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float) and math.isnan(value):
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() in {'undefined', 'null', 'nan', ''}
+    return False
+
+
+def _select_recommendation_span(trace: Trace) -> Any:
+    try:
+        step = trace.recommendation
+        spans = [
+            obs
+            for obs in getattr(step, 'observations', [])
+            if getattr(obs, 'type', '').upper() == 'SPAN'
+        ]
+    except Exception:
+        return None
+
+    for span in spans:
+        brief = _safe_get(span, 'output.brief_recommendation')
+        detailed = _safe_get(span, 'output.detailed_recommendation')
+        if not (_is_invalid_value(brief) and _is_invalid_value(detailed)):
+            return span
+
+    return spans[0] if spans else None
 
 
 def extract_recommendation_from_row(row: dict[str, Any]) -> DatasetItem:

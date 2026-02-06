@@ -230,7 +230,7 @@ class TriggerReport(RichBaseModel):
 
 
 class GhostReferralInput(RichBaseModel):
-    ai_output: str = Field(..., description='The full agent response.')
+    actual_output: str = Field(..., description='The full agent response.')
 
 
 class GhostReferralOutput(RichBaseModel):
@@ -266,7 +266,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 1: CONV_STORE_TEMP - 7-Eleven franchise with tobacco/alcohol
         (
             GhostReferralInput(
-                ai_output='After reviewing the application, I must refer this quote. '
+                actual_output='After reviewing the application, I must refer this quote. '
                 'The business operates as a 7-Eleven convenience store with 24-hour operations '
                 'and sells tobacco products, beer, and lottery tickets.'
             ),
@@ -278,7 +278,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 2: ORG_EST_YEAR - New business requesting building coverage
         (
             GhostReferralInput(
-                ai_output='This application requires referral. The business was just '
+                actual_output='This application requires referral. The business was just '
                 'incorporated in 2024 and has less than one year of operating history. '
                 'They are requesting building coverage and we cannot verify their track record.'
             ),
@@ -290,7 +290,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 3: BPP_TO_SALES - Low contents to revenue ratio
         (
             GhostReferralInput(
-                ai_output='Referral needed. The applicant requests $15,000 in contents coverage '
+                actual_output='Referral needed. The applicant requests $15,000 in contents coverage '
                 'but reports $500,000 in annual sales. This represents only a 3% ratio '
                 'which seems inconsistent with typical retail operations.'
             ),
@@ -302,7 +302,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 4: CLAIMS_HISTORY - Multiple prior claims
         (
             GhostReferralInput(
-                ai_output='This quote must be referred for underwriter review. The applicant '
+                actual_output='This quote must be referred for underwriter review. The applicant '
                 'disclosed two water damage claims in the past three years and one theft '
                 'claim from 2022. The loss history raises concerns about risk profile.'
             ),
@@ -314,7 +314,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 5: UNKNOWN - Generic decline with no specific reason
         (
             GhostReferralInput(
-                ai_output='After careful consideration, this application does not meet our '
+                actual_output='After careful consideration, this application does not meet our '
                 'current underwriting guidelines. We are unable to offer coverage at this time.'
             ),
             GhostReferralOutput(
@@ -325,7 +325,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 6: NON_OWNED_BLDG - Tenant requesting building coverage without ownership
         (
             GhostReferralInput(
-                ai_output='Referral required. The applicant is a tenant and does not own the building, '
+                actual_output='Referral required. The applicant is a tenant and does not own the building, '
                 'but the agent requested building coverage. Please provide the NNN (triple-net) lease.'
             ),
             GhostReferralOutput(
@@ -336,7 +336,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 7: NUM_EMPLOYEES - Employee count exceeds small business threshold
         (
             GhostReferralInput(
-                ai_output='This needs referral. The insured reports 35 employees, which exceeds our small '
+                actual_output='This needs referral. The insured reports 35 employees, which exceeds our small '
                 'business eligibility threshold and requires confirmation of revenue and staffing reasonableness.'
             ),
             GhostReferralOutput(
@@ -347,7 +347,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
         # Example 8: BUSINESS_NOC - Not Otherwise Classified / unclear operations
         (
             GhostReferralInput(
-                ai_output='Referral needed. The business was submitted as NOC (Not Otherwise Classified) '
+                actual_output='Referral needed. The business was submitted as NOC (Not Otherwise Classified) '
                 'and the operations are unclear from the application. We need to determine the correct class.'
             ),
             GhostReferralOutput(
@@ -359,7 +359,7 @@ class GhostReferralClassifier(BaseMetric[GhostReferralInput, GhostReferralOutput
 
 
 class UnknownTriggerReasonInput(RichBaseModel):
-    ai_output: str = Field(..., description='The full agent response.')
+    actual_output: str = Field(..., description='The full agent response.')
 
 
 class UnknownTriggerReasonOutput(RichBaseModel):
@@ -763,8 +763,7 @@ class UnderwritingRules(BaseMetric):
         # Ghost Referral Handling (LLM Fallback)
         if is_referral and not detected_events:
             llm_fallback_used = True
-            llm_input = GhostReferralInput(ai_output=full_text)
-            llm_eval = await self.classifier.execute(llm_input.model_dump())
+            llm_eval = await self.classifier.execute({"actual_output": full_text})
             llm_result = cast(Optional[GhostReferralOutput], llm_eval.signals)
 
             if llm_result and llm_result.likely_trigger != TriggerName.UNKNOWN:
@@ -808,8 +807,7 @@ class UnderwritingRules(BaseMetric):
             primary_reason = TriggerName.UNKNOWN
 
         if self.use_unknown_reason_llm and primary_reason == TriggerName.UNKNOWN:
-            reason_input = UnknownTriggerReasonInput(ai_output=full_text)
-            reason_eval = await self.unknown_reasoner.execute(reason_input.model_dump())
+            reason_eval = await self.unknown_reasoner.execute({"actual_output": full_text})
             reason_output = cast(
                 Optional[UnknownTriggerReasonOutput], reason_eval.signals
             )
