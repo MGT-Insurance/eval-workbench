@@ -236,7 +236,7 @@ Implementation metrics are registered in a module-level registry (e.g. Athena re
 
 You can view the monitor as a “use-case orchestrator” with ports:
 
-- **Input ports**: `DataSource.fetch_items()` returning Axion `DatasetItem`s
+- **Input ports**: `DataSource.fetch_items()` returning an Axion `Dataset`
 - **Output ports**: publish-to-Langfuse and push-to-DB
 
 Concrete adapters:

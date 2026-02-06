@@ -1,12 +1,11 @@
 from typing import Any, Dict, List, Literal, Optional
 
-import pandas as pd
 from axion._core.schema import AIMessage, HumanMessage, RichBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
-from axion.metrics.schema import SignalDescriptor
+from axion.metrics.schema import SignalDescriptor, SubMetricResult
 from pydantic import Field
 
 from eval_workbench.shared.metrics.slack.utils import (
@@ -639,6 +638,13 @@ class SlackConversationAnalyzer(BaseMetric):
     ```
     """
 
+    # Multi-metric explosion configuration
+    is_multi_metric = True
+    include_parent_score = False  # No aggregate score for analysis metrics
+    sub_metric_prefix = (
+        False  # Use standalone names: 'interaction', 'frustration', etc.
+    )
+
     def __init__(
         self,
         metrics: Optional[List[str]] = None,
@@ -951,6 +957,171 @@ class SlackConversationAnalyzer(BaseMetric):
             metadata={'slack_analysis_result': result.model_dump()},
         )
 
+    def get_sub_metrics(self, result: MetricEvaluationResult) -> List[SubMetricResult]:
+        """
+        Extract sub-metrics from the SlackAnalysisResult signals.
+
+        Each enabled metric becomes a separate sub-metric row in the output.
+        """
+        signals: SlackAnalysisResult = result.signals
+        if not signals:
+            return []
+
+        sub_metrics: List[SubMetricResult] = []
+
+        # Heuristic metrics (always present)
+        if 'interaction' in self.enabled_metrics:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='interaction',
+                    score=1.0 if signals.interaction.is_interactive else 0.0,
+                    explanation=f'Interactive: {signals.interaction.is_interactive}, '
+                    f'Turns: {signals.interaction.total_turn_count}',
+                    metric_category=MetricCategory.SCORE,
+                    group='heuristic',
+                    metadata=signals.interaction.model_dump(),
+                )
+            )
+
+        if 'engagement' in self.enabled_metrics:
+            # Normalize interaction_depth to 0-1 scale (cap at 10)
+            depth_score = min(signals.engagement.interaction_depth / 10.0, 1.0)
+            sub_metrics.append(
+                SubMetricResult(
+                    name='engagement',
+                    score=depth_score,
+                    explanation=f'Interaction depth: {signals.engagement.interaction_depth}, '
+                    f'Questions: {signals.engagement.question_count}',
+                    metric_category=MetricCategory.SCORE,
+                    group='heuristic',
+                    metadata=signals.engagement.model_dump(),
+                )
+            )
+
+        if 'recommendation' in self.enabled_metrics:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='recommendation',
+                    score=None,  # ANALYSIS metrics don't have numeric scores
+                    explanation=f'Has recommendation: {signals.recommendation.has_recommendation}, '
+                    f'Type: {signals.recommendation.recommendation_type}',
+                    metric_category=MetricCategory.ANALYSIS,  # Informational: what type of recommendation
+                    group='heuristic',
+                    metadata=signals.recommendation.model_dump(),
+                )
+            )
+
+        # LLM Interaction metrics
+        if 'escalation' in self.enabled_metrics and signals.escalation:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='escalation',
+                    score=None,  # ANALYSIS metrics don't have numeric scores
+                    explanation=f'Escalated: {signals.escalation.is_escalated}, '
+                    f'Type: {signals.escalation.escalation_type}',
+                    metric_category=MetricCategory.ANALYSIS,  # Status flag: was it escalated
+                    group='interaction',
+                    metadata=signals.escalation.model_dump(),
+                )
+            )
+
+        if 'frustration' in self.enabled_metrics and signals.frustration:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='frustration',
+                    score=signals.frustration.frustration_score,
+                    explanation=f'Frustrated: {signals.frustration.is_frustrated}, '
+                    f'Cause: {signals.frustration.frustration_cause}',
+                    threshold=self.frustration_threshold,
+                    metric_category=MetricCategory.SCORE,  # Numeric with threshold
+                    group='interaction',
+                    metadata=signals.frustration.model_dump(),
+                )
+            )
+
+        if 'acceptance' in self.enabled_metrics and signals.acceptance:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='acceptance',
+                    score=None,  # ANALYSIS metrics don't have numeric scores
+                    explanation=f'Accepted: {signals.acceptance.is_accepted}, '
+                    f'Status: {signals.acceptance.acceptance_status}',
+                    metric_category=MetricCategory.ANALYSIS,  # Status tracking: what's the acceptance status
+                    group='interaction',
+                    metadata=signals.acceptance.model_dump(),
+                )
+            )
+
+        if 'override' in self.enabled_metrics and signals.override:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='override',
+                    score=None,  # ANALYSIS metrics don't have numeric scores
+                    explanation=f'Overridden: {signals.override.is_overridden}, '
+                    f'Type: {signals.override.override_type}',
+                    metric_category=MetricCategory.ANALYSIS,  # Status flag: was it overridden
+                    group='interaction',
+                    metadata=signals.override.model_dump(),
+                )
+            )
+
+        if 'satisfaction' in self.enabled_metrics and signals.satisfaction:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='satisfaction',
+                    score=signals.satisfaction.satisfaction_score,
+                    explanation=f'Satisfactory: {signals.satisfaction.is_satisfactory}, '
+                    f'Clear reason: {signals.satisfaction.has_clear_reason}',
+                    threshold=self.satisfaction_threshold,
+                    metric_category=MetricCategory.SCORE,  # Numeric quality metric with threshold
+                    group='interaction',
+                    metadata=signals.satisfaction.model_dump(),
+                )
+            )
+
+        # LLM Outcome metrics
+        if 'intervention' in self.enabled_metrics and signals.intervention:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='intervention',
+                    score=None,  # ANALYSIS metrics don't have numeric scores
+                    explanation=f'STP: {signals.intervention.is_stp}, '
+                    f'Type: {signals.intervention.intervention_type}',
+                    metric_category=MetricCategory.ANALYSIS,  # Describes what happened
+                    group='outcome',
+                    metadata=signals.intervention.model_dump(),
+                )
+            )
+
+        if 'sentiment' in self.enabled_metrics and signals.sentiment:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='sentiment',
+                    score=signals.sentiment.sentiment_score,
+                    explanation=f'Sentiment: {signals.sentiment.sentiment}, '
+                    f'Positive: {signals.sentiment.is_positive}',
+                    threshold=self.sentiment_threshold,
+                    metric_category=MetricCategory.SCORE,  # Numeric with threshold
+                    group='outcome',
+                    metadata=signals.sentiment.model_dump(),
+                )
+            )
+
+        if 'resolution' in self.enabled_metrics and signals.resolution:
+            sub_metrics.append(
+                SubMetricResult(
+                    name='resolution',
+                    score=None,  # ANALYSIS metrics don't have numeric scores
+                    explanation=f'Resolved: {signals.resolution.is_resolved}, '
+                    f'Status: {signals.resolution.final_status}',
+                    metric_category=MetricCategory.ANALYSIS,  # Status tracking
+                    group='outcome',
+                    metadata=signals.resolution.model_dump(),
+                )
+            )
+
+        return sub_metrics
+
     def _classify_intervention_escalation(self, intervention_type: str) -> tuple:
         """Map intervention type to escalation category."""
         HARD = {'correction_factual', 'tech_issue', 'data_quality'}
@@ -1202,99 +1373,3 @@ class SlackConversationAnalyzer(BaseMetric):
             )
 
         return descriptors
-
-    @staticmethod
-    def expand_results(results) -> pd.DataFrame:
-        """Expand results into rows per metric, matching to_dataframe() format."""
-        if not hasattr(results, 'results'):
-            raise TypeError(f'Expected EvaluationResult, got {type(results)}')
-
-        all_rows = []
-        for test_result in results.results:
-            test_case_id = getattr(test_result.test_case, 'id', None)
-
-            for score_result in test_result.score_results:
-                if score_result.name != 'Slack Conversation Analyzer':
-                    continue
-
-                if (
-                    not score_result.metadata
-                    or 'slack_analysis_result' not in score_result.metadata
-                ):
-                    continue
-
-                result_obj = SlackAnalysisResult(
-                    **score_result.metadata['slack_analysis_result']
-                )
-
-                for metric_name in result_obj._get_active_metrics():
-                    signals = getattr(result_obj, metric_name, None)
-                    if signals is None:
-                        continue
-
-                    signals_dict = signals.model_dump()
-
-                    # Extract primary score based on metric type
-                    metric_score = None
-                    if metric_name == 'frustration' and hasattr(
-                        signals, 'frustration_score'
-                    ):
-                        metric_score = signals.frustration_score
-                    elif metric_name == 'satisfaction' and hasattr(
-                        signals, 'satisfaction_score'
-                    ):
-                        metric_score = signals.satisfaction_score
-                    elif metric_name == 'sentiment' and hasattr(
-                        signals, 'sentiment_score'
-                    ):
-                        metric_score = signals.sentiment_score
-
-                    row = {
-                        'id': test_case_id,
-                        'metric_name': f'slack_{metric_name}',
-                        'metric_score': metric_score,
-                        'metric_type': 'analysis',
-                        'threshold': None,
-                        'passed': None,
-                        'explanation': None,
-                        'signals': signals_dict,
-                        'metadata': {
-                            'thread_id': result_obj.thread_id,
-                            'channel_id': result_obj.channel_id,
-                            'sender': result_obj.sender,
-                        },
-                        'run_id': results.run_id,
-                        'evaluation_name': results.evaluation_name,
-                    }
-                    all_rows.append(row)
-
-        return pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
-
-    @staticmethod
-    def results_to_kpi_dataframe(results) -> pd.DataFrame:
-        """Convert results to KPI summary DataFrame."""
-        if not hasattr(results, 'results'):
-            raise TypeError(f'Expected EvaluationResult, got {type(results)}')
-
-        all_rows = []
-        for test_result in results.results:
-            test_case_id = getattr(test_result.test_case, 'id', None)
-
-            for score_result in test_result.score_results:
-                if score_result.name != 'Slack Conversation Analyzer':
-                    continue
-
-                if (
-                    not score_result.metadata
-                    or 'slack_analysis_result' not in score_result.metadata
-                ):
-                    continue
-
-                result_obj = SlackAnalysisResult(
-                    **score_result.metadata['slack_analysis_result']
-                )
-                kpi_row = result_obj.to_kpi_summary()
-                kpi_row['id'] = test_case_id
-                all_rows.append(kpi_row)
-
-        return pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
