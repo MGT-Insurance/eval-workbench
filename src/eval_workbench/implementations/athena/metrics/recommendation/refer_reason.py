@@ -110,7 +110,9 @@ class ReasonAnalysisResult(RichBaseModel):
 class ReasonExtractionInput(StrictBaseModel):
     """Input for the LLM reason extractor."""
 
-    ai_output: str = Field(..., description="The AI's recommendation/decision text.")
+    actual_output: str = Field(
+        ..., description="The AI's recommendation/decision text."
+    )
     source_data_summary: str = Field(
         default='', description='Flattened summary of source data for context.'
     )
@@ -165,7 +167,7 @@ Order reasons by importance (most important first).
         # Example 1: Property Condition
         (
             ReasonExtractionInput(
-                ai_output=(
+                actual_output=(
                     'I must refer this quote for underwriter review. The building has a '
                     'roof that is 28 years old, which exceeds our 20-year threshold. '
                     'Additionally, the electrical wiring is original knob-and-tube from '
@@ -195,7 +197,7 @@ Order reasons by importance (most important first).
         # Example 2: Data Missing / Unverifiable
         (
             ReasonExtractionInput(
-                ai_output=(
+                actual_output=(
                     'This application requires refer to underwriter. We cannot verify the reported '
                     'annual revenue of $2.5M against any third-party sources. The business '
                     'was established in 2024 and has no financial history available.'
@@ -224,7 +226,7 @@ Order reasons by importance (most important first).
         # Example 3: Classification Error
         (
             ReasonExtractionInput(
-                ai_output=(
+                actual_output=(
                     'Decline. The submission lists the business as "Retail Store (NOC)", '
                     'but the narrative and website indicate a church with onsite daycare. '
                     'The classification is too generic and does not match operations.'
@@ -247,7 +249,7 @@ Order reasons by importance (most important first).
         # Example 4: Coverage Excessive + Data Conflict
         (
             ReasonExtractionInput(
-                ai_output=(
+                actual_output=(
                     'Recommend refer to underwriter. The requested BPP limit of $3.5M appears excessive for '
                     'a business reporting only $800k in annual sales. Additionally, the '
                     'customer reports the building was built in 2015, but enrichment shows 1972.'
@@ -382,7 +384,7 @@ class ReferReason(BaseMetric):
 
         # LLM extraction
         llm_input = ReasonExtractionInput(
-            ai_output=full_text,
+            actual_output=full_text,
             source_data_summary=source_summary,
         )
         llm_result = await self.reason_extractor.execute(llm_input)

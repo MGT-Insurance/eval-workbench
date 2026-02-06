@@ -1,6 +1,7 @@
 import ast
 import json
 import logging
+import math
 import re
 from typing import Any
 
@@ -44,10 +45,15 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
     Returns:
         DatasetItem ready for evaluation_runner
     """
+    selected_observation = _select_recommendation_observation(trace)
+    span_for_meta = _get_first_recommendation_span(trace) or selected_observation
+
     # Input fields
-    quote_locator = _safe_get(
-        trace, 'recommendation.span.input.quote_locator', 'unknown'
-    )
+    quote_locator = _safe_get(span_for_meta, 'input.quote_locator', 'unknown')
+    if quote_locator == 'unknown':
+        quote_locator = _safe_get(
+            trace, 'recommendation.span.input.quote_locator', 'unknown'
+        )
 
     # Parse underwriting flags (stored as string repr of list)
     underwriting_flags_raw = _safe_get(
@@ -78,19 +84,17 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
         trace, 'recommendation.variables.swallow_debug_data', ''
     )
     # Performance
-    latency = _safe_get(trace, 'recommendation.span.latency')
+    latency = _safe_get(span_for_meta, 'latency')
+    if latency is None:
+        latency = _safe_get(trace, 'recommendation.span.latency')
 
     # Output fields
-    brief_recommendation = _safe_get(
-        trace, 'recommendation.span.output.brief_recommendation', ''
-    )
-    detailed_recommendation = _safe_get(
-        trace, 'recommendation.span.output.detailed_recommendation', ''
+    brief_recommendation, detailed_recommendation, citations_raw = (
+        _get_recommendation_output(selected_observation)
     )
     label = extract_recommendation_label(brief_recommendation)
 
     # Citations
-    citations_raw = _safe_get(trace, 'recommendation.span.output.citations', [])
     citations = []
     if citations_raw:
         for c in citations_raw:
@@ -101,7 +105,11 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
 
     # Langfuse metadata
     trace_id = str(getattr(trace, 'id', ''))
-    observation_id = _safe_get(trace, 'recommendation.span.id', '')
+    observation_id = _safe_get(selected_observation, 'id', '')
+    if not observation_id:
+        observation_id = _safe_get(span_for_meta, 'id', '')
+    if not observation_id:
+        observation_id = _safe_get(trace, 'recommendation.span.id', '')
 
     # Trace metadata
     trace_metadata = {}
@@ -145,14 +153,72 @@ def _safe_get(obj: Any, path: str, default: Any = None) -> Any:
         try:
             if hasattr(current, part):
                 current = getattr(current, part)
-            elif isinstance(current, dict) and part in current:
-                current = current[part]
+            elif isinstance(current, dict):
+                if part in current:
+                    current = current[part]
+                else:
+                    matched = _fuzzy_dict_get(current, part)
+                    if matched is None:
+                        return default
+                    current = matched
             else:
                 return default
         except Exception:
             return default
 
     return current if current is not None else default
+
+
+def _is_invalid_value(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float) and math.isnan(value):
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() in {'undefined', 'null', 'nan', ''}
+    return False
+
+
+def _select_recommendation_observation(trace: Trace) -> Any:
+    observations = _get_recommendation_observations(trace)
+    for obs in observations:
+        brief, detailed, _ = _get_recommendation_output(obs)
+        if not (_is_invalid_value(brief) and _is_invalid_value(detailed)):
+            return obs
+
+    return observations[0] if observations else None
+
+
+def _get_recommendation_observations(trace: Trace) -> list[Any]:
+    try:
+        step = trace.recommendation
+        return list(getattr(step, 'observations', []))
+    except Exception:
+        return []
+
+
+def _get_first_recommendation_span(trace: Trace) -> Any:
+    for obs in _get_recommendation_observations(trace):
+        if getattr(obs, 'type', '').upper() == 'SPAN':
+            return obs
+    return None
+
+
+def _get_recommendation_output(observation: Any) -> tuple[str, str, list[Any]]:
+    if observation is None:
+        return '', '', []
+    brief = _safe_get(observation, 'output.brief_recommendation', '')
+    detailed = _safe_get(observation, 'output.detailed_recommendation', '')
+    citations_raw = _safe_get(observation, 'output.citations', [])
+    return brief, detailed, citations_raw
+
+
+def _fuzzy_dict_get(data: dict[str, Any], key: str) -> Any:
+    target = key.lower().replace('_', '')
+    for k, v in data.items():
+        if k.lower().replace('_', '') == target:
+            return v
+    return None
 
 
 def extract_recommendation_from_row(row: dict[str, Any]) -> DatasetItem:
