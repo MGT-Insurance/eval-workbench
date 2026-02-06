@@ -15,7 +15,7 @@ Example:
         limit=100,
         hours_back=2,
     )
-    items = await source.fetch_items()
+    dataset = await source.fetch_items()
 
     # Slack source
     source = SlackDataSource(
@@ -23,14 +23,14 @@ Example:
         channel_ids=["C09MAP9HR9D"],
         limit=10,
     )
-    items = await source.fetch_items()
+    dataset = await source.fetch_items()
 """
 
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
-from axion.dataset import DatasetItem
+from axion.dataset import DatasetItem, Dataset
 from axion.tracing import LangfuseTraceLoader
 
 from eval_workbench.shared.langfuse.trace import (
@@ -52,8 +52,8 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    async def fetch_items(self) -> list[DatasetItem]:
-        """Fetch items to evaluate. Each item must have a unique `id`."""
+    async def fetch_items(self) -> Dataset:
+        """Fetch items to evaluate as a dataset. Each item must have a unique `id`."""
         pass
 
 
@@ -153,8 +153,8 @@ class LangfuseDataSource(DataSource):
 
         return TraceCollection(trace_data, prompt_patterns=self._prompt_patterns)
 
-    async def fetch_items(self) -> list[DatasetItem]:
-        """Fetch traces from Langfuse and extract DatasetItems."""
+    async def fetch_items(self) -> Dataset:
+        """Fetch traces from Langfuse and extract DatasetItems into a Dataset."""
         # If specific trace_ids provided, fetch those directly
         if self._trace_ids:
             collection = self._fetch_traces_by_ids(self._trace_ids)
@@ -176,7 +176,7 @@ class LangfuseDataSource(DataSource):
                 logger.warning(f'Failed to extract trace {trace_id}: {e}')
 
         logger.info(f'Extracted {len(items)} items from {len(collection)} traces')
-        return items
+        return Dataset.create(name=self._name, items=items)
 
 
 class SlackDataSource(DataSource):
@@ -189,10 +189,14 @@ class SlackDataSource(DataSource):
         scrape_threads: Include thread replies (default: True)
         filter_sender: Only keep messages from this sender
         bot_name: Name used to identify AI vs human messages (default: "Athena")
+        bot_names: Optional list of names to identify AI vs human messages
         workspace_domain: Slack workspace subdomain (default: "mgtinsurance")
         drop_if_first_is_user: Drop if first turn is from user (default: False)
         drop_if_all_ai: Drop if all turns are AI (default: False)
         max_concurrent: Max concurrent channel scrapes (default: 2)
+        exclude_senders: Optional list of sender names to omit from conversations
+        drop_message_regexes: Optional list of regex patterns to drop messages
+        strip_citation_block: Remove trailing citation blocks like "[1] ..." lines
     """
 
     def __init__(
@@ -203,10 +207,14 @@ class SlackDataSource(DataSource):
         scrape_threads: bool = True,
         filter_sender: str | None = None,
         bot_name: str = 'Athena',
+        bot_names: list[str] | None = None,
         workspace_domain: str = 'mgtinsurance',
         drop_if_first_is_user: bool = False,
         drop_if_all_ai: bool = False,
         max_concurrent: int = 2,
+        exclude_senders: list[str] | None = None,
+        drop_message_regexes: list[str] | None = None,
+        strip_citation_block: bool = False,
     ):
         self._name = name
         self._channel_ids = channel_ids
@@ -214,18 +222,22 @@ class SlackDataSource(DataSource):
         self._scrape_threads = scrape_threads
         self._filter_sender = filter_sender
         self._bot_name = bot_name
+        self._bot_names = bot_names
         self._workspace_domain = workspace_domain
         self._drop_if_first_is_user = drop_if_first_is_user
         self._drop_if_all_ai = drop_if_all_ai
         self._max_concurrent = max_concurrent
+        self._exclude_senders = exclude_senders
+        self._drop_message_regexes = drop_message_regexes
+        self._strip_citation_block = strip_citation_block
 
     @property
     def source_key(self) -> str:
         """Return source key in format 'slack:{name}'."""
         return f'slack:{self._name}'
 
-    async def fetch_items(self) -> list[DatasetItem]:
-        """Fetch messages from Slack and convert to DatasetItems."""
+    async def fetch_items(self) -> Dataset:
+        """Fetch messages from Slack and convert to DatasetItems into a Dataset."""
         from eval_workbench.shared.slack.exporter import SlackExporter
 
         logger.info(
@@ -239,15 +251,19 @@ class SlackDataSource(DataSource):
             scrape_threads=self._scrape_threads,
             filter_sender=self._filter_sender,
             bot_name=self._bot_name,
+            bot_names=self._bot_names,
             workspace_domain=self._workspace_domain,
             drop_if_first_is_user=self._drop_if_first_is_user,
             drop_if_all_ai=self._drop_if_all_ai,
             max_concurrent=self._max_concurrent,
+            exclude_senders=self._exclude_senders,
+            drop_message_regexes=self._drop_message_regexes,
+            strip_citation_block=self._strip_citation_block,
         )
 
         items = await exporter.execute()
         logger.info(f'Fetched {len(items)} items from Slack')
-        return items
+        return Dataset.create(name=self._name, items=items)
 
 
 class NeonDataSource(DataSource):
@@ -284,7 +300,7 @@ class NeonDataSource(DataSource):
     def source_key(self) -> str:
         return f'neon:{self._name}'
 
-    async def fetch_items(self) -> list[DatasetItem]:
+    async def fetch_items(self) -> Dataset:
         from eval_workbench.shared.database.neon import AsyncNeonConnection
 
         query = self._query
@@ -312,4 +328,4 @@ class NeonDataSource(DataSource):
                 logger.warning(f'Failed to extract row {row_id}: {e}')
 
         logger.info(f'Extracted {len(items)} items from {len(rows)} rows')
-        return items
+        return Dataset.create(name=self._name, items=items)

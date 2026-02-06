@@ -21,7 +21,7 @@ source:
   extractor: "eval_workbench.implementations.athena.extractors.extract_recommendation"
   prompt_patterns: "eval_workbench.implementations.athena.langfuse.prompt_patterns.WorkflowPromptPatterns"
   limit: 50
-  minutes_back: 60
+  minutes_back: 90 # Since Github Actions are always accurate to the minute, we allow for a buffer
   tags: ["production"]
   timeout: 60
   fetch_full_traces: true

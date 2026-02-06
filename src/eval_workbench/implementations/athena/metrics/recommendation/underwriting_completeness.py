@@ -225,6 +225,15 @@ class UnderwritingCompleteness(BaseMetric):
             for key, res in res_map.items()
         ]
 
+        self.compute_cost_estimate(
+                [
+                    self.decision_judge,
+                    self.rationale_judge,
+                    self.evidence_judge,
+                    self.next_step_judge,
+                ]
+            )
+
         return MetricEvaluationResult(
             score=total_score,
             signals=UnderwritingCompletenessResult(

@@ -7,7 +7,7 @@ from typing import Any, Callable
 
 import pandas as pd
 from axion._core.asyncio import run_async_function
-from axion.dataset import DatasetItem
+from axion.dataset import Dataset, DatasetItem
 from axion.metrics import metric_registry
 from axion.runners import evaluation_runner
 from axion.tracing import configure_tracing
@@ -366,38 +366,51 @@ class OnlineMonitor:
 
         return result
 
-    def sample_items(self, items: list[DatasetItem]) -> list[DatasetItem]:
-        """Apply sampling strategy to items.
+    @staticmethod
+    def _clone_dataset(dataset: Dataset, items: list[DatasetItem]) -> Dataset:
+        return Dataset(
+            name=dataset.name,
+            description=dataset.description,
+            version=dataset.version,
+            created_at=dataset.created_at,
+            metadata=dataset.metadata,
+            items=items,
+        )
+
+    def sample_items(self, dataset: Dataset) -> Dataset:
+        """Apply sampling strategy to dataset items.
 
         Args:
-            items: List of items to sample from
+            dataset: Dataset to sample from
 
         Returns:
-            Sampled subset of items
+            Dataset containing the sampled subset of items
         """
-        sampled = self._sampling_strategy.sample(items)
-        logger.info(f'Sampling: {len(items)} available, {len(sampled)} sampled')
-        return sampled
+        sampled = self._sampling_strategy.sample(dataset.items)
+        logger.info(
+            f'Sampling: {len(dataset.items)} available, {len(sampled)} sampled'
+        )
+        return self._clone_dataset(dataset, sampled)
 
     @staticmethod
     def _run_timestamp() -> str:
         return datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
-    def filter_unscored_items(self, items: list[DatasetItem]) -> list[DatasetItem]:
+    def filter_unscored_items(self, dataset: Dataset) -> Dataset:
         """Filter out items that have already been scored and deduplicate within batch.
 
         Args:
-            items: List of items to filter
+            dataset: Dataset to filter
 
         Returns:
-            List of unique items that haven't been scored yet
+            Dataset containing unique items that haven't been scored yet
         """
         scored_id_set: set[str] = set()
         if self._scored_store:
             scored_ids = self._scored_store.get_scored_item_ids(self._source.source_key)
             scored_id_set = set(scored_ids)
 
-        pulled_ids = [item.id for item in items if item.id]
+        pulled_ids = [item.id for item in dataset.items if item.id]
         pulled_unique_ids = set(pulled_ids)
         pulled_dups = len(pulled_ids) - len(pulled_unique_ids)
 
@@ -407,29 +420,29 @@ class OnlineMonitor:
 
         # Deduplicate within batch AND filter out already-scored items
         seen_ids: set[str] = set()
-        unscored = []
-        for item in items:
+        unscored: list[DatasetItem] = []
+        for item in dataset.items:
             if item.id and item.id not in scored_id_set and item.id not in seen_ids:
                 unscored.append(item)
                 seen_ids.add(item.id)
 
         logger.info(
-            f'Dedup: fetched={len(items)} (unique_ids={len(pulled_unique_ids)}, '
+            f'Dedup: fetched={len(dataset.items)} (unique_ids={len(pulled_unique_ids)}, '
             f'pulled_dups={pulled_dups}), already_scored_matches={already_scored_matches} '
             f'(scored_store_size={len(scored_id_set)}), to_process={len(unscored)}'
         )
-        return unscored
+        return self._clone_dataset(dataset, unscored)
 
-    def record_scored_items(self, items: list[DatasetItem]) -> None:
+    def record_scored_items(self, dataset: Dataset) -> None:
         """Record items as scored in the store.
 
         Args:
-            items: List of items that were successfully scored
+            dataset: Dataset whose items were successfully scored
         """
         if not self._scored_store:
             return
 
-        item_ids = [str(item.id) for item in items if item.id]
+        item_ids = [str(item.id) for item in dataset.items if item.id]
         self._scored_store.record_scored_items(self._source.source_key, item_ids)
 
     def _infer_sql_type(self, series: pd.Series) -> str:
@@ -562,21 +575,21 @@ class OnlineMonitor:
             EvaluationResults from axion's evaluation_runner, or None if no items
         """
         # Fetch items from source
-        items = await self._source.fetch_items()
-        if not items:
+        dataset = await self._source.fetch_items()
+        if not dataset:
             logger.warning('No items found from source')
             return None
 
         # Filter already-scored items
         if deduplicate:
-            items = self.filter_unscored_items(items)
-            if not items:
+            dataset = self.filter_unscored_items(dataset)
+            if not dataset:
                 logger.info('All items already scored, nothing to process')
                 return None
 
         # Apply sampling strategy
-        items = self.sample_items(items)
-        if not items:
+        dataset = self.sample_items(dataset)
+        if not dataset:
             logger.info('No items to process after sampling')
             return None
 
@@ -585,7 +598,7 @@ class OnlineMonitor:
             raise ConfigurationError('metrics_config required')
 
         logger.info(
-            f'Evaluating {len(items)} items with metrics: {list(self._metrics_config.keys())}'
+            f'Evaluating {len(dataset)} items with metrics: {list(self._metrics_config.keys())}'
         )
 
         # Use config default if not overridden at runtime
@@ -607,7 +620,7 @@ class OnlineMonitor:
 
         # Build base kwargs with defaults
         eval_kwargs: dict[str, Any] = {
-            'evaluation_inputs': items,
+            'evaluation_inputs': dataset,
             'scoring_config': scoring_config,
             'evaluation_name': self.name,
             'scoring_strategy': 'flat',
@@ -634,7 +647,7 @@ class OnlineMonitor:
             configure_tracing('langfuse')
 
         # Record scored items
-        self.record_scored_items(items)
+        self.record_scored_items(dataset)
 
         if publish:
             pub_cfg = self._publishing_config
