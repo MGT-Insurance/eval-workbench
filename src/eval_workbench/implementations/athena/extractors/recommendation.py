@@ -48,9 +48,7 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
     selected_span = _select_recommendation_span(trace)
 
     # Input fields
-    quote_locator = _safe_get(
-        selected_span, 'input.quote_locator', 'unknown'
-    )
+    quote_locator = _safe_get(selected_span, 'input.quote_locator', 'unknown')
     if quote_locator == 'unknown':
         quote_locator = _safe_get(
             trace, 'recommendation.span.input.quote_locator', 'unknown'
@@ -90,9 +88,7 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
         latency = _safe_get(trace, 'recommendation.span.latency')
 
     # Output fields
-    brief_recommendation = _safe_get(
-        selected_span, 'output.brief_recommendation', ''
-    )
+    brief_recommendation = _safe_get(selected_span, 'output.brief_recommendation', '')
     detailed_recommendation = _safe_get(
         selected_span, 'output.detailed_recommendation', ''
     )
@@ -110,9 +106,7 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
     # Citations
     citations_raw = _safe_get(selected_span, 'output.citations', [])
     if not citations_raw:
-        citations_raw = _safe_get(
-            trace, 'recommendation.span.output.citations', []
-        )
+        citations_raw = _safe_get(trace, 'recommendation.span.output.citations', [])
     citations = []
     if citations_raw:
         for c in citations_raw:

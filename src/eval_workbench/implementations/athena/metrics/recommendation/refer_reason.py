@@ -110,7 +110,9 @@ class ReasonAnalysisResult(RichBaseModel):
 class ReasonExtractionInput(StrictBaseModel):
     """Input for the LLM reason extractor."""
 
-    actual_output: str = Field(..., description="The AI's recommendation/decision text.")
+    actual_output: str = Field(
+        ..., description="The AI's recommendation/decision text."
+    )
     source_data_summary: str = Field(
         default='', description='Flattened summary of source data for context.'
     )

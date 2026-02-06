@@ -763,7 +763,7 @@ class UnderwritingRules(BaseMetric):
         # Ghost Referral Handling (LLM Fallback)
         if is_referral and not detected_events:
             llm_fallback_used = True
-            llm_eval = await self.classifier.execute({"actual_output": full_text})
+            llm_eval = await self.classifier.execute({'actual_output': full_text})
             llm_result = cast(Optional[GhostReferralOutput], llm_eval.signals)
 
             if llm_result and llm_result.likely_trigger != TriggerName.UNKNOWN:
@@ -807,7 +807,9 @@ class UnderwritingRules(BaseMetric):
             primary_reason = TriggerName.UNKNOWN
 
         if self.use_unknown_reason_llm and primary_reason == TriggerName.UNKNOWN:
-            reason_eval = await self.unknown_reasoner.execute({"actual_output": full_text})
+            reason_eval = await self.unknown_reasoner.execute(
+                {'actual_output': full_text}
+            )
             reason_output = cast(
                 Optional[UnknownTriggerReasonOutput], reason_eval.signals
             )
