@@ -226,13 +226,13 @@ class UnderwritingCompleteness(BaseMetric):
         ]
 
         self.compute_cost_estimate(
-                [
-                    self.decision_judge,
-                    self.rationale_judge,
-                    self.evidence_judge,
-                    self.next_step_judge,
-                ]
-            )
+            [
+                self.decision_judge,
+                self.rationale_judge,
+                self.evidence_judge,
+                self.next_step_judge,
+            ]
+        )
 
         return MetricEvaluationResult(
             score=total_score,

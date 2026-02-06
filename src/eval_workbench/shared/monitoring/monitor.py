@@ -387,9 +387,7 @@ class OnlineMonitor:
             Dataset containing the sampled subset of items
         """
         sampled = self._sampling_strategy.sample(dataset.items)
-        logger.info(
-            f'Sampling: {len(dataset.items)} available, {len(sampled)} sampled'
-        )
+        logger.info(f'Sampling: {len(dataset.items)} available, {len(sampled)} sampled')
         return self._clone_dataset(dataset, sampled)
 
     @staticmethod

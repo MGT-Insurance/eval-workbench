@@ -30,7 +30,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
-from axion.dataset import DatasetItem, Dataset
+from axion.dataset import Dataset, DatasetItem
 from axion.tracing import LangfuseTraceLoader
 
 from eval_workbench.shared.langfuse.trace import (

@@ -1,5 +1,13 @@
 from typing import Any, Dict, List, Literal, Optional
 
+from axion._core.schema import AIMessage, HumanMessage, RichBaseModel
+from axion._core.tracing import trace
+from axion._core.types import MetricCategory
+from axion.dataset import DatasetItem
+from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
+from axion.metrics.schema import SignalDescriptor, SubMetricResult
+from pydantic import Field
+
 from eval_workbench.shared.metrics.slack.utils import (
     build_transcript,
     count_questions,
@@ -12,14 +20,6 @@ from eval_workbench.shared.metrics.slack.utils import (
     get_human_messages,
     parse_slack_metadata,
 )
-from pydantic import Field
-
-from axion._core.schema import AIMessage, HumanMessage, RichBaseModel
-from axion._core.tracing import trace
-from axion._core.types import MetricCategory
-from axion.dataset import DatasetItem
-from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
-from axion.metrics.schema import SignalDescriptor, SubMetricResult
 
 # Heuristic metrics (no LLM cost)
 HEURISTIC_METRICS = {'interaction', 'engagement', 'recommendation'}

@@ -74,7 +74,9 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
         context_data = {}
 
     case_assessment = _safe_get(trace, 'recommendation.variables.case_assessment', '')
-    swallow_debug_data = _safe_get(trace, 'recommendation.variables.swallow_debug_data', '')
+    swallow_debug_data = _safe_get(
+        trace, 'recommendation.variables.swallow_debug_data', ''
+    )
     # Performance
     latency = _safe_get(trace, 'recommendation.span.latency')
 
