@@ -53,15 +53,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      # Restore scored items cache from previous runs
-      - name: Restore scored items cache
-        uses: actions/cache@v4
-        with:
-          path: data/scored_items.csv
-          key: scored-items-${{ github.run_id }}
-          restore-keys: |
-            scored-items-
-
       - name: Run monitoring
         run: |
           python scripts/monitoring/monitoring_entrypoint.py ${{ github.event.inputs.config_file || 'monitoring_langfuse.yaml' }}
@@ -78,14 +69,6 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           # Database (if pushing to DB)
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      # Save scored items cache for next run
-      - name: Save scored items cache
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: data/scored_items.csv
-          key: scored-items-${{ github.run_id }}
 
       - name: Upload scored items as artifact
         uses: actions/upload-artifact@v4

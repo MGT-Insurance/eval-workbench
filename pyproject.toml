@@ -52,6 +52,7 @@ langfuse = ["langfuse>=3.0.0"]
 # Knowledge graph memory (optional)
 memory = [
     "zep-cloud>=2.0.0",
+    "falkordb>=1.0.0",
     "networkx>=3.0",
     "matplotlib>=3.7",
 ]

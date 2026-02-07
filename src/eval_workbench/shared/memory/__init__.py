@@ -1,4 +1,5 @@
 from eval_workbench.shared.memory.analytics import BaseGraphAnalytics
+from eval_workbench.shared.memory.falkor import FalkorGraphStore
 from eval_workbench.shared.memory.ontology import (
     EdgeTypeDefinition,
     NodeTypeDefinition,
@@ -14,7 +15,12 @@ from eval_workbench.shared.memory.persistence import (
     save_extractions,
 )
 from eval_workbench.shared.memory.pipeline import BasePipeline, PipelineResult
-from eval_workbench.shared.memory.settings import ZepSettings, get_zep_settings
+from eval_workbench.shared.memory.settings import (
+    FalkorSettings,
+    ZepSettings,
+    get_falkor_settings,
+    get_zep_settings,
+)
 from eval_workbench.shared.memory.store import (
     BaseGraphStore,
     GraphEdge,
@@ -38,6 +44,7 @@ __all__ = [
     'GraphSearchResult',
     'GraphIngestPayload',
     'ZepGraphStore',
+    'FalkorGraphStore',
     # Pipeline
     'BasePipeline',
     'PipelineResult',
@@ -52,4 +59,6 @@ __all__ = [
     # Settings
     'ZepSettings',
     'get_zep_settings',
+    'FalkorSettings',
+    'get_falkor_settings',
 ]

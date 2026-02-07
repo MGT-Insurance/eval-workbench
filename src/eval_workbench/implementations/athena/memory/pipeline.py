@@ -7,6 +7,7 @@ from pathlib import Path
 from eval_workbench.implementations.athena.memory.extractors import RuleExtractor
 from eval_workbench.shared.memory.ontology import OntologyDefinition
 from eval_workbench.shared.memory.persistence import (
+    fetch_all_extractions,
     fetch_pending,
     mark_failed,
     mark_ingested,
@@ -235,18 +236,22 @@ class AthenaRulePipeline(BasePipeline):
         *,
         batch_id: str | None = None,
         batch_size: int = 5,
+        force: bool = False,
     ) -> PipelineResult:
-        """Re-ingest pending rules from Neon into Zep (no LLM extraction).
+        """Re-ingest rules from Neon into the graph store (no LLM extraction).
 
-        Loads rules with ``ingestion_status='pending'`` from the database and
-        ingests them into the graph store, updating their status on success or
-        failure.
+        By default loads only rules with ``ingestion_status='pending'``.
+        Pass ``force=True`` to reload ALL rules regardless of status
+        (useful when rebuilding a graph backend from scratch).
         """
         if not self.db:
             raise ValueError('NeonConnection required for run_from_db')
 
         result = PipelineResult()
-        rules = fetch_pending(self.db, agent_name='athena', batch_id=batch_id)
+        if force:
+            rules = fetch_all_extractions(self.db, agent_name='athena', limit=10000)
+        else:
+            rules = fetch_pending(self.db, agent_name='athena', batch_id=batch_id)
         result.items_processed = len(rules)
 
         for i in range(0, len(rules), batch_size):
@@ -278,9 +283,14 @@ class AthenaRulePipeline(BasePipeline):
         Expected YAML structure::
 
             memory:
+              backend: "falkor"  # or "zep"
               zep:
                 api_key: "${ZEP_API_KEY}"
                 ...
+              falkor:
+                host: "localhost"
+                port: 6379
+                graph_name_template: "{agent_name}_rules"
               extractor:
                 model: "gpt-4o"
               pipeline:
@@ -289,13 +299,24 @@ class AthenaRulePipeline(BasePipeline):
         Pass an optional ``db`` (NeonConnection) to enable persistence.
         """
         from eval_workbench.shared.config import load_config
-        from eval_workbench.shared.memory.zep import ZepGraphStore
 
         cfg = load_config(path)
         memory_cfg = cfg.get('memory', {})
         extractor_model = memory_cfg.get('extractor', {}).get('model', 'gpt-4o')
+        backend = memory_cfg.get('backend', 'zep')
 
-        store = ZepGraphStore.from_yaml(path, agent_name='athena', ontology=ontology)
+        if backend == 'falkor':
+            from eval_workbench.shared.memory.falkor import FalkorGraphStore
+
+            store = FalkorGraphStore.from_yaml(
+                path, agent_name='athena', ontology=ontology,
+            )
+        else:
+            from eval_workbench.shared.memory.zep import ZepGraphStore
+
+            store = ZepGraphStore.from_yaml(
+                path, agent_name='athena', ontology=ontology,
+            )
+
         extractor = RuleExtractor(model=extractor_model)
-
         return cls(store=store, extractor=extractor, db=db)

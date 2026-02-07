@@ -1,20 +1,31 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Protocol, TypeGuard
 from collections import defaultdict
 
 from eval_workbench.shared.memory.analytics import BaseGraphAnalytics
-from eval_workbench.shared.memory.store import GraphSearchResult
+from eval_workbench.shared.memory.store import BaseGraphStore, GraphSearchResult
 
 logger = logging.getLogger(__name__)
 
 
-class AthenaGraphAnalytics(BaseGraphAnalytics):
-    """Domain-specific analytics layer for Athena's underwriting knowledge graph."""
+class _CypherStore(Protocol):
+    def cypher(self, query: str, params: dict | None = None) -> Any: ...
 
-    # ------------------------------------------------------------------
-    # Core query methods
-    # ------------------------------------------------------------------
+
+def _has_cypher(store: BaseGraphStore) -> TypeGuard[_CypherStore]:
+    """Check if the store supports direct Cypher queries (FalkorDB)."""
+    return hasattr(store, 'cypher') and callable(getattr(store, 'cypher', None))
+
+
+class AthenaGraphAnalytics(BaseGraphAnalytics):
+    """Domain-specific analytics layer for Athena's underwriting knowledge graph.
+
+    Automatically uses Cypher queries when backed by FalkorDB for
+    exact property filtering. Falls back to semantic search + post-hoc
+    reconstruction when using Zep.
+    """
 
     def query(self, input: str, *, product_type: str | None = None, **kwargs) -> list[dict]:
         """Search for underwriting rules triggered by a risk factor.
@@ -112,10 +123,6 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
     ) -> list[dict]:
         """Domain alias for ``query()``."""
         return self.query(risk_factor, product_type=product_type, **kwargs)
-
-    # ------------------------------------------------------------------
-    # Rule lookup
-    # ------------------------------------------------------------------
 
     def get_rule(self, rule_name: str, *, limit: int = 25) -> dict | None:
         """Look up a specific rule and all its connected edges.
@@ -253,20 +260,54 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         return list(rule_info.values())
 
     def list_all_rules(self, *, limit: int = 500) -> list[dict]:
-        """Return every rule in the graph with its action and product type.
+        """Return every rule in the graph with its action and product type."""
+        if _has_cypher(self.store):
+            res = self.store.cypher(
+                'MATCH (f:RiskFactor)-[t:TRIGGERS]->(r:Rule) '
+                'RETURN f.name AS risk_factor, r.name AS rule_name, '
+                'r.action AS action, r.product_type AS product_type, '
+                'r.threshold_type AS threshold_type '
+                f'LIMIT {limit}'
+            )
+            return [
+                {
+                    'risk_factor': row[0] or '',
+                    'rule_name': row[1] or '',
+                    'action': row[2] or '',
+                    'product_type': row[3] or '',
+                    'threshold_type': row[4] or '',
+                }
+                for row in res.result_set
+            ]
 
-        Reconstructs rules from all edge types Zep returns, not just
-        TRIGGERS edges.
-        """
         result = self.store.search('*', limit=limit)
         return self._build_rule_index(result)
 
     def rules_by_action(self, action: str, *, limit: int = 500) -> list[dict]:
-        """Return all rules matching a given action (e.g. 'decline', 'refer').
+        """Return all rules matching a given action (e.g. 'decline', 'refer')."""
+        if _has_cypher(self.store):
+            from eval_workbench.shared.memory.falkor.store import _escape_cypher
 
-        Searches semantically for the action term, then filters the
-        reconstructed rule index by action name or fact text.
-        """
+            escaped = _escape_cypher(action.lower())
+            res = self.store.cypher(
+                'MATCH (f:RiskFactor)-[t:TRIGGERS]->(r:Rule) '
+                f"WHERE toLower(r.action) CONTAINS '{escaped}' "
+                'RETURN f.name AS risk_factor, r.name AS rule_name, '
+                'r.action AS action, r.product_type AS product_type, '
+                'r.threshold_type AS threshold_type '
+                f'LIMIT {limit}'
+            )
+            return [
+                {
+                    'risk_factor': row[0] or '',
+                    'rule_name': row[1] or '',
+                    'action': row[2] or '',
+                    'product_type': row[3] or '',
+                    'threshold_type': row[4] or '',
+                }
+                for row in res.result_set
+            ]
+
         result = self.store.search(action, limit=limit)
         all_rules = self._build_rule_index(result)
 
@@ -283,6 +324,29 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
         Includes rules with ``product_type='ALL'``.
         """
+        if _has_cypher(self.store):
+            from eval_workbench.shared.memory.falkor.store import _escape_cypher
+
+            escaped = _escape_cypher(product_type)
+            res = self.store.cypher(
+                'MATCH (f:RiskFactor)-[t:TRIGGERS]->(r:Rule) '
+                f"WHERE r.product_type = '{escaped}' OR r.product_type = 'ALL' "
+                'RETURN f.name AS risk_factor, r.name AS rule_name, '
+                'r.action AS action, r.product_type AS product_type, '
+                'r.threshold_type AS threshold_type '
+                f'LIMIT {limit}'
+            )
+            return [
+                {
+                    'risk_factor': row[0] or '',
+                    'rule_name': row[1] or '',
+                    'action': row[2] or '',
+                    'product_type': row[3] or '',
+                    'threshold_type': row[4] or '',
+                }
+                for row in res.result_set
+            ]
+
         result = self.store.search(product_type, limit=limit)
         all_rules = self._build_rule_index(result)
 
@@ -322,12 +386,19 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
         return [node_map[uid].name for uid in orphan_uuids if uid in node_map]
 
-    # ------------------------------------------------------------------
-    # Mitigant analysis
-    # ------------------------------------------------------------------
 
     def mitigants_for_rule(self, rule_name: str, *, limit: int = 25) -> list[str]:
         """Return all mitigant names that OVERRIDE a given rule."""
+        if _has_cypher(self.store):
+            from eval_workbench.shared.memory.falkor.store import _escape_cypher
+
+            escaped = _escape_cypher(rule_name)
+            res = self.store.cypher(
+                f"MATCH (m:Mitigant)-[:OVERRIDES]->(r:Rule {{name: '{escaped}'}}) "
+                f'RETURN m.name LIMIT {limit}'
+            )
+            return [row[0] for row in res.result_set if row[0]]
+
         result = self.store.search(rule_name, limit=limit)
         if result.is_empty:
             return []
@@ -345,6 +416,16 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
     def rules_mitigated_by(self, mitigant: str, *, limit: int = 25) -> list[str]:
         """Return all rule names that a given mitigant OVERRIDES."""
+        if _has_cypher(self.store):
+            from eval_workbench.shared.memory.falkor.store import _escape_cypher
+
+            escaped = _escape_cypher(mitigant)
+            res = self.store.cypher(
+                f"MATCH (m:Mitigant {{name: '{escaped}'}})-[:OVERRIDES]->(r:Rule) "
+                f'RETURN r.name LIMIT {limit}'
+            )
+            return [row[0] for row in res.result_set if row[0]]
+
         result = self.store.search(mitigant, limit=limit)
         if result.is_empty:
             return []
@@ -362,6 +443,23 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
     def unmitigated_declines(self, *, limit: int = 500) -> list[dict]:
         """Find decline rules with zero mitigants — hard stops with no overrides."""
+        if _has_cypher(self.store):
+            res = self.store.cypher(
+                "MATCH (f:RiskFactor)-[:TRIGGERS]->(r:Rule {action: 'decline'}) "
+                'WHERE NOT EXISTS { MATCH (:Mitigant)-[:OVERRIDES]->(r) } '
+                'RETURN f.name AS risk_factor, r.name AS rule_name, '
+                'r.product_type AS product_type '
+                f'LIMIT {limit}'
+            )
+            return [
+                {
+                    'rule_name': row[1] or '',
+                    'risk_factor': row[0] or '',
+                    'product_type': row[2] or '',
+                }
+                for row in res.result_set
+            ]
+
         result = self.store.search('decline', limit=limit)
         if result.is_empty:
             return []
@@ -399,10 +497,6 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             })
 
         return rules
-
-    # ------------------------------------------------------------------
-    # Conflict & overlap detection
-    # ------------------------------------------------------------------
 
     def conflicting_rules(self, risk_factor: str, *, limit: int = 50) -> list[dict]:
         """Find rules where the same risk factor triggers conflicting actions.
@@ -477,10 +571,6 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
         return matches
 
-    # ------------------------------------------------------------------
-    # Decision support
-    # ------------------------------------------------------------------
-
     def evaluate(
         self,
         risk_factor: str,
@@ -538,16 +628,15 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
         return evaluated
 
-    # ------------------------------------------------------------------
-    # Graph stats
-    # ------------------------------------------------------------------
-
     def summary(self, *, limit: int = 500) -> dict:
         """Return aggregate statistics about the knowledge graph.
 
         Returns counts of nodes by type, edges by relation, rules by
         action, and rules by product type.
         """
+        if _has_cypher(self.store):
+            return self._summary_cypher(self.store)
+
         result = self.store.search('*', limit=limit)
         if result.is_empty:
             return {
@@ -611,9 +700,56 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             'rules_by_product': dict(rules_by_product),
         }
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+    def _summary_cypher(self, store: _CypherStore) -> dict:
+        """Build summary stats using direct Cypher queries."""
+
+        # Total nodes
+        res = store.cypher('MATCH (n) RETURN count(n)')
+        total_nodes = res.result_set[0][0] if res.result_set else 0
+
+        # Total edges
+        res = store.cypher('MATCH ()-[r]->() RETURN count(r)')
+        total_edges = res.result_set[0][0] if res.result_set else 0
+
+        # Nodes by label
+        nodes_by_type: dict[str, int] = {}
+        for label in ('RiskFactor', 'Rule', 'Outcome', 'Mitigant', 'Source'):
+            res = store.cypher(f'MATCH (n:{label}) RETURN count(n)')
+            count = res.result_set[0][0] if res.result_set else 0
+            if count:
+                nodes_by_type[label] = count
+
+        # Edges by relation
+        edges_by_relation: dict[str, int] = {}
+        for rel in ('TRIGGERS', 'RESULTS_IN', 'OVERRIDES', 'DERIVED_FROM'):
+            res = store.cypher(f'MATCH ()-[r:{rel}]->() RETURN count(r)')
+            count = res.result_set[0][0] if res.result_set else 0
+            if count:
+                edges_by_relation[rel] = count
+
+        # Rules by action
+        res = store.cypher(
+            'MATCH (r:Rule) WHERE r.action IS NOT NULL '
+            'RETURN r.action, count(r) ORDER BY count(r) DESC'
+        )
+        rules_by_action = {row[0]: row[1] for row in res.result_set if row[0]}
+
+        # Rules by product
+        res = store.cypher(
+            'MATCH (r:Rule) WHERE r.product_type IS NOT NULL '
+            'RETURN r.product_type, count(r) ORDER BY count(r) DESC'
+        )
+        rules_by_product = {row[0]: row[1] for row in res.result_set if row[0]}
+
+        return {
+            'total_nodes': total_nodes,
+            'total_edges': total_edges,
+            'nodes_by_type': nodes_by_type,
+            'edges_by_relation': edges_by_relation,
+            'rules_by_action': rules_by_action,
+            'rules_by_product': rules_by_product,
+        }
+
 
     @staticmethod
     def _parse_triggers(

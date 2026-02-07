@@ -26,3 +26,11 @@ class AthenaSettings(RepoSettingsBase):
         default=None,
         description='Zep Cloud base URL (only needed for self-hosted).',
     )
+    falkor_host: str = Field(
+        default='localhost',
+        description='FalkorDB / Redis host for knowledge graph.',
+    )
+    falkor_port: int = Field(
+        default=6379,
+        description='FalkorDB / Redis port.',
+    )
