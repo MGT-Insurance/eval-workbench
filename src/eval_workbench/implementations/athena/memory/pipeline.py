@@ -309,13 +309,17 @@ class AthenaRulePipeline(BasePipeline):
             from eval_workbench.shared.memory.falkor import FalkorGraphStore
 
             store = FalkorGraphStore.from_yaml(
-                path, agent_name='athena', ontology=ontology,
+                path,
+                agent_name='athena',
+                ontology=ontology,
             )
         else:
             from eval_workbench.shared.memory.zep import ZepGraphStore
 
             store = ZepGraphStore.from_yaml(
-                path, agent_name='athena', ontology=ontology,
+                path,
+                agent_name='athena',
+                ontology=ontology,
             )
 
         extractor = RuleExtractor(model=extractor_model)

@@ -35,7 +35,7 @@ def _props_to_cypher(props: dict) -> str:
         if v is None:
             continue
         if isinstance(v, bool):
-            parts.append(f"{k}: {'true' if v else 'false'}")
+            parts.append(f'{k}: {"true" if v else "false"}')
         elif isinstance(v, (int, float)):
             parts.append(f'{k}: {v}')
         elif isinstance(v, str):
@@ -75,8 +75,7 @@ class FalkorGraphStore(BaseGraphStore):
                 from falkordb import FalkorDB
             except ImportError as exc:
                 raise ImportError(
-                    'FalkorDB SDK is required. '
-                    'Install with: pip install falkordb'
+                    'FalkorDB SDK is required. Install with: pip install falkordb'
                 ) from exc
 
             db = FalkorDB(
@@ -195,8 +194,7 @@ class FalkorGraphStore(BaseGraphStore):
         tries to match by name first.
         """
         query = (
-            f"MATCH (n) WHERE n.name = '{_escape_cypher(node_uuid)}' "
-            'DETACH DELETE n'
+            f"MATCH (n) WHERE n.name = '{_escape_cypher(node_uuid)}' DETACH DELETE n"
         )
         self.graph.query(query)
         logger.info('Deleted node %s from FalkorDB', node_uuid)
@@ -281,7 +279,9 @@ class FalkorGraphStore(BaseGraphStore):
         )
         return self._result_from_query(query, name)
 
-    def _result_from_query(self, cypher_query: str, original_query: str) -> GraphSearchResult:
+    def _result_from_query(
+        self, cypher_query: str, original_query: str
+    ) -> GraphSearchResult:
         """Execute a Cypher query and convert to GraphSearchResult."""
         try:
             result = self.graph.query(cypher_query)
@@ -370,7 +370,8 @@ class FalkorGraphStore(BaseGraphStore):
             port=falkor_cfg.get('port', 6379),
             password=falkor_cfg.get('password'),
             graph_name_template=falkor_cfg.get(
-                'graph_name_template', '{agent_name}_rules',
+                'graph_name_template',
+                '{agent_name}_rules',
             ),
         )
         return cls(agent_name=agent_name, settings=settings, ontology=ontology)
@@ -379,6 +380,7 @@ class FalkorGraphStore(BaseGraphStore):
 # ---------------------------------------------------------------------------
 # Helpers for extracting properties from FalkorDB SDK objects
 # ---------------------------------------------------------------------------
+
 
 def _extract_node_props(node: Any) -> dict:
     """Extract properties from a FalkorDB Node object."""

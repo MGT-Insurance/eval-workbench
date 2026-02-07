@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from axion.schema import RichBaseModel
-from axion._core.asyncio import run_async_function
 
+from axion._core.asyncio import run_async_function
+from axion._handlers.llm.handler import LLMHandler
+from axion.schema import RichBaseModel
 from pydantic import Field
 
 logger = logging.getLogger(__name__)
@@ -142,9 +143,6 @@ class RuleExtractionOutput(RichBaseModel):
     rules: list[Rule] = Field(default_factory=list)
 
 
-from axion._handlers.llm.handler import LLMHandler
-
-
 class RuleExtractionHandler(LLMHandler[RuleExtractionInput, RuleExtractionOutput]):
     """Structured LLM handler for underwriting rule extraction."""
 
@@ -187,7 +185,9 @@ class RuleExtractor:
         print(f'combined: {combined}')
 
         try:
-            output = run_async_function(self._handler.execute, RuleExtractionInput(text=combined))
+            output = run_async_function(
+                self._handler.execute, RuleExtractionInput(text=combined)
+            )
             return [rule.model_dump() for rule in output.rules]
         except Exception as exc:
             logger.error('Rule extraction failed: %s', exc)

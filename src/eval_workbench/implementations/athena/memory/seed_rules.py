@@ -50,7 +50,6 @@ def _load_seed_rules(path: Path = SEED_RULES_PATH) -> list[dict]:
 REFERRAL_TRIGGER_RULES: list[dict] = _load_seed_rules()
 
 
-
 def seed_to_neon(
     db,
     *,
@@ -88,7 +87,9 @@ def seed_to_neon(
     )
     logger.info(
         'Seeded %d rules into Neon (batch_id=%s, source=%s)',
-        len(ids), batch_id, source_label,
+        len(ids),
+        batch_id,
+        source_label,
     )
     return ids
 
@@ -114,7 +115,9 @@ def seed_to_graph(
     from eval_workbench.shared.memory.persistence import mark_failed, mark_ingested
 
     rules = rules or REFERRAL_TRIGGER_RULES
-    ids = seed_to_neon(db, rules=rules, agent_name=agent_name, source_label=source_label)
+    ids = seed_to_neon(
+        db, rules=rules, agent_name=agent_name, source_label=source_label
+    )
 
     for i, rule in enumerate(rules):
         try:
@@ -122,7 +125,9 @@ def seed_to_graph(
             store.ingest(payload)
             mark_ingested(db, ids[i])
         except Exception as exc:
-            logger.warning('Failed to ingest seed rule %s: %s', rule.get('rule_name'), exc)
+            logger.warning(
+                'Failed to ingest seed rule %s: %s', rule.get('rule_name'), exc
+            )
             mark_failed(db, ids[i], str(exc))
 
     logger.info('Seeded %d rules into Neon + Zep graph.', len(ids))

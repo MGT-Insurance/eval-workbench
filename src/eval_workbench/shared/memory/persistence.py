@@ -68,16 +68,22 @@ def save_extractions(
                 rule.get('product_type'),
                 rule.get('action'),
                 rule.get('outcome_description'),
-                Json(rule.get('mitigants')) if rule.get('mitigants') is not None else None,
+                Json(rule.get('mitigants'))
+                if rule.get('mitigants') is not None
+                else None,
                 rule.get('source'),
                 rule.get('source_type'),
                 rule.get('confidence'),
-                Json(rule.get('threshold')) if rule.get('threshold') is not None else None,
+                Json(rule.get('threshold'))
+                if rule.get('threshold') is not None
+                else None,
                 rule.get('threshold_type'),
                 rule.get('historical_exceptions'),
                 rule.get('decision_quality'),
                 rule.get('compound_trigger'),
-                Json(rule.get('data_fields')) if rule.get('data_fields') is not None else None,
+                Json(rule.get('data_fields'))
+                if rule.get('data_fields') is not None
+                else None,
             ),
         )
 

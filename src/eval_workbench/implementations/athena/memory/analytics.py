@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Protocol, TypeGuard
 from collections import defaultdict
+from typing import Any, Protocol, TypeGuard
 
 from eval_workbench.shared.memory.analytics import BaseGraphAnalytics
 from eval_workbench.shared.memory.store import BaseGraphStore, GraphSearchResult
@@ -27,7 +27,9 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
     reconstruction when using Zep.
     """
 
-    def query(self, input: str, *, product_type: str | None = None, **kwargs) -> list[dict]:
+    def query(
+        self, input: str, *, product_type: str | None = None, **kwargs
+    ) -> list[dict]:
         """Search for underwriting rules triggered by a risk factor.
 
         Parameters
@@ -45,7 +47,9 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         result = self.store.search(search_query, limit=limit)
         return self._parse_triggers(result, input, product_type)
 
-    def trace(self, input: str, *, product_type: str | None = None, **kwargs) -> list[dict]:
+    def trace(
+        self, input: str, *, product_type: str | None = None, **kwargs
+    ) -> list[dict]:
         """Trace the full decision path for a risk factor.
 
         Returns a structured list showing RiskFactor -> Rule -> Outcome
@@ -228,7 +232,9 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             info = rule_info[rule_uuid]
             info['action'] = info['action'] or props.get('action', '')
             info['product_type'] = info['product_type'] or props.get('product_type', '')
-            info['threshold_type'] = info['threshold_type'] or props.get('threshold_type', '')
+            info['threshold_type'] = info['threshold_type'] or props.get(
+                'threshold_type', ''
+            )
             info['fact'] = info['fact'] or props.get('fact', '')
 
         # RESULTS_IN edges: Rule -> Outcome
@@ -313,7 +319,8 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
         action_lower = action.lower()
         return [
-            r for r in all_rules
+            r
+            for r in all_rules
             if action_lower in r.get('action', '').lower()
             or action_lower in r.get('fact', '').lower()
             or action_lower in ' '.join(r.get('outcomes', [])).lower()
@@ -351,7 +358,8 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         all_rules = self._build_rule_index(result)
 
         return [
-            r for r in all_rules
+            r
+            for r in all_rules
             if not r.get('product_type')
             or r['product_type'] in ('ALL', product_type)
             or product_type.lower() in r.get('fact', '').lower()
@@ -385,7 +393,6 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         orphan_uuids = all_node_uuids - covered
 
         return [node_map[uid].name for uid in orphan_uuids if uid in node_map]
-
 
     def mitigants_for_rule(self, rule_name: str, *, limit: int = 25) -> list[str]:
         """Return all mitigant names that OVERRIDE a given rule."""
@@ -490,11 +497,13 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 continue
             seen.add(rule_name)
 
-            rules.append({
-                'rule_name': rule_name,
-                'risk_factor': source.name if source else edge.source_node_uuid,
-                'product_type': props.get('product_type', ''),
-            })
+            rules.append(
+                {
+                    'rule_name': rule_name,
+                    'risk_factor': source.name if source else edge.source_node_uuid,
+                    'product_type': props.get('product_type', ''),
+                }
+            )
 
         return rules
 
@@ -519,22 +528,26 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             props = edge.properties
             product = props.get('product_type', 'ALL')
 
-            groups[(risk_name, product)].append({
-                'rule_name': target.name if target else edge.target_node_uuid,
-                'action': props.get('action', ''),
-                'properties': props,
-            })
+            groups[(risk_name, product)].append(
+                {
+                    'rule_name': target.name if target else edge.target_node_uuid,
+                    'action': props.get('action', ''),
+                    'properties': props,
+                }
+            )
 
         conflicts: list[dict] = []
         for (risk_name, product), entries in groups.items():
             actions = {e['action'] for e in entries if e['action']}
             if len(actions) > 1:
-                conflicts.append({
-                    'risk_factor': risk_name,
-                    'product_type': product,
-                    'actions': sorted(actions),
-                    'rules': entries,
-                })
+                conflicts.append(
+                    {
+                        'risk_factor': risk_name,
+                        'product_type': product,
+                        'actions': sorted(actions),
+                        'rules': entries,
+                    }
+                )
 
         return conflicts
 
@@ -561,13 +574,15 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
             target = node_map.get(edge.target_node_uuid)
             source = node_map.get(edge.source_node_uuid)
-            matches.append({
-                'rule_name': target.name if target else edge.target_node_uuid,
-                'risk_factor': source.name if source else edge.source_node_uuid,
-                'threshold': threshold,
-                'threshold_type': props.get('threshold_type', ''),
-                'product_type': props.get('product_type', ''),
-            })
+            matches.append(
+                {
+                    'rule_name': target.name if target else edge.target_node_uuid,
+                    'risk_factor': source.name if source else edge.source_node_uuid,
+                    'threshold': threshold,
+                    'threshold_type': props.get('threshold_type', ''),
+                    'product_type': props.get('product_type', ''),
+                }
+            )
 
         return matches
 
@@ -601,9 +616,9 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         context_keys = []
         if context:
             # Flatten context values to strings for matching
-            context_keys = [
-                str(v).lower() for v in context.values() if v
-            ] + [k.lower() for k in context]
+            context_keys = [str(v).lower() for v in context.values() if v] + [
+                k.lower() for k in context
+            ]
 
         evaluated: list[dict] = []
         for path in paths:
@@ -616,15 +631,17 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                             applicable_mitigants.append(mitigant)
                             break
 
-            evaluated.append({
-                'risk_factor': path['risk_factor'],
-                'rule': path['rule'],
-                'trigger_properties': path['trigger_properties'],
-                'outcomes': path['outcomes'],
-                'all_mitigants': path['mitigants'],
-                'applicable_mitigants': applicable_mitigants,
-                'mitigated': len(applicable_mitigants) > 0,
-            })
+            evaluated.append(
+                {
+                    'risk_factor': path['risk_factor'],
+                    'rule': path['rule'],
+                    'trigger_properties': path['trigger_properties'],
+                    'outcomes': path['outcomes'],
+                    'all_mitigants': path['mitigants'],
+                    'applicable_mitigants': applicable_mitigants,
+                    'mitigated': len(applicable_mitigants) > 0,
+                }
+            )
 
         return evaluated
 
@@ -749,7 +766,6 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             'rules_by_action': rules_by_action,
             'rules_by_product': rules_by_product,
         }
-
 
     @staticmethod
     def _parse_triggers(

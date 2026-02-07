@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class NodeTypeDefinition(BaseModel, frozen=True):
+class NodeTypeDefinition(BaseModel):
     """Defines a node type in the knowledge graph ontology."""
+
+    model_config = ConfigDict(frozen=True)
 
     label: str = Field(description='Unique label for this node type.')
     description: str = Field(description='Human-readable description of the node type.')
@@ -18,8 +20,10 @@ class NodeTypeDefinition(BaseModel, frozen=True):
     )
 
 
-class EdgeTypeDefinition(BaseModel, frozen=True):
+class EdgeTypeDefinition(BaseModel):
     """Defines an edge type (relation) in the knowledge graph ontology."""
+
+    model_config = ConfigDict(frozen=True)
 
     relation: str = Field(description='Unique relation name (e.g. TRIGGERS).')
     source_label: str = Field(description='Label of the source node type.')
@@ -31,8 +35,10 @@ class EdgeTypeDefinition(BaseModel, frozen=True):
     )
 
 
-class OntologyDefinition(BaseModel, frozen=True):
+class OntologyDefinition(BaseModel):
     """Complete ontology schema for a knowledge graph domain."""
+
+    model_config = ConfigDict(frozen=True)
 
     name: str = Field(description='Unique ontology name (e.g. athena_underwriting).')
     version: str = Field(default='1.0.0', description='Semantic version.')

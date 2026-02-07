@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import Any, cast
 
 from eval_workbench.shared.memory.ontology import OntologyDefinition
 from eval_workbench.shared.memory.settings import ZepSettings, get_zep_settings
@@ -50,7 +51,7 @@ class ZepGraphStore(BaseGraphStore):
             if not self.settings.api_key:
                 raise ValueError('ZEP_API_KEY is required but not set.')
 
-            kwargs = {'api_key': self.settings.api_key}
+            kwargs: dict[str, Any] = {'api_key': self.settings.api_key}
             if self.settings.base_url:
                 kwargs['base_url'] = self.settings.base_url
             self._client = Zep(**kwargs)
@@ -80,9 +81,7 @@ class ZepGraphStore(BaseGraphStore):
             type='json',
             data=data,
         )
-        logger.info(
-            'Ingested %d edge(s) for user %s', len(payload.edges), self.user_id
-        )
+        logger.info('Ingested %d edge(s) for user %s', len(payload.edges), self.user_id)
 
     def search(
         self,
@@ -141,7 +140,8 @@ class ZepGraphStore(BaseGraphStore):
 
     def delete_node(self, node_uuid: str) -> None:
         """Delete a node from the Zep graph."""
-        self.client.graph.delete_node(user_id=self.user_id, node_uuid=node_uuid)
+        graph = cast(Any, self.client.graph)
+        graph.delete_node(user_id=self.user_id, node_uuid=node_uuid)
         logger.info('Deleted node %s for user %s', node_uuid, self.user_id)
 
     def clear(self) -> None:
