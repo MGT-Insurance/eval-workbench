@@ -1,0 +1,9 @@
+memory:
+  zep:
+    api_key: "${ZEP_API_KEY}"
+    admin_email: "athena@system.local"
+    user_id_template: "{agent_name}_global_rules"
+  extractor:
+    model: "gpt-4o"
+  pipeline:
+    batch_size: 5

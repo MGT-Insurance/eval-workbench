@@ -18,3 +18,11 @@ class AthenaSettings(RepoSettingsBase):
         default=None,
         description='Langfuse secret key for Athena traces.',
     )
+    zep_api_key: str | None = Field(
+        default=None,
+        description='Zep Cloud API key for knowledge graph memory.',
+    )
+    zep_base_url: str | None = Field(
+        default=None,
+        description='Zep Cloud base URL (only needed for self-hosted).',
+    )
