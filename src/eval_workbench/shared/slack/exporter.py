@@ -1,4 +1,5 @@
 import asyncio
+import json
 import re
 from typing import Any, Dict, List, Mapping, Optional
 
@@ -274,7 +275,7 @@ class SlackExporter:
                     continue
                 convo_messages.append(self._to_axion_message(reply))
 
-            # NEW: drop rules
+            # Optional: Drop conversations based on first turn or all AI turns
             if self.drop_if_first_is_user and self._first_turn_is_user(convo_messages):
                 continue
             if self.drop_if_all_ai and self._all_turns_are_ai(convo_messages):
@@ -286,10 +287,17 @@ class SlackExporter:
                 DatasetItem(
                     id=root.get('id'),
                     conversation=conversation,
+                    metadata=json.dumps(
+                        {
+                            'message_url': root.get('messageUrl'),
+                            'channel_id': channel_id,
+                            'thread_ts': root.get('thread_ts') or root_ts,
+                        }
+                    ),
                     additional_input={
                         'message_url': root.get('messageUrl'),
                         'channel_id': channel_id,
-                        'thread_ts': root.get('thread_ts'),
+                        'thread_ts': root.get('thread_ts') or root_ts,
                         'reply_count': len(root.get('threadReplies', []) or []),
                         'sender': root.get('sender'),
                     },
