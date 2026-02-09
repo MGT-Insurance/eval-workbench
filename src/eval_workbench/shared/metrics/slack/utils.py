@@ -205,7 +205,7 @@ def extract_case_id(text: str) -> Optional[str]:
         return None
 
     patterns = [
-        r'[Cc]ase\s*(?:[Ii][Dd])?[:# ]\s*([A-Za-z0-9-]+)',
+        r'[Cc]ase\s*(?:[Ii][Dd])?[:# ]\s*([A-Za-z0-9-]*\d[A-Za-z0-9-]*)',
         r'[Rr]eference[:# ]\s*([A-Za-z0-9-]+)',
         r'#([A-Z]{2,}-\d+)',
         r'\b([A-Z]{2,}\d{4,})\b',

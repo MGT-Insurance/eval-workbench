@@ -39,7 +39,6 @@ from eval_workbench.shared.metrics.slack.subjective import (
     SubjectiveAnalysisInput,
     SubjectiveAnalysisOutput,
 )
-from eval_workbench.shared.metrics.slack.composite import UnderwritingCompositeEvaluator
 from eval_workbench.shared.metrics.slack.config import AnalyzerConfig, TruncationConfig
 from eval_workbench.shared.metrics.slack.truncation import (
     HAS_TIKTOKEN,
@@ -98,8 +97,6 @@ __all__ = [
     'SlackFeedbackAttributionAnalyzer',
     'FeedbackAttributionInput',
     'FeedbackAttributionOutput',
-    # === Composite Metrics ===
-    'UnderwritingCompositeEvaluator',
     # === Config ===
     'AnalyzerConfig',
     'TruncationConfig',

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from pydantic import Field
 
@@ -10,15 +10,11 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
 
 
-from axion.runners import evaluation_runner
-from axion import Dataset
-from eval_workbench.shared.metrics import (
-    SlackObjectiveAnalyzer,
-    SlackFeedbackAttributionAnalyzer,
-    SlackProductAnalyzer,
-    AnalyzerConfig,
-    SlackSubjectiveAnalyzer
-)
+from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
+from eval_workbench.shared.metrics.slack.feedback import SlackFeedbackAttributionAnalyzer
+from eval_workbench.shared.metrics.slack.objective import SlackObjectiveAnalyzer
+from eval_workbench.shared.metrics.slack.product import SlackProductAnalyzer
+from eval_workbench.shared.metrics.slack.subjective import SlackSubjectiveAnalyzer
 
 
 class UnderwritingCompositeResult(RichBaseModel):
@@ -32,7 +28,7 @@ class UnderwritingCompositeResult(RichBaseModel):
 @metric(
     name='Underwriting Composite Evaluator',
     key='underwriting_composite_evaluator',
-    required_fields=['conversaiton'],
+    required_fields=['conversation'],
     description='Orchestrates the full underwriting evaluation pipeline with dependency management.',
     metric_category=MetricCategory.ANALYSIS,
 )
@@ -74,7 +70,7 @@ class UnderwritingCompositeEvaluator(BaseMetric):
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         """Execute the pipeline in sequence."""
 
-        # --- STEP 1: OBJECTIVE (The Source of Truth) ---
+        # OBJECTIVE
         # Did the human intervene? What was the outcome?
         obj_result = await self.objective.execute(item)
         obj_signals = obj_result.signals
@@ -92,7 +88,7 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             'final_status': obj_signals.resolution.final_status
         }
 
-        # --- STEP 2: SUBJECTIVE (The User Experience) ---
+        # SUBJECTIVE
         # Always run subjective to catch "silent frustration" even if no intervention
         subj_result = await self.subjective.execute(item, objective_context=subj_context)
         subj_signals = subj_result.signals
@@ -120,13 +116,13 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             'frustration_cause': subj_signals.frustration_cause
         }
 
-        # --- STEP 3: FEEDBACK ATTRIBUTION (The Root Cause) ---
+        # FEEDBACK ATTRIBUTION
         # OPTIMIZATION: Only run expensive root cause analysis if there was a problem
         fb_result = None
         if needs_diagnosis:
             fb_result = await self.feedback.execute(item, analysis_context=feedback_context)
 
-        # --- STEP 4: PRODUCT SIGNALS (The Roadmap) ---
+        # PRODUCT SIGNALS
         # Independent, can run with basic context. Good to run always for feature requests.
         prod_context = {
             'has_intervention': obj_signals.intervention.has_intervention,
@@ -170,19 +166,19 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             return []
 
         # Collect sub-metrics from each child analyzer
-        # 1. Objective Metrics
+        # Objective Metrics
         if 'objective' in result.metadata:
             all_metrics.extend(self.objective.get_sub_metrics(result.metadata['objective']))
 
-        # 2. Feedback Metrics (The most important technical ones)
+        # Feedback Metrics (The most important technical ones)
         if 'feedback' in result.metadata and result.metadata['feedback']:
             all_metrics.extend(self.feedback.get_sub_metrics(result.metadata['feedback']))
 
-        # 3. Product Metrics (Strategic)
+        # Product Metrics (Strategic)
         if 'product' in result.metadata:
             all_metrics.extend(self.product.get_sub_metrics(result.metadata['product']))
 
-        # 4. Subjective Metrics (Optional - can comment out if too noisy)
+        # Subjective Metrics (Optional - can comment out if too noisy)
         if 'subjective' in result.metadata:
             all_metrics.extend(self.subjective.get_sub_metrics(result.metadata['subjective']))
 

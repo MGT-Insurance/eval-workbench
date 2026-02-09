@@ -5,7 +5,6 @@ from eval_workbench.shared.metrics.slack import (
     SlackObjectiveAnalyzer,
     SlackProductAnalyzer,
     SlackSubjectiveAnalyzer,
-    UnderwritingCompositeEvaluator,
 )
 
 __all__ = [
@@ -15,5 +14,4 @@ __all__ = [
     'SlackProductAnalyzer',
     'SlackFeedbackAttributionAnalyzer',
     'AnalyzerConfig',
-    'UnderwritingCompositeEvaluator',
 ]
