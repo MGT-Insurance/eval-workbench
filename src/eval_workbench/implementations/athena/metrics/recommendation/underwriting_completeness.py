@@ -56,10 +56,11 @@ class UnderwritingCompletenessResult(RichBaseModel):
 )
 class UnderwritingCompleteness(BaseMetric):
     def __init__(
-        self, 
+        self,
         weights: Optional[Dict[str, float]] = None,
         main_check_field: str = 'brief_recommendation',
-        **kwargs):
+        **kwargs,
+    ):
         """
         Args:
             weights: Dictionary mapping criteria names to their score weight.
