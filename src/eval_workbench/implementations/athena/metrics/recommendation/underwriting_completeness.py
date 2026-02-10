@@ -55,14 +55,21 @@ class UnderwritingCompletenessResult(RichBaseModel):
     tags=['athena', 'agent'],
 )
 class UnderwritingCompleteness(BaseMetric):
-    def __init__(self, weights: Optional[Dict[str, float]] = None, **kwargs):
+    def __init__(
+        self,
+        weights: Optional[Dict[str, float]] = None,
+        main_check_field: str = 'brief_recommendation',
+        **kwargs,
+    ):
         """
         Args:
             weights: Dictionary mapping criteria names to their score weight.
                      Default: Decision (0.4), Rationale (0.2), Evidence (0.2), NextStep (0.2).
+            main_check_field: The field in the dataset item that contains the main recommendation text.
+                     Default: 'brief_recommendation'.
         """
         super().__init__(**kwargs)
-
+        self.main_check_field = main_check_field
         # Default Weights
         self.weights = weights or {
             'Decision': 0.4,
@@ -173,11 +180,14 @@ class UnderwritingCompleteness(BaseMetric):
     async def execute(
         self, dataset_item: DatasetItem, **kwargs
     ) -> MetricEvaluationResult:
-        actual_output = self.get_field(dataset_item, 'actual_output') or ''
         additional_output = dataset_item.additional_output or {}
         detailed = additional_output.get('detailed_recommendation') or ''
         brief = additional_output.get('brief_recommendation') or ''
-        text = detailed or brief or actual_output
+        recommendation_texts = {
+            'detailed_recommendation': detailed,
+            'brief_recommendation': brief,
+        }
+        text = recommendation_texts.get(self.main_check_field) or brief or detailed
 
         if not text:
             return MetricEvaluationResult(
