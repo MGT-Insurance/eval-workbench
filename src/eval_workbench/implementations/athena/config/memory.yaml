@@ -1,0 +1,19 @@
+memory:
+  # Backend to use: "zep" or "falkor"
+  backend: "falkor"
+
+  zep:
+    api_key: "${ZEP_API_KEY}"
+    admin_email: "athena@system.local"
+    user_id_template: "{agent_name}_global_rules"
+
+  falkor:
+    host: "${FALKOR_HOST:-localhost}"
+    port: 6379
+    graph_name_template: "{agent_name}_rules"
+
+  extractor:
+    model: "gpt-4o"
+
+  pipeline:
+    batch_size: 5

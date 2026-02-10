@@ -1,4 +1,4 @@
-from eval_workbench.implementations.athena.metrics.slack import (
+from eval_workbench.implementations.athena.metrics.slack.composite import (
     UnderwritingCompositeEvaluator,
 )
 

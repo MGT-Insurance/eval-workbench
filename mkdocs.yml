@@ -14,6 +14,7 @@ nav:
     - Monitoring: guides/monitoring.md
     - Monitoring Config (YAML): guides/monitoring-config.md
     - Slack: guides/slack.md
+    - Knowledge Graph Memory: guides/memory.md
   - Metric Registry:
     - metric-registry/index.md
     - Shared:

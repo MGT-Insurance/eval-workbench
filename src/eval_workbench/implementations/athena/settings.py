@@ -18,3 +18,19 @@ class AthenaSettings(RepoSettingsBase):
         default=None,
         description='Langfuse secret key for Athena traces.',
     )
+    zep_api_key: str | None = Field(
+        default=None,
+        description='Zep Cloud API key for knowledge graph memory.',
+    )
+    zep_base_url: str | None = Field(
+        default=None,
+        description='Zep Cloud base URL (only needed for self-hosted).',
+    )
+    falkor_host: str = Field(
+        default='localhost',
+        description='FalkorDB / Redis host for knowledge graph.',
+    )
+    falkor_port: int = Field(
+        default=6379,
+        description='FalkorDB / Redis port.',
+    )
