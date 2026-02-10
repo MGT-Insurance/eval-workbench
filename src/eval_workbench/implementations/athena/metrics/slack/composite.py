@@ -32,6 +32,7 @@ class UnderwritingCompositeResult(RichBaseModel):
     required_fields=['conversation'],
     description='Orchestrates the full underwriting evaluation pipeline with dependency management.',
     metric_category=MetricCategory.ANALYSIS,
+    tags=['slack', 'multi_turn'],
 )
 class UnderwritingCompositeEvaluator(BaseMetric):
     """

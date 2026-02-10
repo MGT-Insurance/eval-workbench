@@ -194,7 +194,7 @@ class SubjectiveAnalysisOutput(RichBaseModel):
     metric_category=MetricCategory.ANALYSIS,
     default_threshold=0.5,
     score_range=(0.0, 1.0),
-    tags=['slack', 'subjective', 'llm', 'sentiment'],
+    tags=['slack', 'multi_turn'],
 )
 class SlackSubjectiveAnalyzer(
     BaseMetric[SubjectiveAnalysisInput, SubjectiveAnalysisOutput]

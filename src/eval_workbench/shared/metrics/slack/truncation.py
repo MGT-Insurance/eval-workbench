@@ -1,5 +1,3 @@
-"""Token counting and conversation truncation utilities."""
-
 from typing import List, Optional, Tuple
 
 from axion._core.schema import BaseMessage, HumanMessage

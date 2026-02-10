@@ -305,7 +305,7 @@ Provide your reasoning trace first, identifying the specific turn where interven
     metric_category=MetricCategory.ANALYSIS,
     default_threshold=None,
     score_range=None,
-    tags=['slack', 'objective', 'llm', 'deterministic'],
+    tags=['slack', 'multi_turn'],
 )
 class SlackObjectiveAnalyzer(BaseMetric):
     """

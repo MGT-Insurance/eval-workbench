@@ -107,7 +107,7 @@ class HeuristicAnalysisResult(RichBaseModel):
     metric_category=MetricCategory.ANALYSIS,
     default_threshold=None,
     score_range=None,
-    tags=['slack', 'heuristic', 'zero-cost'],
+    tags=['slack', 'heuristic', 'multi_turn'],
 )
 class SlackHeuristicAnalyzer(BaseMetric):
     """

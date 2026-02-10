@@ -106,7 +106,7 @@ class ProductSignalsOutput(RichBaseModel):
     metric_category=MetricCategory.ANALYSIS,
     default_threshold=None,
     score_range=None,
-    tags=['slack', 'product', 'llm', 'insights'],
+    tags=['slack', 'multi_turn'],
 )
 class SlackProductAnalyzer(BaseMetric[ProductSignalsInput, ProductSignalsOutput]):
     """

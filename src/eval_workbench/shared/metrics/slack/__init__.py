@@ -70,7 +70,6 @@ from eval_workbench.shared.metrics.slack.utils import (
 )
 
 __all__ = [
-    # === Standalone Metrics ===
     # Heuristic Analyzer (Zero Cost)
     'SlackHeuristicAnalyzer',
     'HeuristicAnalysisResult',

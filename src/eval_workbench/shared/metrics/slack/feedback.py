@@ -97,7 +97,7 @@ class FeedbackAttributionOutput(RichBaseModel):
     metric_category=MetricCategory.ANALYSIS,
     default_threshold=None,
     score_range=None,
-    tags=['slack', 'feedback', 'llm', 'attribution'],
+    tags=['slack', 'multi_turn'],
 )
 class SlackFeedbackAttributionAnalyzer(
     BaseMetric[FeedbackAttributionInput, FeedbackAttributionOutput]

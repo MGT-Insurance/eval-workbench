@@ -1,5 +1,3 @@
-"""Utility functions for Slack conversation analysis."""
-
 import json
 import re
 from dataclasses import dataclass

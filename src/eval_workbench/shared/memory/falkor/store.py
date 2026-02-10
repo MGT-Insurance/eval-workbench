@@ -377,11 +377,6 @@ class FalkorGraphStore(BaseGraphStore):
         return cls(agent_name=agent_name, settings=settings, ontology=ontology)
 
 
-# ---------------------------------------------------------------------------
-# Helpers for extracting properties from FalkorDB SDK objects
-# ---------------------------------------------------------------------------
-
-
 def _extract_node_props(node: Any) -> dict:
     """Extract properties from a FalkorDB Node object."""
     props: dict = {}
