@@ -78,7 +78,9 @@ def _json_pretty(value: Any) -> tuple[str, str]:
     return text, md
 
 
-def _format_compact_props(props: dict[str, Any] | None, *, drop: set[str] | None = None) -> str:
+def _format_compact_props(
+    props: dict[str, Any] | None, *, drop: set[str] | None = None
+) -> str:
     """Format a dict as compact `k=v` pairs, stable key order."""
     if not props:
         return ''
@@ -213,13 +215,14 @@ def _render_trace_ascii(paths: list[dict], *, title: str) -> str:
     return '\n'.join(lines).rstrip()
 
 
-
 class _CypherStore(Protocol):
     def cypher(self, query: str, params: dict | None = None) -> Any: ...
 
 
 class _SearchStore(Protocol):
-    def search(self, query: str, *, limit: int = 10, scope: str | None = None) -> Any: ...
+    def search(
+        self, query: str, *, limit: int = 10, scope: str | None = None
+    ) -> Any: ...
 
 
 def _has_cypher(store: BaseGraphStore) -> TypeGuard[_CypherStore]:
@@ -282,9 +285,9 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         for e in items:
             props = e.get('properties') or {}
             props_str = _format_compact_props(props, drop={'uuid', 'fact'})
-            line = f"- {e.get('source','')} --{e.get('relation','')}--> {e.get('target','')}"
+            line = f'- {e.get("source", "")} --{e.get("relation", "")}--> {e.get("target", "")}'
             if props_str:
-                line += f" ({props_str})"
+                line += f' ({props_str})'
             text_lines.append(line)
             md_lines.append(line)
 
@@ -371,7 +374,10 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                     target.properties.get('product_type') if target else ''
                 )
                 trigger_prod_norm = str(trigger_prod or '').lower()
-                if trigger_prod_norm and trigger_prod_norm not in ('all', wanted_product):
+                if trigger_prod_norm and trigger_prod_norm not in (
+                    'all',
+                    wanted_product,
+                ):
                     continue
 
             path = {
@@ -411,18 +417,25 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 trig,
                 drop={'uuid'},
             )
-            outcomes = [o.get('outcome') for o in (p.get('outcomes') or []) if o.get('outcome')]
+            outcomes = [
+                o.get('outcome') for o in (p.get('outcomes') or []) if o.get('outcome')
+            ]
             mitigants = p.get('mitigants') or []
 
-            text_lines.append(f'{i}. Risk: {p.get("risk_factor","")}')
-            text_lines.append(f'   Rule: {p.get("rule","")}' + (f' ({trig_str})' if trig_str else ''))
+            text_lines.append(f'{i}. Risk: {p.get("risk_factor", "")}')
+            text_lines.append(
+                f'   Rule: {p.get("rule", "")}' + (f' ({trig_str})' if trig_str else '')
+            )
             if outcomes:
                 text_lines.append(f'   Outcome(s): {", ".join(outcomes)}')
             if mitigants:
                 text_lines.append(f'   Mitigant(s): {", ".join(mitigants)}')
 
-            md_lines.append(f'{i}. **Risk**: {p.get("risk_factor","")}')
-            md_lines.append(f'   - **Rule**: {p.get("rule","")}' + (f' ({trig_str})' if trig_str else ''))
+            md_lines.append(f'{i}. **Risk**: {p.get("risk_factor", "")}')
+            md_lines.append(
+                f'   - **Rule**: {p.get("rule", "")}'
+                + (f' ({trig_str})' if trig_str else '')
+            )
             if outcomes:
                 md_lines.append(f'   - **Outcome(s)**: {", ".join(outcomes)}')
             if mitigants:
@@ -869,8 +882,12 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             items = [row[0] for row in res.result_set if row[0]]
             if not pretty:
                 return items
-            text = f'Mitigants for rule: {rule_name}\n' + '\n'.join(f'- {x}' for x in items)
-            md = f'**Mitigants for rule: {rule_name}**\n' + '\n'.join(f'- {x}' for x in items)
+            text = f'Mitigants for rule: {rule_name}\n' + '\n'.join(
+                f'- {x}' for x in items
+            )
+            md = f'**Mitigants for rule: {rule_name}**\n' + '\n'.join(
+                f'- {x}' for x in items
+            )
             return _wrap_pretty_list(
                 items,
                 pretty=True,
@@ -896,7 +913,9 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         if not pretty:
             return items
         text = f'Mitigants for rule: {rule_name}\n' + '\n'.join(f'- {x}' for x in items)
-        md = f'**Mitigants for rule: {rule_name}**\n' + '\n'.join(f'- {x}' for x in items)
+        md = f'**Mitigants for rule: {rule_name}**\n' + '\n'.join(
+            f'- {x}' for x in items
+        )
         return _wrap_pretty_list(
             items,
             pretty=True,
@@ -925,8 +944,12 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             items = [row[0] for row in res.result_set if row[0]]
             if not pretty:
                 return items
-            text = f'Rules mitigated by: {mitigant}\n' + '\n'.join(f'- {x}' for x in items)
-            md = f'**Rules mitigated by: {mitigant}**\n' + '\n'.join(f'- {x}' for x in items)
+            text = f'Rules mitigated by: {mitigant}\n' + '\n'.join(
+                f'- {x}' for x in items
+            )
+            md = f'**Rules mitigated by: {mitigant}**\n' + '\n'.join(
+                f'- {x}' for x in items
+            )
             return _wrap_pretty_list(
                 items,
                 pretty=True,
@@ -952,7 +975,9 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         if not pretty:
             return items
         text = f'Rules mitigated by: {mitigant}\n' + '\n'.join(f'- {x}' for x in items)
-        md = f'**Rules mitigated by: {mitigant}**\n' + '\n'.join(f'- {x}' for x in items)
+        md = f'**Rules mitigated by: {mitigant}**\n' + '\n'.join(
+            f'- {x}' for x in items
+        )
         return _wrap_pretty_list(
             items,
             pretty=True,

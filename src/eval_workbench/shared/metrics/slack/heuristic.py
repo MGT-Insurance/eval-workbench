@@ -1,14 +1,13 @@
 import re
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import Field
-
 from axion._core.schema import AIMessage, HumanMessage, RichBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
+from pydantic import Field
 
 from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
 from eval_workbench.shared.metrics.slack.utils import (
@@ -56,8 +55,8 @@ class RecommendationSignals(RichBaseModel):
     """Recommendation signals (heuristic)."""
 
     has_recommendation: bool = Field(default=False)
-    recommendation_type: Literal['approve', 'decline', 'review', 'hold', 'none'] = Field(
-        default='none'
+    recommendation_type: Literal['approve', 'decline', 'review', 'hold', 'none'] = (
+        Field(default='none')
     )
     recommendation_turn_index: Optional[int] = Field(default=None)
     recommendation_confidence: Optional[float] = Field(default=None)
@@ -183,7 +182,9 @@ class SlackHeuristicAnalyzer(BaseMetric):
                 all_mentions.extend(extract_mentions(msg.content))
         unique_mentions = list(set(all_mentions))
 
-        avg_human_len = sum(len(m.content or '') for m in human_messages) / max(human_count, 1)
+        avg_human_len = sum(len(m.content or '') for m in human_messages) / max(
+            human_count, 1
+        )
         avg_ai_len = sum(len(m.content or '') for m in ai_messages) / max(ai_count, 1)
 
         engagement = EngagementSignals(
@@ -206,15 +207,21 @@ class SlackHeuristicAnalyzer(BaseMetric):
             rec_text = rec_message.content or ''
             rec_type = extract_recommendation_type(rec_text) or 'none'
 
-        case_id = additional.get('case_id') or self._extract_case_id_from_messages(all_messages)
+        case_id = additional.get('case_id') or self._extract_case_id_from_messages(
+            all_messages
+        )
 
         recommendation = RecommendationSignals(
             has_recommendation=has_recommendation,
             recommendation_type=rec_type,
             recommendation_turn_index=rec_turn,
-            recommendation_confidence=self._extract_confidence(rec_text) if has_recommendation else None,
+            recommendation_confidence=self._extract_confidence(rec_text)
+            if has_recommendation
+            else None,
             case_id=case_id,
-            case_priority=self._extract_priority_from_messages(ai_messages) if has_recommendation else None,
+            case_priority=self._extract_priority_from_messages(ai_messages)
+            if has_recommendation
+            else None,
         )
 
         # Reactions
@@ -280,24 +287,28 @@ class SlackHeuristicAnalyzer(BaseMetric):
         ]
 
         if signals.reactions:
-            sub_metrics.append(SubMetricResult(
-                name='reaction_sentiment',
-                score=signals.reactions.reaction_sentiment_score,
-                explanation=f'Score: {signals.reactions.reaction_sentiment_score:.2f}',
-                metric_category=MetricCategory.SCORE,
-                group='heuristic',
-                metadata=signals.reactions.model_dump(),
-            ))
+            sub_metrics.append(
+                SubMetricResult(
+                    name='reaction_sentiment',
+                    score=signals.reactions.reaction_sentiment_score,
+                    explanation=f'Score: {signals.reactions.reaction_sentiment_score:.2f}',
+                    metric_category=MetricCategory.SCORE,
+                    group='heuristic',
+                    metadata=signals.reactions.model_dump(),
+                )
+            )
 
         if signals.stalemate:
-            sub_metrics.append(SubMetricResult(
-                name='is_stalemate',
-                score=None,
-                explanation=str(signals.stalemate.is_stalemate).lower(),
-                metric_category=MetricCategory.CLASSIFICATION,
-                group='heuristic',
-                metadata=signals.stalemate.model_dump(),
-            ))
+            sub_metrics.append(
+                SubMetricResult(
+                    name='is_stalemate',
+                    score=None,
+                    explanation=str(signals.stalemate.is_stalemate).lower(),
+                    metric_category=MetricCategory.CLASSIFICATION,
+                    group='heuristic',
+                    metadata=signals.stalemate.model_dump(),
+                )
+            )
 
         return sub_metrics
 

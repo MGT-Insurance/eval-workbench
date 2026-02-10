@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import Field
-
 from axion._core.schema import RichBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
@@ -9,6 +7,7 @@ from axion._handlers.llm.handler import LLMHandler
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
+from pydantic import Field
 
 from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
 from eval_workbench.shared.metrics.slack.utils import (
@@ -61,16 +60,18 @@ class ProductSignalsOutput(RichBaseModel):
         default_factory=list,
         description='Key learnings from this conversation',
     )
-    learning_categories: List[Literal[
-        'ux',
-        'accuracy',
-        'coverage',
-        'speed',
-        'workflow',   # New: Process friction (e.g. "Can't decline")
-        'rules',      # New: Underwriting logic (e.g. "Don't ask X")
-        'guardrails', # New: Prevention (e.g. "Block agents from Y")
-        'other',
-    ]] = Field(
+    learning_categories: List[
+        Literal[
+            'ux',
+            'accuracy',
+            'coverage',
+            'speed',
+            'workflow',  # New: Process friction (e.g. "Can't decline")
+            'rules',  # New: Underwriting logic (e.g. "Don't ask X")
+            'guardrails',  # New: Prevention (e.g. "Block agents from Y")
+            'other',
+        ]
+    ] = Field(
         default_factory=list,
         description='Categories for each learning',
     )

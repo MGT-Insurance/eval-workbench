@@ -41,9 +41,7 @@ class TestParseSlackMetadata:
 
     def test_merges_dataset_metadata(self):
         additional_input = {'sender': 'user123'}
-        dataset_metadata = json.dumps(
-            {'thread_ts': '999.000', 'channel_id': 'C999'}
-        )
+        dataset_metadata = json.dumps({'thread_ts': '999.000', 'channel_id': 'C999'})
 
         result = parse_slack_metadata(additional_input, dataset_metadata)
 

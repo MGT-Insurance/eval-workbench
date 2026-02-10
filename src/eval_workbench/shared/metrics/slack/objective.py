@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import Field
-
 from axion._core.schema import AIMessage, HumanMessage, RichBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
@@ -9,6 +7,7 @@ from axion._handlers.llm.handler import LLMHandler
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
+from pydantic import Field
 
 from eval_workbench.shared.metrics.slack.config import AnalyzerConfig, TruncationConfig
 from eval_workbench.shared.metrics.slack.truncation import (
@@ -21,7 +20,6 @@ from eval_workbench.shared.metrics.slack.utils import (
     extract_mentions,
     extract_recommendation_type,
     find_recommendation_turn,
-    get_ai_messages,
     get_human_messages,
     parse_slack_metadata,
 )
@@ -38,7 +36,9 @@ class ObjectiveAnalysisInput(RichBaseModel):
     recommendation_turn: Optional[int] = Field(
         description='Turn where recommendation was made'
     )
-    detected_mentions: List[str] = Field(description='@mentions detected in conversation')
+    detected_mentions: List[str] = Field(
+        description='@mentions detected in conversation'
+    )
     human_message_count: int = Field(description='Number of human messages')
     truncation_summary: str = Field(
         default='',
@@ -85,14 +85,14 @@ class ObjectiveAnalysisOutput(RichBaseModel):
     )
     intervention_type: Literal[
         'no_intervention',
-        'correction_factual',      # Fixing data errors (Year built, Sq Ft)
-        'correction_classification', # Fixing Class Codes (Church vs Retail)
-        'missing_context',         # Providing info the bot didn't have
-        'risk_appetite',           # Judgment call on risk
-        'system_workaround',       # Bypassing a tool error (Force decline)
-        'clarification',           # Explaining the "Why"
-        'support',                 # General help
-        'approval',                # Signing off
+        'correction_factual',  # Fixing data errors (Year built, Sq Ft)
+        'correction_classification',  # Fixing Class Codes (Church vs Retail)
+        'missing_context',  # Providing info the bot didn't have
+        'risk_appetite',  # Judgment call on risk
+        'system_workaround',  # Bypassing a tool error (Force decline)
+        'clarification',  # Explaining the "Why"
+        'support',  # General help
+        'approval',  # Signing off
         'unknown',
     ] = Field(
         default='no_intervention',
@@ -232,7 +232,9 @@ class ObjectiveAnalysisResult(RichBaseModel):
         }
 
 
-class _ObjectiveLLMAnalyzer(BaseMetric[ObjectiveAnalysisInput, ObjectiveAnalysisOutput]):
+class _ObjectiveLLMAnalyzer(
+    BaseMetric[ObjectiveAnalysisInput, ObjectiveAnalysisOutput]
+):
     """Internal LLM analyzer for objective classification."""
 
     instruction = """You are an expert Underwriting Auditor for an AI Assistant ({bot_name}).
@@ -333,7 +335,7 @@ class SlackObjectiveAnalyzer(BaseMetric):
         super().__init__(**kwargs)
         self.analyzer_config = config or AnalyzerConfig()
         self.truncation_config = truncation_config or TruncationConfig()
-        self._llm_analyzer = None
+        self._llm_analyzer: _ObjectiveLLMAnalyzer | None = None
 
     @property
     def llm_analyzer(self) -> _ObjectiveLLMAnalyzer:
@@ -396,14 +398,11 @@ class SlackObjectiveAnalyzer(BaseMetric):
         )
 
         if truncation_summary:
-            transcript = format_truncated_transcript(truncated_messages, truncation_summary)
+            transcript = format_truncated_transcript(
+                truncated_messages, truncation_summary
+            )
         else:
             transcript = build_transcript(item.conversation)
-
-        # Build input
-        truncation_notice = ''
-        if truncation_summary:
-            truncation_notice = f'**Note**: The transcript has been truncated:\n{truncation_summary}'
 
         llm_input = ObjectiveAnalysisInput(
             conversation_transcript=transcript,
@@ -559,7 +558,9 @@ class SlackObjectiveAnalyzer(BaseMetric):
         else:
             return 'none', True
 
-    def _heuristic_escalation(self, messages: list, mentions: List[str]) -> EscalationSignals:
+    def _heuristic_escalation(
+        self, messages: list, mentions: List[str]
+    ) -> EscalationSignals:
         import re
 
         is_escalated = False
@@ -572,7 +573,11 @@ class SlackObjectiveAnalyzer(BaseMetric):
             if isinstance(msg, AIMessage):
                 ai_seen = True
                 if msg.content:
-                    for pattern in [r'apologize.*error', r'encountered.*(?:error|issue)', r'unable\s+to']:
+                    for pattern in [
+                        r'apologize.*error',
+                        r'encountered.*(?:error|issue)',
+                        r'unable\s+to',
+                    ]:
                         if re.search(pattern, msg.content, re.IGNORECASE):
                             is_escalated = True
                             escalation_type = 'error_escalation'

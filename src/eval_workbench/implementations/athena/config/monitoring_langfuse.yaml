@@ -72,8 +72,8 @@ evaluation:
 
 # Publishing configuration
 publishing:
-  push_to_db: true
-  push_to_langfuse: true
+  push_to_db: false
+  push_to_langfuse: false
   trace_experiment: false
 
   # Database upload configuration

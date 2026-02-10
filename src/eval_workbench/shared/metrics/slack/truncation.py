@@ -66,14 +66,19 @@ def truncate_conversation(
 
     if recommendation_turn is not None and 0 <= recommendation_turn < total_messages:
         target_start = max(0, recommendation_turn - config.target_context)
-        target_end = min(total_messages, recommendation_turn + config.target_context + 1)
+        target_end = min(
+            total_messages, recommendation_turn + config.target_context + 1
+        )
         keep_indices.update(range(target_start, target_end))
 
     sorted_indices = sorted(keep_indices)
     truncated = [messages[i] for i in sorted_indices]
     truncated_tokens = sum(estimate_message_tokens(m) for m in truncated)
 
-    while truncated_tokens > config.max_tokens and len(truncated) > config.head_turns + config.tail_turns:
+    while (
+        truncated_tokens > config.max_tokens
+        and len(truncated) > config.head_turns + config.tail_turns
+    ):
         middle_start = config.head_turns
         middle_end = len(truncated) - config.tail_turns
 
@@ -94,10 +99,14 @@ def truncate_conversation(
                 gap_start = prev_idx + 1
                 gap_end = idx - 1
                 gap_count = gap_end - gap_start + 1
-                gaps.append(f'turns {gap_start + 1}-{gap_end + 1} ({gap_count} messages)')
+                gaps.append(
+                    f'turns {gap_start + 1}-{gap_end + 1} ({gap_count} messages)'
+                )
             prev_idx = idx
 
-        summary_parts = [f'[TRUNCATED: {omitted_count} of {total_messages} messages omitted to fit context window]']
+        summary_parts = [
+            f'[TRUNCATED: {omitted_count} of {total_messages} messages omitted to fit context window]'
+        ]
         if gaps:
             summary_parts.append(f'Omitted sections: {"; ".join(gaps)}')
         summary_parts.append('Head, tail, and recommendation context preserved.')

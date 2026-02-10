@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import Field
-
 from axion._core.schema import RichBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
@@ -9,6 +7,7 @@ from axion._handlers.llm.handler import LLMHandler
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
+from pydantic import Field
 
 from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
 from eval_workbench.shared.metrics.slack.utils import build_transcript
@@ -58,14 +57,16 @@ class FeedbackAttributionOutput(RichBaseModel):
         description='Whether negative feedback was identified',
     )
     # UPDATED: Failure categories specific to Underwriting/Socotra/Magic Dust
-    failed_step: Optional[Literal[
-        'classification_failure',   # Wrong Class Code / NAICS
-        'data_integrity_failure',   # Magic Dust data was wrong (Year built, Sq Ft)
-        'rule_engine_failure',      # Missed hard rule (Payroll cap, Coastal distance)
-        'system_tooling_failure',   # Socotra/Swallow/SFX error
-        'chat_interface',           # Hallucination or confusing prompt
-        'unknown',
-    ]] = Field(
+    failed_step: Optional[
+        Literal[
+            'classification_failure',  # Wrong Class Code / NAICS
+            'data_integrity_failure',  # Magic Dust data was wrong (Year built, Sq Ft)
+            'rule_engine_failure',  # Missed hard rule (Payroll cap, Coastal distance)
+            'system_tooling_failure',  # Socotra/Swallow/SFX error
+            'chat_interface',  # Hallucination or confusing prompt
+            'unknown',
+        ]
+    ] = Field(
         default=None,
         description='The step in the pipeline that failed',
     )
@@ -98,7 +99,9 @@ class FeedbackAttributionOutput(RichBaseModel):
     score_range=None,
     tags=['slack', 'feedback', 'llm', 'attribution'],
 )
-class SlackFeedbackAttributionAnalyzer(BaseMetric[FeedbackAttributionInput, FeedbackAttributionOutput]):
+class SlackFeedbackAttributionAnalyzer(
+    BaseMetric[FeedbackAttributionInput, FeedbackAttributionOutput]
+):
     """
     Feedback Attribution Analyzer: Identify which step failed.
 
@@ -189,7 +192,7 @@ Identify the most likely failed step and provide direct quote evidence.
         (
             FeedbackAttributionInput(
                 conversation_transcript="""
-[Turn 0] Athena: Status: Approved. 
+[Turn 0] Athena: Status: Approved.
 [Turn 1] User: Taylor reached out because this condo is owner occupied. I will have to change to decline.
 [Turn 2] User: I tried that and got "failed to decline" in SFX.
 [Turn 3] User: I can't do it in SFX without editing something to make it not auto approve.
@@ -335,7 +338,11 @@ Identify the most likely failed step and provide direct quote evidence.
         self.analysis_context = analysis_context or {}
         self.sentiment_threshold = sentiment_threshold
 
-    @trace(name='SlackFeedbackAttributionAnalyzer', capture_args=True, capture_response=True)
+    @trace(
+        name='SlackFeedbackAttributionAnalyzer',
+        capture_args=True,
+        capture_response=True,
+    )
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         """Execute feedback attribution analysis."""
         if not item.conversation:
@@ -354,7 +361,7 @@ Identify the most likely failed step and provide direct quote evidence.
         # Early exit if sentiment is positive (AND no intervention occurred)
         # UPDATED LOGIC: Even if sentiment is neutral, if there was a major correction, we want to know why.
         has_intervention = ctx.get('has_intervention', False)
-        
+
         if sentiment_score >= self.sentiment_threshold and not has_intervention:
             return MetricEvaluationResult(
                 score=None,

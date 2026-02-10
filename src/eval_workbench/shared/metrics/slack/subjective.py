@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import Field
-
 from axion._core.schema import RichBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
@@ -9,6 +7,7 @@ from axion._handlers.llm.handler import LLMHandler
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
+from pydantic import Field
 
 from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
 from eval_workbench.shared.metrics.slack.utils import (
@@ -78,11 +77,11 @@ class SubjectiveAnalysisOutput(RichBaseModel):
     # Frustration (classification only)
     frustration_cause: Literal[
         'none',
-        'ai_error',         # Bot hallucinated or gave wrong info
-        'data_quality',     # Magic Dust/3rd party data was wrong
-        'tooling_friction', # Platform (Socotra/SFX) bugs or UI issues
-        'rule_rigidity',    # Hard blocks that user disagrees with
-        'slow_response',    # Latency issues
+        'ai_error',  # Bot hallucinated or gave wrong info
+        'data_quality',  # Magic Dust/3rd party data was wrong
+        'tooling_friction',  # Platform (Socotra/SFX) bugs or UI issues
+        'rule_rigidity',  # Hard blocks that user disagrees with
+        'slow_response',  # Latency issues
         'other',
     ] = Field(
         default='none',
@@ -197,7 +196,9 @@ class SubjectiveAnalysisOutput(RichBaseModel):
     score_range=(0.0, 1.0),
     tags=['slack', 'subjective', 'llm', 'sentiment'],
 )
-class SlackSubjectiveAnalyzer(BaseMetric[SubjectiveAnalysisInput, SubjectiveAnalysisOutput]):
+class SlackSubjectiveAnalyzer(
+    BaseMetric[SubjectiveAnalysisInput, SubjectiveAnalysisOutput]
+):
     """
     Subjective Analyzer: Nuanced sentiment and quality assessment.
 
@@ -296,7 +297,7 @@ Note specific turns and quotes that inform your assessments."""
                 sentiment_trajectory='worsening',
                 sentiment_indicators=['"failed to decline"', '"can\'t do it in SFX"'],
                 frustration_cause='tooling_friction',
-                frustration_indicators=['failed to decline', 'can\'t do it in SFX'],
+                frustration_indicators=['failed to decline', "can't do it in SFX"],
                 peak_frustration_turn=2,
                 acceptance_status='rejected',
                 is_accepted=False,
@@ -400,7 +401,9 @@ Note specific turns and quotes that inform your assessments."""
             domain_context=self.analyzer_config.domain_context,
             objective_is_escalated=obj_ctx.get('is_escalated', False),
             objective_has_intervention=obj_ctx.get('has_intervention', False),
-            objective_intervention_type=obj_ctx.get('intervention_type', 'no_intervention'),
+            objective_intervention_type=obj_ctx.get(
+                'intervention_type', 'no_intervention'
+            ),
             objective_final_status=obj_ctx.get('final_status', 'pending'),
         )
 
@@ -489,19 +492,21 @@ Note specific turns and quotes that inform your assessments."""
         ]
 
         if signals.satisfaction_score is not None:
-            sub_metrics.append(SubMetricResult(
-                name='satisfaction_score',
-                score=signals.satisfaction_score,
-                explanation=f'Score: {signals.satisfaction_score:.2f}',
-                metric_category=MetricCategory.SCORE,
-                group='subjective',
-                metadata={
-                    'has_clear_reason': signals.has_clear_reason,
-                    'has_supporting_evidence': signals.has_supporting_evidence,
-                    'is_actionable': signals.is_actionable,
-                    'suggestions': signals.improvement_suggestions,
-                },
-            ))
+            sub_metrics.append(
+                SubMetricResult(
+                    name='satisfaction_score',
+                    score=signals.satisfaction_score,
+                    explanation=f'Score: {signals.satisfaction_score:.2f}',
+                    metric_category=MetricCategory.SCORE,
+                    group='subjective',
+                    metadata={
+                        'has_clear_reason': signals.has_clear_reason,
+                        'has_supporting_evidence': signals.has_supporting_evidence,
+                        'is_actionable': signals.is_actionable,
+                        'suggestions': signals.improvement_suggestions,
+                    },
+                )
+            )
 
         # Distribute cost across sub-metrics (normalized per metric)
         total_cost = getattr(self, 'cost_estimate', None)

@@ -1,17 +1,17 @@
 from typing import Any, List, Optional
 
-from pydantic import Field
-
 from axion._core.schema import RichBaseModel
 from axion._core.tracing import trace
 from axion._core.types import MetricCategory
 from axion.dataset import DatasetItem
 from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
-
+from pydantic import Field
 
 from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
-from eval_workbench.shared.metrics.slack.feedback import SlackFeedbackAttributionAnalyzer
+from eval_workbench.shared.metrics.slack.feedback import (
+    SlackFeedbackAttributionAnalyzer,
+)
 from eval_workbench.shared.metrics.slack.objective import SlackObjectiveAnalyzer
 from eval_workbench.shared.metrics.slack.product import SlackProductAnalyzer
 from eval_workbench.shared.metrics.slack.subjective import SlackSubjectiveAnalyzer
@@ -19,6 +19,7 @@ from eval_workbench.shared.metrics.slack.subjective import SlackSubjectiveAnalyz
 
 class UnderwritingCompositeResult(RichBaseModel):
     """Combined signals from all analyzers."""
+
     objective: Any = Field(default=None)
     subjective: Any = Field(default=None)
     feedback: Any = Field(default=None)
@@ -42,6 +43,7 @@ class UnderwritingCompositeEvaluator(BaseMetric):
     3. Feedback Analyzer (Get root cause, using Intervention + Sentiment context)
     4. Product Analyzer (Get feature requests)
     """
+
     is_multi_metric = True
     include_parent_score = False
     sub_metric_prefix = False
@@ -58,15 +60,12 @@ class UnderwritingCompositeEvaluator(BaseMetric):
 
     def _map_sentiment_to_score(self, sentiment: str) -> float:
         """Map categorical sentiment to the float expected by Feedback analyzer."""
-        mapping = {
-            'positive': 1.0,
-            'neutral': 0.5,
-            'confused': 0.3,
-            'frustrated': 0.0
-        }
+        mapping = {'positive': 1.0, 'neutral': 0.5, 'confused': 0.3, 'frustrated': 0.0}
         return mapping.get(sentiment, 0.5)
 
-    @trace(name='UnderwritingCompositeEvaluator', capture_args=True, capture_response=True)
+    @trace(
+        name='UnderwritingCompositeEvaluator', capture_args=True, capture_response=True
+    )
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
         """Execute the pipeline in sequence."""
 
@@ -77,7 +76,10 @@ class UnderwritingCompositeEvaluator(BaseMetric):
 
         # Determine if we need deep analysis
         # If no intervention and resolved successfully, we might skip deep diagnostics
-        needs_diagnosis = obj_signals.intervention.has_intervention or obj_signals.escalation.is_escalated
+        needs_diagnosis = (
+            obj_signals.intervention.has_intervention
+            or obj_signals.escalation.is_escalated
+        )
 
         # Prepare context for Subjective
         # Subjective needs to know if there was an escalation or intervention
@@ -85,12 +87,14 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             'is_escalated': obj_signals.escalation.is_escalated,
             'has_intervention': obj_signals.intervention.has_intervention,
             'intervention_type': obj_signals.intervention.intervention_type,
-            'final_status': obj_signals.resolution.final_status
+            'final_status': obj_signals.resolution.final_status,
         }
 
         # SUBJECTIVE
         # Always run subjective to catch "silent frustration" even if no intervention
-        subj_result = await self.subjective.execute(item, objective_context=subj_context)
+        subj_result = await self.subjective.execute(
+            item, objective_context=subj_context
+        )
         subj_signals = subj_result.signals
 
         # Prepare context for Feedback
@@ -113,14 +117,16 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             'intervention_type': obj_signals.intervention.intervention_type,
             'sentiment_score': sentiment_score,
             'frustration_score': frustration_score,
-            'frustration_cause': subj_signals.frustration_cause
+            'frustration_cause': subj_signals.frustration_cause,
         }
 
         # FEEDBACK ATTRIBUTION
         # OPTIMIZATION: Only run expensive root cause analysis if there was a problem
         fb_result = None
         if needs_diagnosis:
-            fb_result = await self.feedback.execute(item, analysis_context=feedback_context)
+            fb_result = await self.feedback.execute(
+                item, analysis_context=feedback_context
+            )
 
         # PRODUCT SIGNALS
         # Independent, can run with basic context. Good to run always for feature requests.
@@ -128,7 +134,7 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             'has_intervention': obj_signals.intervention.has_intervention,
             'intervention_type': obj_signals.intervention.intervention_type,
             'frustration_score': frustration_score,
-            'sentiment': subj_signals.sentiment
+            'sentiment': subj_signals.sentiment,
         }
         prod_result = await self.product.execute(item, analysis_context=prod_context)
 
@@ -137,20 +143,20 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             objective=obj_signals,
             subjective=subj_signals,
             feedback=fb_result.signals if fb_result else None,
-            product=prod_result.signals
+            product=prod_result.signals,
         )
 
         return MetricEvaluationResult(
             score=None,
-            explanation=f"Eval Complete. Status: {obj_signals.resolution.final_status} | Intervention: {obj_signals.intervention.intervention_type}",
+            explanation=f'Eval Complete. Status: {obj_signals.resolution.final_status} | Intervention: {obj_signals.intervention.intervention_type}',
             signals=composite_signals,
             # We store individual results in metadata so they can be accessed if needed
             metadata={
                 'objective': obj_result,
                 'subjective': subj_result,
                 'feedback': fb_result,
-                'product': prod_result
-            }
+                'product': prod_result,
+            },
         )
 
     def get_sub_metrics(self, result: MetricEvaluationResult) -> List[SubMetricResult]:
@@ -168,11 +174,15 @@ class UnderwritingCompositeEvaluator(BaseMetric):
         # Collect sub-metrics from each child analyzer
         # Objective Metrics
         if 'objective' in result.metadata:
-            all_metrics.extend(self.objective.get_sub_metrics(result.metadata['objective']))
+            all_metrics.extend(
+                self.objective.get_sub_metrics(result.metadata['objective'])
+            )
 
         # Feedback Metrics (The most important technical ones)
         if 'feedback' in result.metadata and result.metadata['feedback']:
-            all_metrics.extend(self.feedback.get_sub_metrics(result.metadata['feedback']))
+            all_metrics.extend(
+                self.feedback.get_sub_metrics(result.metadata['feedback'])
+            )
 
         # Product Metrics (Strategic)
         if 'product' in result.metadata:
@@ -180,11 +190,15 @@ class UnderwritingCompositeEvaluator(BaseMetric):
 
         # Subjective Metrics (Optional - can comment out if too noisy)
         if 'subjective' in result.metadata:
-            all_metrics.extend(self.subjective.get_sub_metrics(result.metadata['subjective']))
+            all_metrics.extend(
+                self.subjective.get_sub_metrics(result.metadata['subjective'])
+            )
 
         # Populate signals from each sub-metric's own metadata
         # (child analyzers already put the targeted signal data there)
         for sub in all_metrics:
-            sub.signals = {k: v for k, v in sub.metadata.items() if k != 'cost_estimate'}
+            sub.signals = {
+                k: v for k, v in sub.metadata.items() if k != 'cost_estimate'
+            }
 
         return all_metrics

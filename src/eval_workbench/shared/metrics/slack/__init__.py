@@ -8,6 +8,7 @@ Standalone Metrics (can be run independently through evaluation_runner):
 - SlackFeedbackAttributionAnalyzer: Failure attribution for negative feedback
 """
 
+from eval_workbench.shared.metrics.slack.config import AnalyzerConfig, TruncationConfig
 from eval_workbench.shared.metrics.slack.feedback import (
     FeedbackAttributionInput,
     FeedbackAttributionOutput,
@@ -39,11 +40,10 @@ from eval_workbench.shared.metrics.slack.subjective import (
     SubjectiveAnalysisInput,
     SubjectiveAnalysisOutput,
 )
-from eval_workbench.shared.metrics.slack.config import AnalyzerConfig, TruncationConfig
 from eval_workbench.shared.metrics.slack.truncation import (
     HAS_TIKTOKEN,
-    estimate_tokens,
     estimate_message_tokens,
+    estimate_tokens,
     format_truncated_transcript,
     get_truncation_markers,
     truncate_conversation,

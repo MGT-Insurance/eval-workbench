@@ -76,26 +76,44 @@ class SlackMetadata:
 class ReactionSignals(RichBaseModel):
     """Slack emoji reaction analysis (heuristic)."""
 
-    thumbs_up_count: int = Field(default=0, description='Count of positive thumb reactions')
-    thumbs_down_count: int = Field(default=0, description='Count of negative thumb reactions')
-    has_positive_reaction: bool = Field(default=False, description='Whether any positive reaction exists')
-    has_negative_reaction: bool = Field(default=False, description='Whether any negative reaction exists')
+    thumbs_up_count: int = Field(
+        default=0, description='Count of positive thumb reactions'
+    )
+    thumbs_down_count: int = Field(
+        default=0, description='Count of negative thumb reactions'
+    )
+    has_positive_reaction: bool = Field(
+        default=False, description='Whether any positive reaction exists'
+    )
+    has_negative_reaction: bool = Field(
+        default=False, description='Whether any negative reaction exists'
+    )
     reaction_sentiment_score: float = Field(
         default=0.5,
         ge=0.0,
         le=1.0,
         description='Overall sentiment from reactions (0=negative, 0.5=neutral, 1=positive)',
     )
-    all_reactions: Dict[str, int] = Field(default_factory=dict, description='All reactions with counts')
+    all_reactions: Dict[str, int] = Field(
+        default_factory=dict, description='All reactions with counts'
+    )
 
 
 class StalemateSignals(RichBaseModel):
     """Detect bot repeating same error/message (heuristic)."""
 
-    is_stalemate: bool = Field(default=False, description='Whether a stalemate was detected')
-    repeated_message_count: int = Field(default=0, description='Number of times the same message was repeated')
-    stalemate_turn_index: Optional[int] = Field(default=None, description='Turn where stalemate began')
-    repeated_content: Optional[str] = Field(default=None, description='The content that was repeated')
+    is_stalemate: bool = Field(
+        default=False, description='Whether a stalemate was detected'
+    )
+    repeated_message_count: int = Field(
+        default=0, description='Number of times the same message was repeated'
+    )
+    stalemate_turn_index: Optional[int] = Field(
+        default=None, description='Turn where stalemate began'
+    )
+    repeated_content: Optional[str] = Field(
+        default=None, description='The content that was repeated'
+    )
 
 
 def _load_dataset_metadata(dataset_metadata: Optional[str]) -> Dict[str, Any]:
@@ -323,7 +341,9 @@ def detect_stalemate(
     if not messages:
         return StalemateSignals()
 
-    ai_messages = [(i, m) for i, m in enumerate(messages) if isinstance(m, AIMessage) and m.content]
+    ai_messages = [
+        (i, m) for i, m in enumerate(messages) if isinstance(m, AIMessage) and m.content
+    ]
 
     if len(ai_messages) < min_repeats:
         return StalemateSignals()
