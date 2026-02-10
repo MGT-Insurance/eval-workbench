@@ -21,8 +21,8 @@
 <div class="grid-item" style="text-align: center;">
 <span style="font-size: 2rem;">⚡</span><br>
 <strong>Default Threshold</strong><br>
-<code style="font-size: 1.5rem; color: var(--md-primary);">—</code><br>
-<small style="color: var(--md-text-muted);">No default threshold</small>
+<code style="font-size: 1.5rem; color: var(--md-primary);">0.8</code><br>
+<small style="color: var(--md-text-muted);">High Bar</small>
 </div>
 
 <div class="grid-item" style="text-align: center;">
@@ -140,15 +140,16 @@
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
     | `weights` | `dict` | See below | Per-criterion weights |
+    | `main_check_field` | `str` | `brief_recommendation` | Field in additional_output to analyze |
 
     **Default Weights:**
 
     | Criterion | Default Weight |
     |-----------|----------------|
     | Decision | 0.4 |
-    | Rationale | 0.25 |
+    | Rationale | 0.2 |
     | Evidence | 0.2 |
-    | NextStep | 0.15 |
+    | NextStep | 0.2 |
 
     !!! warning "Hard Gate"
         If the Decision criterion scores 0.0 (no clear decision found), the overall score is forced to 0.0 regardless of other criteria.
@@ -180,7 +181,7 @@
 
     result = await metric.execute(item)
     print(result.pretty())
-    # Score: 0.95 (all components present and strong)
+    # Score: 1.0 (all components present and strong)
     ```
 
 === ":material-cog-outline: Custom Weights"
@@ -221,39 +222,46 @@ result.signals              # Full diagnostic breakdown
 ```python
 UnderwritingCompletenessResult(
 {
-    "overall_score": 0.92,
-    "criteria": {
-        "Decision": {
+    "overall_score": 0.8,
+    "criteria": [
+        {
+            "name": "Decision",
             "score": 1.0,
-            "reasoning": "Clear 'Approve' recommendation stated",
-            "evidence": "Recommendation: Approve"
+            "reasoning": "Explicitly states 'Approve'.",
+            "evidence_found": "Recommendation: Approve"
         },
-        "Rationale": {
-            "score": 0.9,
-            "reasoning": "Strong explanation with multiple factors",
-            "evidence": "low-risk profile, building age, claims history"
+        {
+            "name": "Rationale",
+            "score": 1.0,
+            "reasoning": "Cites specific factor 'building age'.",
+            "evidence_found": "building age: 5 years"
         },
-        "Evidence": {
-            "score": 0.85,
-            "reasoning": "Specific data points cited",
-            "evidence": "5 years, 0 claims, $1.2M"
+        {
+            "name": "Evidence",
+            "score": 1.0,
+            "reasoning": "Specific financial data point.",
+            "evidence_found": "$1.2M"
         },
-        "NextStep": {
-            "score": 0.8,
-            "reasoning": "Clear action specified",
-            "evidence": "Proceed to bind coverage"
+        {
+            "name": "NextStep",
+            "score": 0.0,
+            "reasoning": "Statement of fact only.",
+            "evidence_found": null
         }
-    }
+    ]
 }
 )
 ```
+
+!!! info "Binary Scoring"
+    Each criterion judge returns either **1.0** (pass) or **0.0** (fail). Scores are not continuous.
 
 ### Signal Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `overall_score` | `float` | Weighted combination of criteria |
-| `criteria` | `dict` | Per-criterion score, reasoning, evidence |
+| `criteria` | `List[CompletenessCriterion]` | Per-criterion results (`name`, `score`, `reasoning`, `evidence_found`) |
 
 </details>
 
@@ -261,7 +269,7 @@ UnderwritingCompletenessResult(
 
 ## Example Scenarios
 
-=== "Pass (0.95)"
+=== "Pass (1.0)"
 
     !!! success "All Components Present"
 
@@ -273,13 +281,13 @@ UnderwritingCompletenessResult(
         | Criterion | Score | Finding |
         |-----------|-------|---------|
         | Decision | 1.0 | Clear "Approve" |
-        | Rationale | 0.95 | Multiple factors explained |
-        | Evidence | 0.90 | Specific data cited |
-        | NextStep | 0.85 | Clear action |
+        | Rationale | 1.0 | Cites specific factor |
+        | Evidence | 1.0 | Specific data cited |
+        | NextStep | 1.0 | Clear action |
 
-        **Final Score:** `0.95` :material-check-all:
+        **Final Score:** `(0.4 × 1.0) + (0.2 × 1.0) + (0.2 × 1.0) + (0.2 × 1.0) = 1.0` :material-check-all:
 
-=== "Partial (0.65)"
+=== "Partial (0.6)"
 
     !!! warning "Missing Elements"
 
@@ -291,11 +299,11 @@ UnderwritingCompletenessResult(
         | Criterion | Score | Finding |
         |-----------|-------|---------|
         | Decision | 1.0 | Clear "Approve" |
-        | Rationale | 0.4 | Vague "good risk" |
-        | Evidence | 0.2 | No specific data |
+        | Rationale | 0.0 | Too generic |
+        | Evidence | 0.0 | No specific data |
         | NextStep | 0.0 | No next steps |
 
-        **Final Score:** `0.65` :material-alert:
+        **Final Score:** `(0.4 × 1.0) + (0.2 × 0.0) + (0.2 × 0.0) + (0.2 × 0.0) = 0.4` :material-alert:
 
 === "Fail (0.0)"
 

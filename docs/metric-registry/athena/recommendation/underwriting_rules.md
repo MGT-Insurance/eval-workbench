@@ -250,28 +250,28 @@ result.signals              # Full diagnostic breakdown
 ```
 
 <details markdown="1">
-<summary><strong>📊 UnderwritingRulesResult Structure</strong></summary>
+<summary><strong>📊 TriggerReport Structure</strong></summary>
 
 ```python
-UnderwritingRulesResult(
+TriggerReport(
 {
-    "score": 1.0,
     "is_referral": true,
-    "outcome_label": "Referral",
-    "primary_trigger": "bppValue",
-    "detected_events": [
+    "active_triggers": [
         {
-            "trigger": "bppValue",
-            "severity": "hard",
-            "confidence": 0.95,
-            "detection_method": "structured",
-            "details": "BPP limit $300,000 exceeds $250,000 threshold"
+            "trigger_name": "bppValue",
+            "detection_method": "regex",
+            "context": "bop_bpp_limit=300000",
+            "confidence": 1.0
         }
     ],
-    "structured_values": {
-        "bpp_limit": 300000,
-        "gross_sales": 1500000
-    }
+    "primary_referral_reason": "bppValue",
+    "summary_text": "bppValue",
+    "outcome_label": "Refer",
+    "trigger_count": 1,
+    "llm_fallback_used": false,
+    "min_confidence": 1.0,
+    "has_hard_trigger": true,
+    "unknown_reasoning": null
 }
 )
 ```
@@ -280,12 +280,16 @@ UnderwritingRulesResult(
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `score` | `float` | 1.0 if consistent, 0.0 if not |
 | `is_referral` | `bool` | Whether outcome is referral/decline |
+| `active_triggers` | `List[TriggerEvent]` | Detected triggers (`trigger_name`, `detection_method`, `context`, `confidence`) |
+| `primary_referral_reason` | `TriggerName` | Most significant trigger (by priority) |
+| `summary_text` | `str` | Comma-separated trigger names |
 | `outcome_label` | `str` | Normalized outcome label |
-| `primary_trigger` | `str` | Most significant trigger |
-| `detected_events` | `List` | All detected triggers with details |
-| `structured_values` | `dict` | Extracted field values |
+| `trigger_count` | `int` | Number of triggers detected |
+| `llm_fallback_used` | `bool` | Whether LLM classifier was invoked |
+| `min_confidence` | `float` | Minimum confidence across all triggers |
+| `has_hard_trigger` | `bool` | Whether any hard-severity trigger was detected |
+| `unknown_reasoning` | `str \| None` | LLM explanation when no trigger matched |
 
 </details>
 

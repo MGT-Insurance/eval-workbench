@@ -138,7 +138,7 @@
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
     | `validation_mode` | `str` | `ref_only` | `ref_only` or `ref_plus_input` |
-    | `output_key` | `str` | `None` | Key in `additional_output` to analyze (fallback to `actual_output`) |
+    | `output_key` | `str` | `brief_recommendation` | Key in `additional_output` to analyze (fallback to `actual_output`) |
 
     !!! info "Validation Modes"
         - **ref_only**: Only check that citations match reference entries
@@ -209,16 +209,22 @@ CitationAccuracyResult(
     "valid_citations": 2,
     "verdicts": [
         {
-            "citation": "[1]",
-            "reference_match": "[1] - quote.roof_age",
-            "status": "valid",
-            "reason": "Reference entry found"
+            "citation_text": "[1]",
+            "citation_number": 1,
+            "source": "[1] - quote.roof_age",
+            "is_scorable": true,
+            "is_valid": true,
+            "reason": "Reference exists.",
+            "missing_fields": null
         },
         {
-            "citation": "[2]",
-            "reference_match": "[2] - quote.revenue",
-            "status": "valid",
-            "reason": "Reference entry found"
+            "citation_text": "[2]",
+            "citation_number": 2,
+            "source": "[2] - quote.revenue",
+            "is_scorable": true,
+            "is_valid": true,
+            "reason": "Reference exists.",
+            "missing_fields": null
         }
     ]
 }
@@ -233,7 +239,7 @@ CitationAccuracyResult(
 | `total_citations` | `int` | Total citations found in output |
 | `scorable_citations` | `int` | Citations that could be validated |
 | `valid_citations` | `int` | Citations that passed validation |
-| `verdicts` | `List` | Per-citation validation details |
+| `verdicts` | `List[CitationAccuracyVerdict]` | Per-citation details (`citation_text`, `citation_number`, `source`, `is_scorable`, `is_valid`, `reason`, `missing_fields`) |
 
 </details>
 

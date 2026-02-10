@@ -96,39 +96,51 @@
 
 === ":material-tag: Reason Categories"
 
-    <div class="grid-container">
+    The metric uses 18 granular `ReasonCategory` values grouped by actionable type:
 
-    <div class="grid-item" style="border-left: 4px solid #ef4444; padding-left: 1rem;">
-    <strong style="color: #ef4444;">Claims History</strong>
-    <br><small>Prior claims or loss history issues</small>
-    </div>
+    **Coverage & Pricing**
 
-    <div class="grid-item" style="border-left: 4px solid #f59e0b; padding-left: 1rem;">
-    <strong style="color: #f59e0b;">BPP Value</strong>
-    <br><small>Business personal property limits</small>
-    </div>
+    | Category | Description | Actionable |
+    |----------|-------------|------------|
+    | `Excessive Coverage Requested` | Coverage limits materially exceed typical thresholds | market |
+    | `Inadequate / Suspicious Valuation` | Coverage amounts appear insufficient or implausible | market |
+    | `Pricing Anomaly - Too Low` | Calculated premium appears unusually low | market |
+    | `Pricing Anomaly - Too High` | Calculated premium appears unusually high | market |
 
-    <div class="grid-item" style="border-left: 4px solid #3b82f6; padding-left: 1rem;">
-    <strong style="color: #3b82f6;">New Business</strong>
-    <br><small>Organization age concerns</small>
-    </div>
+    **Property & Location**
 
-    <div class="grid-item" style="border-left: 4px solid #8b5cf6; padding-left: 1rem;">
-    <strong style="color: #8b5cf6;">Building Coverage</strong>
-    <br><small>Non-owned building or coverage issues</small>
-    </div>
+    | Category | Description | Actionable |
+    |----------|-------------|------------|
+    | `Property Condition Concerns` | Elevated risk from property condition | market |
+    | `Construction / Exposure Threshold` | Property characteristics exceed thresholds | market |
+    | `Location / CAT Risk` | Elevated catastrophe or environmental risk | market |
 
-    <div class="grid-item" style="border-left: 4px solid #10b981; padding-left: 1rem;">
-    <strong style="color: #10b981;">Employee Count</strong>
-    <br><small>High employee count concerns</small>
-    </div>
+    **Data & Classification**
 
-    <div class="grid-item" style="border-left: 4px solid #6b7280; padding-left: 1rem;">
-    <strong style="color: #6b7280;">Other</strong>
-    <br><small>Classification, location, or other factors</small>
-    </div>
+    | Category | Description | Actionable |
+    |----------|-------------|------------|
+    | `Data Conflict / Mismatch` | Discrepancies between customer and third-party data | system |
+    | `Implausible / Invalid Data` | One or more inputs appear invalid | system |
+    | `Missing / Unverifiable Data` | Required data cannot be verified | system |
+    | `Industry / Class Code Error` | Business classification appears incorrect | policy |
+    | `Unrelated / Ancillary Operations` | Operations outside primary stated class | policy |
 
-    </div>
+    **Business & Operational**
+
+    | Category | Description | Actionable |
+    |----------|-------------|------------|
+    | `Startup / New Venture` | Limited or no operating history | market |
+    | `Multi-Location / Complex Ops` | Multiple locations requiring manual review | market |
+    | `Financial / Operational Inconsistency` | Operational metrics are internally inconsistent | market |
+    | `Ownership / Insurable Interest Issue` | Coverage for property without insurable interest | policy |
+
+    **Compliance & Procedural**
+
+    | Category | Description | Actionable |
+    |----------|-------------|------------|
+    | `Sanctions / Watchlists` | Potential regulatory or sanctions concern | policy |
+    | `Procedural / Temporary Block` | Procedural rather than risk-based referral | system |
+    | `Other / Unknown` | Does not fit a defined category | unknown |
 
 </details>
 
@@ -156,18 +168,18 @@
     metric = ReferReason()
 
     item = DatasetItem(
-        actual_output="Decline due to prior claims history and high BPP coverage request."
+        actual_output="Refer to underwriting. Roof is 28 years old, exceeding 20-year threshold."
     )
 
     result = await metric.execute(item)
     print(result.explanation)
-    # "Claims History"
+    # "Property Condition Concerns"
 
     print(result.signals.primary_category)
-    # ReasonCategory.CLAIMS_HISTORY
+    # ReasonCategory.PROPERTY_CONDITION
 
     print(result.signals.all_reasons)
-    # [{"category": "Claims History", ...}, {"category": "BPP Value", ...}]
+    # [ExtractedReason(reason_text="...", category=ReasonCategory.PROPERTY_CONDITION, reasoning="..."), ...]
     ```
 
 === ":material-cog-outline: Full Analysis"
@@ -213,33 +225,33 @@ result.signals              # Full analysis breakdown
 ```
 
 <details markdown="1">
-<summary><strong>📊 ReferReasonResult Structure</strong></summary>
+<summary><strong>📊 ReasonAnalysisResult Structure</strong></summary>
 
 ```python
-ReferReasonResult(
+ReasonAnalysisResult(
 {
     "is_negative_outcome": true,
-    "outcome_label": "Referral",
+    "outcome_label": "Refer to Underwriter",
     "primary_reason": {
-        "category": "Claims History",
-        "reasoning": "Prior claims mentioned as primary concern",
-        "confidence": 0.92
+        "reason_text": "Roof is 28 years old, exceeding 20-year threshold",
+        "category": "Property Condition Concerns",
+        "reasoning": "Explicit mention of roof age exceeding policy threshold."
     },
-    "primary_category": "Claims History",
+    "primary_category": "Property Condition Concerns",
     "all_reasons": [
         {
-            "category": "Claims History",
-            "reasoning": "Prior claims mentioned",
-            "confidence": 0.92
+            "reason_text": "Roof is 28 years old, exceeding 20-year threshold",
+            "category": "Property Condition Concerns",
+            "reasoning": "Explicit mention of roof age exceeding policy threshold."
         },
         {
-            "category": "BPP Value",
-            "reasoning": "High BPP coverage request",
-            "confidence": 0.85
+            "reason_text": "Original knob-and-tube wiring from 1950s",
+            "category": "Property Condition Concerns",
+            "reasoning": "Outdated wiring type is a known fire hazard concern."
         }
     ],
     "reason_count": 2,
-    "actionable_type": "policy"
+    "actionable_type": "market"
 }
 )
 ```
@@ -249,12 +261,12 @@ ReferReasonResult(
 | Field | Type | Description |
 |-------|------|-------------|
 | `is_negative_outcome` | `bool` | Whether outcome is referral/decline |
-| `outcome_label` | `str` | Referral, Decline, Approved, or Unknown |
-| `primary_reason` | `dict` | Most significant reason details |
-| `primary_category` | `str` | Category of primary reason |
-| `all_reasons` | `List` | All extracted reasons |
+| `outcome_label` | `str` | Refer to Underwriter, Decline, Approved, or Unknown |
+| `primary_reason` | `ExtractedReason` | Most significant reason (`reason_text`, `category`, `reasoning`) |
+| `primary_category` | `ReasonCategory` | Category enum of the primary reason |
+| `all_reasons` | `List[ExtractedReason]` | All extracted reasons |
 | `reason_count` | `int` | Number of reasons detected |
-| `actionable_type` | `str` | market, system, or policy |
+| `actionable_type` | `str` | market, system, policy, or unknown |
 
 </details>
 
@@ -264,40 +276,40 @@ ReferReasonResult(
 
 === "Single Reason"
 
-    !!! info "Claims History"
+    !!! info "Property Condition"
 
         **Recommendation:**
-        > "Decline - applicant has 3 claims in the past 2 years."
+        > "Refer to underwriting - roof is 28 years old, exceeding 20-year threshold."
 
         **Analysis:**
 
         | Field | Value |
         |-------|-------|
-        | Outcome | Decline |
-        | Primary Category | Claims History |
+        | Outcome | Refer to Underwriter |
+        | Primary Category | Property Condition Concerns |
         | Reason Count | 1 |
-        | Actionable Type | policy |
+        | Actionable Type | market |
 
-        **Explanation:** `"Claims History"`
+        **Explanation:** `"Property Condition Concerns"`
 
 === "Multiple Reasons"
 
     !!! info "Multiple Factors"
 
         **Recommendation:**
-        > "Refer - new business (2024), high BPP ($350k), and 25 employees."
+        > "Refer - new business (2024), BPP limit of $3.5M appears excessive for $800k sales, and year built conflicts between customer data and enrichment."
 
         **Analysis:**
 
         | Field | Value |
         |-------|-------|
-        | Outcome | Referral |
-        | Primary Category | New Business |
+        | Outcome | Refer to Underwriter |
+        | Primary Category | Excessive Coverage Requested |
         | Reason Count | 3 |
-        | All Reasons | New Business, BPP Value, Employee Count |
-        | Actionable Type | system |
+        | All Reasons | Excessive Coverage Requested, Data Conflict / Mismatch, Startup / New Venture |
+        | Actionable Type | market |
 
-        **Explanation:** `"New Business"`
+        **Explanation:** `"Excessive Coverage Requested"`
 
 === "Approval (N/A)"
 

@@ -51,6 +51,7 @@ class UnderwritingCompletenessResult(RichBaseModel):
     key='uw_completeness',
     description='Evaluates completeness using dedicated LLM calls for each dimension.',
     required_fields=['actual_output'],
+    default_threshold=0.8,
     score_range=(0, 1),
     tags=['athena', 'agent'],
 )

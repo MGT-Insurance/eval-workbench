@@ -137,12 +137,8 @@
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
     | `verification_mode` | `str` | `llm` | `llm`, `heuristic`, or `heuristic_then_llm` |
-    | `max_claims` | `int` | `50` | Maximum claims to verify |
-    | `max_concurrent` | `int` | `10` | Concurrency limit for LLM verification |
-
-    !!! info "Performance Tuning"
-        For large recommendations, use `heuristic_then_llm` mode with appropriate `max_concurrent` to balance accuracy and speed.
-
+    | `max_claims` | `int` | `10` | Maximum claims to verify |
+    | `max_concurrent` | `int` | `5` | Concurrency limit for LLM verification |
 ---
 
 ## Code Examples
@@ -217,51 +213,54 @@ result.signals              # Full diagnostic breakdown
 ```python
 UnderwritingFaithfulnessResult(
 {
-    "overall_score": 0.85,
+    "overall_score": 0.75,
     "total_claims": 4,
     "supported_claims": 3,
     "hallucinations": 1,
     "claim_details": [
         {
             "claim": "Revenue is $2.1M",
-            "status": "supported",
-            "evidence": "financials.revenue: 2100000",
-            "confidence": 0.95
+            "status": "✅ Supported",
+            "reason": "Exact numeric match in source data.",
+            "decision_source": "llm"
         },
         {
             "claim": "Building was constructed in 2019",
-            "status": "supported",
-            "evidence": "property.year_built: 2019",
-            "confidence": 0.98
+            "status": "✅ Supported",
+            "reason": "Year built matches property.year_built.",
+            "decision_source": "llm"
         },
         {
             "claim": "No claims in 5 years",
-            "status": "supported",
-            "evidence": "claims.five_year_count: 0",
-            "confidence": 0.92
+            "status": "✅ Supported",
+            "reason": "claims.five_year_count: 0 confirms zero claims.",
+            "decision_source": "llm"
         },
         {
             "claim": "Premium is $1,200",
-            "status": "unsupported",
-            "evidence": null,
-            "confidence": 0.1
+            "status": "❌ Hallucinated/Unsupported",
+            "reason": "No premium data found in source.",
+            "decision_source": "llm"
         }
     ],
-    "unverified_claims": ["Premium is $1,200"]
+    "unverified_claims": []
 }
 )
 ```
+
+!!! info "Unverified vs Hallucinated"
+    `unverified_claims` lists claims that exceeded `max_claims` and were not checked. `claim_details` contains verdicts for all checked claims.
 
 ### Signal Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `overall_score` | `float` | Proportion of supported claims |
-| `total_claims` | `int` | Total atomic claims extracted |
+| `total_claims` | `int` | Total atomic claims extracted (capped by `max_claims`) |
 | `supported_claims` | `int` | Claims verified against source |
 | `hallucinations` | `int` | Claims not found in source |
-| `claim_details` | `List` | Per-claim verification details |
-| `unverified_claims` | `List[str]` | List of unsupported claims |
+| `claim_details` | `List[dict]` | Per-claim details (`claim`, `status`, `reason`, `decision_source`) |
+| `unverified_claims` | `List[str]` | Claims that exceeded `max_claims` and were not checked |
 
 </details>
 

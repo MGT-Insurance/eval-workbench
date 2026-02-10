@@ -136,11 +136,11 @@
 
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
-    | `check_values` | `bool` | `False` | Verify cited values appear in text |
-    | `window_chars` | `int` | `200` | Characters to search for value |
+    | `check_values` | `bool` | `True` | Verify cited values appear in text |
+    | `window_chars` | `int` | `150` | Characters to search for value |
     | `min_shared_tokens` | `int` | `2` | Min tokens to match for text values |
-    | `fuzzy_threshold` | `float` | `0.8` | Fuzzy match threshold for strings |
-    | `numeric_tolerance` | `float` | `0.01` | Tolerance for numeric comparisons |
+    | `fuzzy_threshold` | `float` | `0.88` | Fuzzy match threshold for strings |
+    | `numeric_tolerance` | `float` | `0.02` | Tolerance for numeric comparisons |
 
     !!! info "Value Checking"
         When `check_values=True`, the metric verifies that the JSON value actually appears in the text near the citation, preventing citations that point to valid paths but misrepresent the data.
@@ -213,18 +213,20 @@ CitationFidelityResult(
     "valid_citations": 2,
     "verdicts": [
         {
-            "citation": "[quote.premium]",
-            "path": "quote.premium",
-            "resolved_value": 1200,
-            "status": "valid",
-            "reason": "Path resolved successfully"
+            "citation_text": "[quote.premium]",
+            "path_referenced": "quote.premium",
+            "json_value": "1200",
+            "is_valid_path": true,
+            "is_supported": true,
+            "reason": "Exact match."
         },
         {
-            "citation": "[quote.coverage]",
-            "path": "quote.coverage",
-            "resolved_value": 500000,
-            "status": "valid",
-            "reason": "Path resolved successfully"
+            "citation_text": "[quote.coverage]",
+            "path_referenced": "quote.coverage",
+            "json_value": "500000",
+            "is_valid_path": true,
+            "is_supported": true,
+            "reason": "Numeric match."
         }
     ]
 }
@@ -237,8 +239,8 @@ CitationFidelityResult(
 |-------|------|-------------|
 | `score` | `float` | Overall fidelity score |
 | `total_citations` | `int` | Total path citations found |
-| `valid_citations` | `int` | Citations that resolved |
-| `verdicts` | `List` | Per-citation resolution details |
+| `valid_citations` | `int` | Citations that resolved and are supported |
+| `verdicts` | `List[CitationVerdict]` | Per-citation details (`citation_text`, `path_referenced`, `json_value`, `is_valid_path`, `is_supported`, `reason`) |
 
 </details>
 
