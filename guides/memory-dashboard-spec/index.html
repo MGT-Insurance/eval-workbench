@@ -1,0 +1,2905 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluation tooling and metrics for agent workflows">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/mountains-light.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Memory Dashboard Tab — Frontend Spec - Eval Workbench</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#memory-dashboard-tab-frontend-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Eval Workbench" class="md-header__button md-logo" aria-label="Eval Workbench" data-md-component="logo">
+      
+  <img src="../../assets/mountains-light.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Eval Workbench
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Memory Dashboard Tab — Frontend Spec
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MGT-Insurance/eval-workbench" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Home
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../metric-registry/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Metric Registry
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep-dives/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Deep Dives
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Eval Workbench" class="md-nav__button md-logo" aria-label="Eval Workbench" data-md-component="logo">
+      
+  <img src="../../assets/mountains-light.svg" alt="logo">
+
+    </a>
+    Eval Workbench
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MGT-Insurance/eval-workbench" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Home
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../athena-langfuse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Langfuse (Athena)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shared-langfuse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Langfuse (Shared)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring Config (YAML)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../slack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Knowledge Graph Memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metric Registry
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Metric Registry
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/shared/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Shared
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/shared/slack/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slack
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_2_2" id="__nav_4_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Slack
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/acceptance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acceptance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/composite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/engagement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engagement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/escalation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Escalation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/frustration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frustration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/intervention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Intervention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/interaction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interaction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/override/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Override
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/override_satisfaction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Override Satisfaction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/recommendation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommendation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/resolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/sentiment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sentiment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/slack_compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slack Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/athena/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Athena
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Athena
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/athena/recommendation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommendation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3_2" id="__nav_4_3_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recommendation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/citation_accuracy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citation Accuracy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/citation_fidelity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citation Fidelity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/decision_quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/refer_reason/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Refer Reason
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/underwriting_completeness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Underwriting Completeness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/underwriting_faithfulness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Underwriting Faithfulness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/underwriting_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Underwriting Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../deep-dives/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deep Dives
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deep Dives
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep-dives/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep-dives/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep-dives/schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#page-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Page Layout
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Page Layout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#component-breakdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component breakdown
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sub-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-tabs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-cards-always-visible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Cards (always visible)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conflict-warning-banner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conflict Warning Banner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sub-tab-1-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-tab 1: Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sub-tab 1: Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#table-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filters-all-optional-combinable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filters (all optional, combinable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expanded-row-detail-click-a-row-to-expand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expanded row detail (click a row to expand)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sub-tab-2-decision-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-tab 2: Decision Quality
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sub-tab 2: Decision Quality">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layout-two-column-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layout — two-column split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soft-thresholds-section-below-the-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Soft Thresholds section (below the split)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sub-tab-3-hard-stops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-tab 3: Hard Stops
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sub-tab-4-batches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-tab 4: Batches
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backend-functions-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backend Functions Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backend Functions Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connection setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#direct-sql-for-views-not-covered-by-existing-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct SQL for views not covered by existing functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#suggested-api-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested API Endpoints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables Required
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build Priority
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="memory-dashboard-tab-frontend-spec">Memory Dashboard Tab — Frontend Spec<a class="headerlink" href="#memory-dashboard-tab-frontend-spec" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Dashboard tab for visualizing what the Athena agent has learned about underwriting rules. Two data sources:</p>
+<ul>
+<li><strong>Neon (Postgres)</strong> — flat <code>rule_extractions</code> table with every extracted rule, raw source text, and ingestion status</li>
+<li><strong>Zep (Graph)</strong> — knowledge graph with semantic relationships (RiskFactor -&gt; Rule -&gt; Outcome, Mitigant -&gt; Rule)</li>
+</ul>
+<p>No existing frontend or API layer. Backend is Python (FastAPI available as dependency). All data access functions exist and are documented below with exact return shapes.</p>
+<hr />
+<h2 id="page-layout">Page Layout<a class="headerlink" href="#page-layout" title="Permanent link">&para;</a></h2>
+<p>The Memory tab is a <strong>single page</strong> with a summary strip at the top, an optional conflict warning banner, and sub-tabs for the main content area.</p>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────┐
+│  Memory                                                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
+│  │ 12 Rules │ │ 11 Risk  │ │ 15 Mit-  │ │ 3 Hard   │       │
+│  │          │ │ Factors  │ │ igants   │ │ Stops    │       │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
+│                                                             │
+│  ┌─ small bar charts (inline, beside cards) ─────────────┐  │
+│  │  rules by action: ██ decline ██ refer █ approve       │  │
+│  │  rules by product: ██ ALL ██ Property █ BOP █ LRO     │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ⚠ 2 Conflicting Rules Detected (click to view)            │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ [Rules]  [Decision Quality]  [Hard Stops]  [Batches] │   │
+│  ├──────────────────────────────────────────────────────┤   │
+│  │                                                      │   │
+│  │  (sub-tab content area)                              │   │
+│  │                                                      │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="component-breakdown">Component breakdown<a class="headerlink" href="#component-breakdown" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Position</th>
+<th>Always visible</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Summary cards</td>
+<td>Top strip</td>
+<td>Yes</td>
+<td><code>graph.summary()</code> + Neon status counts</td>
+</tr>
+<tr>
+<td>Action/product bar charts</td>
+<td>Top strip, beside cards</td>
+<td>Yes</td>
+<td><code>graph.summary()</code></td>
+</tr>
+<tr>
+<td>Conflict warning banner</td>
+<td>Below cards, above tabs</td>
+<td>Only if conflicts exist</td>
+<td><code>graph.conflicting_rules()</code> across known risk factors</td>
+</tr>
+<tr>
+<td>Sub-tabs</td>
+<td>Main content area</td>
+<td>Yes (one active)</td>
+<td>See below</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sub-tabs">Sub-tabs<a class="headerlink" href="#sub-tabs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Label</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Rules</strong></td>
+<td>Filterable rules table with expandable row detail (includes inline decision path)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Decision Quality</strong></td>
+<td>Aligned vs divergent split view + soft thresholds</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Hard Stops</strong></td>
+<td>Unmitigated decline rules list</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Batches</strong></td>
+<td>Pipeline activity / batch history</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="summary-cards-always-visible">Summary Cards (always visible)<a class="headerlink" href="#summary-cards-always-visible" title="Permanent link">&para;</a></h2>
+<p><strong>Source:</strong> Zep — <code>graph.summary()</code> + Neon status counts</p>
+<p><strong>Zep return shape:</strong>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;total_nodes&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;total_edges&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">58</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;nodes_by_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;RiskFactor&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Rule&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Outcome&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Mitigant&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Source&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;edges_by_relation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;TRIGGERS&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;RESULTS_IN&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;OVERRIDES&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;DERIVED_FROM&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;rules_by_action&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;decline&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;refer&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;approve_with_conditions&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;flag_for_review&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;rules_by_product&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;ALL&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;BOP&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Property&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;LRO&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></p>
+<p><strong>Neon status counts</strong> (direct SQL):
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">ingestion_status</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="k">count</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">rule_extractions</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">agent_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;athena&#39;</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">ingestion_status</span>
+</code></pre></div></p>
+<p><strong>Cards to show:</strong>
+- <strong>Rules</strong> — <code>nodes_by_type.Rule</code> count
+- <strong>Risk Factors</strong> — <code>nodes_by_type.RiskFactor</code> count
+- <strong>Mitigants</strong> — <code>nodes_by_type.Mitigant</code> count
+- <strong>Hard Stops</strong> — count from unmitigated declines (or pre-computed)</p>
+<p><strong>Bar charts (small, inline):</strong>
+- Rules by action — horizontal bars, color-coded: red=decline, yellow=refer, blue=approve_with_conditions, gray=flag_for_review
+- Rules by product — horizontal bars, neutral colors</p>
+<hr />
+<h2 id="conflict-warning-banner">Conflict Warning Banner<a class="headerlink" href="#conflict-warning-banner" title="Permanent link">&para;</a></h2>
+<p><strong>Source:</strong> Zep — <code>graph.conflicting_rules(risk_factor)</code> run across known risk factors</p>
+<p><strong>Behavior:</strong>
+- On page load, check for conflicts across all risk factors from <code>graph.list_all_rules()</code>
+- If any conflicts found, show amber banner: "⚠ {N} Conflicting Rules Detected"
+- Click banner → opens a modal or expandable section showing:</p>
+<p><strong>Return shape:</strong>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;risk_factor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Employee Count&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;product_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BOP&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;actions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;decline&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;refer&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span><span class="nt">&quot;rule_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rule A&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;decline&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}},</span>
+<span class="w">      </span><span class="p">{</span><span class="nt">&quot;rule_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rule B&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;refer&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div></p>
+<p><strong>Conflict detail layout:</strong>
+- Each conflict is a card showing: risk factor, product type, then the conflicting rules side-by-side with their actions highlighted in their badge colors</p>
+<hr />
+<h2 id="sub-tab-1-rules">Sub-tab 1: Rules<a class="headerlink" href="#sub-tab-1-rules" title="Permanent link">&para;</a></h2>
+<p><strong>Source:</strong> Neon — <code>fetch_all_extractions(db, agent_name='athena')</code></p>
+<p>Dataset can also be read from CSV: <code>/Users/mattevanoff/Downloads/rule_extractions_v1.csv</code></p>
+<p><strong>Return shape</strong> — <code>list[dict]</code>, each dict:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid-string&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-02-06T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;batch_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid-string&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;agent_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;athena&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;raw_text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Properties within 1 mile of coast require...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;raw_text_hash&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sha256-hex&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;risk_factor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coastal Exposure&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;risk_category&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;location&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;rule_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coastal Wind Referral&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;product_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Property&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;refer&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;outcome_description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Properties within 1 mile of coast require wind/hail review...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;mitigants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Hurricane shutters installed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Miami-Dade rated roof&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Catastrophe Guidelines 2024&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;source_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;manual&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;threshold&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;field&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;distance_to_coast&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;operator&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lt&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;miles&quot;</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;threshold_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hard&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;historical_exceptions&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;decision_quality&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;compound_trigger&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;data_fields&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ingestion_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ingested&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ingestion_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ingested_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-02-06T12:00:05Z&quot;</span>
+<span class="p">}</span>
+</code></pre></div></p>
+<h3 id="table-columns">Table columns<a class="headerlink" href="#table-columns" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Source field</th>
+<th>Display</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rule Name</td>
+<td><code>rule_name</code></td>
+<td>Text, clickable to expand row</td>
+</tr>
+<tr>
+<td>Risk Factor</td>
+<td><code>risk_factor</code></td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Action</td>
+<td><code>action</code></td>
+<td>Badge: red=<code>decline</code>, yellow=<code>refer</code>, blue=<code>approve_with_conditions</code>, gray=<code>flag_for_review</code></td>
+</tr>
+<tr>
+<td>Product</td>
+<td><code>product_type</code></td>
+<td>Text, <code>ALL</code> shown as a distinct style</td>
+</tr>
+<tr>
+<td>Threshold</td>
+<td><code>threshold_type</code></td>
+<td>Badge: <code>hard</code> (solid) vs <code>soft</code> (outline) — soft means flexibility exists</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><code>ingestion_status</code></td>
+<td>Dot: green=<code>ingested</code>, gray=<code>pending</code>, red=<code>failed</code></td>
+</tr>
+<tr>
+<td>Confidence</td>
+<td><code>confidence</code></td>
+<td>Text or badge</td>
+</tr>
+<tr>
+<td>Created</td>
+<td><code>created_at</code></td>
+<td>Relative time ("2 hours ago")</td>
+</tr>
+</tbody>
+</table>
+<h3 id="filters-all-optional-combinable">Filters (all optional, combinable)<a class="headerlink" href="#filters-all-optional-combinable" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Action: multi-select (<code>decline</code>, <code>refer</code>, <code>approve_with_conditions</code>, <code>flag_for_review</code>)</li>
+<li>Product: multi-select (<code>ALL</code>, <code>BOP</code>, <code>Property</code>, <code>LRO</code>)</li>
+<li>Status: multi-select (<code>ingested</code>, <code>pending</code>, <code>failed</code>)</li>
+<li>Threshold type: <code>hard</code> / <code>soft</code></li>
+<li>Risk category: text/select</li>
+<li>Batch: select dropdown</li>
+<li>Date range</li>
+</ul>
+<h3 id="expanded-row-detail-click-a-row-to-expand">Expanded row detail (click a row to expand)<a class="headerlink" href="#expanded-row-detail-click-a-row-to-expand" title="Permanent link">&para;</a></h3>
+<p>Two sections: <strong>Rule Detail</strong> and <strong>Decision Path</strong>.</p>
+<p><strong>Rule Detail section</strong> — fields not shown in the table:</p>
+<ul>
+<li><strong>Outcome Description</strong> — full text</li>
+<li><strong>Mitigants</strong> — bulleted list from the JSONB array</li>
+<li><strong>Threshold</strong> — render the JSON object as human-readable: <code>distance_to_coast &lt; 1 miles</code> (field + operator + value + unit)</li>
+<li><strong>Historical Exceptions</strong> — italic text block, shows what UWs have actually done vs the manual</li>
+<li><strong>Source</strong> — <code>source</code> + <code>source_type</code> badge (manual / compliance / production)</li>
+<li><strong>Decision Quality</strong> — <code>aligned</code> vs <code>divergent</code> badge (if present)</li>
+<li><strong>Compound Trigger</strong> — the boolean expression as code text (if present)</li>
+<li><strong>Data Fields</strong> — code-formatted list of field paths (if present)</li>
+<li><strong>Raw Text</strong> — collapsible/scrollable area showing the original source text</li>
+<li><strong>Ingestion Error</strong> — red text block (only if <code>ingestion_status = 'failed'</code>)</li>
+<li><strong>IDs</strong> — <code>id</code>, <code>batch_id</code> in small muted text</li>
+</ul>
+<p><strong>Decision Path section</strong> — inline graph trace for this rule:</p>
+<p><strong>Source:</strong> Zep — <code>graph.trace(rule.risk_factor, product_type=rule.product_type)</code></p>
+<p>Render as a horizontal flow:</p>
+<div class="highlight"><pre><span></span><code>[Coastal Exposure] --TRIGGERS--&gt; [Coastal Wind Referral] --RESULTS_IN--&gt; [Refer]
+                                         ^
+                            [Hurricane shutters installed] --OVERRIDES--
+                            [Miami-Dade rated roof] --OVERRIDES--
+</code></pre></div>
+<ul>
+<li>Nodes as rounded boxes, edges as labeled arrows</li>
+<li>Risk Factor node in blue, Rule node in orange, Outcome node in green, Mitigant nodes in purple</li>
+<li>Keep it compact — this is inside an expanded table row, not a full page</li>
+</ul>
+<hr />
+<h2 id="sub-tab-2-decision-quality">Sub-tab 2: Decision Quality<a class="headerlink" href="#sub-tab-2-decision-quality" title="Permanent link">&para;</a></h2>
+<p><strong>Source:</strong> Neon — direct SQL</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">rule_name</span><span class="p">,</span><span class="w"> </span><span class="n">risk_factor</span><span class="p">,</span><span class="w"> </span><span class="n">action</span><span class="p">,</span><span class="w"> </span><span class="n">product_type</span><span class="p">,</span><span class="w"> </span><span class="n">threshold_type</span><span class="p">,</span>
+<span class="w">       </span><span class="n">historical_exceptions</span><span class="p">,</span><span class="w"> </span><span class="n">decision_quality</span><span class="p">,</span><span class="w"> </span><span class="n">outcome_description</span><span class="p">,</span>
+<span class="w">       </span><span class="n">threshold</span><span class="p">,</span><span class="w"> </span><span class="n">mitigants</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">rule_extractions</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">decision_quality</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">decision_quality</span><span class="p">,</span><span class="w"> </span><span class="n">created_at</span><span class="w"> </span><span class="k">DESC</span>
+</code></pre></div>
+<h3 id="layout-two-column-split">Layout — two-column split<a class="headerlink" href="#layout-two-column-split" title="Permanent link">&para;</a></h3>
+<p><strong>Left column: "Aligned"</strong> (<code>decision_quality = 'aligned'</code>)
+- Green section header
+- Rules where the agent's learned behavior matches the manual
+- Card list, each card shows:
+  - Rule name
+  - Action badge
+  - Risk factor
+  - Brief outcome description (truncated to 2 lines)</p>
+<p><strong>Right column: "Divergent"</strong> (<code>decision_quality = 'divergent'</code>)
+- Orange/amber section header
+- Rules where real UW decisions diverge from the manual — <strong>these are the key insights</strong>
+- Card list, each card shows:
+  - Rule name + action badge
+  - <code>outcome_description</code> — what the manual says
+  - <code>historical_exceptions</code> — <strong>highlighted/emphasized</strong> — what UWs actually did
+  - <code>threshold</code> rendered as "manual says X, but UWs approved up to Y"
+  - <code>mitigants</code> — what conditions enabled the divergent decisions</p>
+<h3 id="soft-thresholds-section-below-the-split">Soft Thresholds section (below the split)<a class="headerlink" href="#soft-thresholds-section-below-the-split" title="Permanent link">&para;</a></h3>
+<p><strong>Source:</strong> Neon — direct SQL</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">rule_name</span><span class="p">,</span><span class="w"> </span><span class="n">risk_factor</span><span class="p">,</span><span class="w"> </span><span class="n">action</span><span class="p">,</span><span class="w"> </span><span class="n">product_type</span><span class="p">,</span>
+<span class="w">       </span><span class="n">threshold</span><span class="p">,</span><span class="w"> </span><span class="n">threshold_type</span><span class="p">,</span><span class="w"> </span><span class="n">historical_exceptions</span><span class="p">,</span>
+<span class="w">       </span><span class="n">outcome_description</span><span class="p">,</span><span class="w"> </span><span class="n">mitigants</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">rule_extractions</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">threshold_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;soft&#39;</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">created_at</span><span class="w"> </span><span class="k">DESC</span>
+</code></pre></div>
+<p><strong>Purpose:</strong> Show rules where a hard number has learned flexibility. Rendered as a card list below the aligned/divergent split.</p>
+<p>Each card:
+- Rule name
+- <strong>Manual threshold:</strong> <code>employee_count &gt; 20 employees</code> (rendered from <code>threshold</code> JSON)
+- <strong>What actually happens:</strong> <code>historical_exceptions</code> text
+- <strong>Mitigants that unlock flexibility:</strong> bulleted <code>mitigants</code> list</p>
+<hr />
+<h2 id="sub-tab-3-hard-stops">Sub-tab 3: Hard Stops<a class="headerlink" href="#sub-tab-3-hard-stops" title="Permanent link">&para;</a></h2>
+<p><strong>Source:</strong> Zep — <code>graph.unmitigated_declines()</code></p>
+<p><strong>Return shape</strong> — <code>list[dict]</code>:
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;rule_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannabis Exclusion&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;risk_factor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannabis Operations&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;product_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALL&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div></p>
+<p><strong>Purpose:</strong> Rules that are absolute hard stops — no mitigants, no flexibility, no overrides. The agent should never try to work around these.</p>
+<p><strong>Layout:</strong>
+- Red-themed section header: "Hard Stops — No Overrides Available"
+- Count badge: "{N} unmitigated decline rules"
+- Card or list for each rule:
+  - Rule name (bold)
+  - Risk factor
+  - Product type badge
+  - Red "DECLINE" badge
+- Optionally: link each rule to its expanded detail in the Rules tab</p>
+<hr />
+<h2 id="sub-tab-4-batches">Sub-tab 4: Batches<a class="headerlink" href="#sub-tab-4-batches" title="Permanent link">&para;</a></h2>
+<p><strong>Source:</strong> Neon — direct SQL (aggregation query)</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span>
+<span class="w">    </span><span class="n">batch_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">rule_count</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="n">created_at</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">started_at</span><span class="p">,</span>
+<span class="w">    </span><span class="k">SUM</span><span class="p">(</span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ingestion_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ingested&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">END</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">ingested</span><span class="p">,</span>
+<span class="w">    </span><span class="k">SUM</span><span class="p">(</span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ingestion_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;pending&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">END</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">pending</span><span class="p">,</span>
+<span class="w">    </span><span class="k">SUM</span><span class="p">(</span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ingestion_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;failed&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">END</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">failed</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">rule_extractions</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">agent_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;athena&#39;</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">batch_id</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">MIN</span><span class="p">(</span><span class="n">created_at</span><span class="p">)</span><span class="w"> </span><span class="k">DESC</span>
+</code></pre></div>
+<p><strong>Purpose:</strong> Pipeline run history — when the agent extracted rules, how many, success rate.</p>
+<p><strong>Layout:</strong>
+- List of batches, most recent first
+- Each batch row:
+  - Batch ID (truncated UUID, e.g. <code>abc12345...</code>)
+  - Timestamp (relative: "2 hours ago")
+  - Rule count
+  - Stacked progress bar: green (ingested) / gray (pending) / red (failed)
+  - Percentage: "92% ingested"
+- Click a batch → navigates to the <strong>Rules</strong> sub-tab filtered by that <code>batch_id</code></p>
+<hr />
+<h2 id="backend-functions-reference">Backend Functions Reference<a class="headerlink" href="#backend-functions-reference" title="Permanent link">&para;</a></h2>
+<p>All functions are importable from Python. The frontend needs API endpoints wrapping these.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Neon (Postgres) — rule_extractions table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.database.neon</span><span class="w"> </span><span class="kn">import</span> <span class="n">NeonConnection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.memory.persistence</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">fetch_all_extractions</span><span class="p">,</span>   <span class="c1"># (db, agent_name=&#39;athena&#39;, limit=500) -&gt; list[dict]</span>
+    <span class="n">fetch_pending</span><span class="p">,</span>           <span class="c1"># (db, agent_name=&#39;athena&#39;, batch_id=None) -&gt; list[dict]</span>
+    <span class="n">save_extractions</span><span class="p">,</span>        <span class="c1"># (db, rules, batch_id, agent_name, raw_text) -&gt; list[str]</span>
+    <span class="n">mark_ingested</span><span class="p">,</span>           <span class="c1"># (db, rule_id) -&gt; None</span>
+    <span class="n">mark_failed</span><span class="p">,</span>             <span class="c1"># (db, rule_id, error) -&gt; None</span>
+<span class="p">)</span>
+
+<span class="c1"># Zep (Graph) — knowledge graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory.analytics</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaGraphAnalytics</span>
+
+<span class="c1"># graph = AthenaGraphAnalytics(store=store)</span>
+<span class="c1"># graph.summary()                                          -&gt; dict</span>
+<span class="c1"># graph.query(input, product_type=None, limit=10)          -&gt; list[dict]</span>
+<span class="c1"># graph.trace(input, product_type=None, limit=25)          -&gt; list[dict]</span>
+<span class="c1"># graph.export(limit=500)                                  -&gt; list[dict]</span>
+<span class="c1"># graph.get_rule(rule_name, limit=25)                      -&gt; dict | None</span>
+<span class="c1"># graph.list_all_rules(limit=500)                          -&gt; list[dict]</span>
+<span class="c1"># graph.rules_by_action(action, limit=500)                 -&gt; list[dict]</span>
+<span class="c1"># graph.rules_by_product(product_type, limit=500)          -&gt; list[dict]</span>
+<span class="c1"># graph.uncovered_risks(limit=500)                         -&gt; list[str]</span>
+<span class="c1"># graph.mitigants_for_rule(rule_name, limit=25)            -&gt; list[str]</span>
+<span class="c1"># graph.rules_mitigated_by(mitigant, limit=25)             -&gt; list[str]</span>
+<span class="c1"># graph.unmitigated_declines(limit=500)                    -&gt; list[dict]</span>
+<span class="c1"># graph.conflicting_rules(risk_factor, limit=50)           -&gt; list[dict]</span>
+<span class="c1"># graph.overlapping_thresholds(field, limit=100)           -&gt; list[dict]</span>
+<span class="c1"># graph.evaluate(risk_factor, product_type, context, limit=25) -&gt; list[dict]</span>
+</code></pre></div>
+<h3 id="connection-setup">Connection setup<a class="headerlink" href="#connection-setup" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Neon</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">NeonConnection</span><span class="p">()</span>  <span class="c1"># reads DATABASE_URL from env</span>
+<span class="c1"># use as context manager: with NeonConnection() as db: ...</span>
+
+<span class="c1"># Zep</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATHENA_ONTOLOGY</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZepGraphStore</span>
+
+<span class="n">store</span> <span class="o">=</span> <span class="n">ZepGraphStore</span><span class="p">(</span><span class="n">agent_name</span><span class="o">=</span><span class="s1">&#39;athena&#39;</span><span class="p">,</span> <span class="n">ontology</span><span class="o">=</span><span class="n">ATHENA_ONTOLOGY</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">AthenaGraphAnalytics</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="direct-sql-for-views-not-covered-by-existing-functions">Direct SQL for views not covered by existing functions<a class="headerlink" href="#direct-sql-for-views-not-covered-by-existing-functions" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Pipeline activity (Batches sub-tab)</span>
+<span class="n">db</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    SELECT batch_id, COUNT(*) as rule_count, MIN(created_at) as started_at,</span>
+<span class="s2">           SUM(CASE WHEN ingestion_status = &#39;ingested&#39; THEN 1 ELSE 0 END) as ingested,</span>
+<span class="s2">           SUM(CASE WHEN ingestion_status = &#39;pending&#39; THEN 1 ELSE 0 END) as pending,</span>
+<span class="s2">           SUM(CASE WHEN ingestion_status = &#39;failed&#39; THEN 1 ELSE 0 END) as failed</span>
+<span class="s2">    FROM rule_extractions WHERE agent_name = </span><span class="si">%s</span>
+<span class="s2">    GROUP BY batch_id ORDER BY MIN(created_at) DESC</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;athena&#39;</span><span class="p">,))</span>
+
+<span class="c1"># Decision quality split (Decision Quality sub-tab)</span>
+<span class="n">db</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    SELECT rule_name, risk_factor, action, product_type, threshold_type,</span>
+<span class="s2">           historical_exceptions, decision_quality, outcome_description,</span>
+<span class="s2">           threshold, mitigants</span>
+<span class="s2">    FROM rule_extractions WHERE decision_quality IS NOT NULL</span>
+<span class="s2">    ORDER BY decision_quality, created_at DESC</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Soft thresholds (Decision Quality sub-tab, lower section)</span>
+<span class="n">db</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    SELECT rule_name, risk_factor, action, product_type,</span>
+<span class="s2">           threshold, threshold_type, historical_exceptions,</span>
+<span class="s2">           outcome_description, mitigants</span>
+<span class="s2">    FROM rule_extractions WHERE threshold_type = &#39;soft&#39;</span>
+<span class="s2">    ORDER BY created_at DESC</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Status counts (summary cards)</span>
+<span class="n">db</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    SELECT ingestion_status, COUNT(*) as count</span>
+<span class="s2">    FROM rule_extractions WHERE agent_name = </span><span class="si">%s</span>
+<span class="s2">    GROUP BY ingestion_status</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;athena&#39;</span><span class="p">,))</span>
+</code></pre></div>
+<hr />
+<h2 id="suggested-api-endpoints">Suggested API Endpoints<a class="headerlink" href="#suggested-api-endpoints" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Backend call</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/rules</code></td>
+<td>GET</td>
+<td><code>fetch_all_extractions(db)</code></td>
+<td>Rules sub-tab</td>
+</tr>
+<tr>
+<td><code>/api/rules?status=pending</code></td>
+<td>GET</td>
+<td><code>fetch_pending(db)</code></td>
+<td>Rules sub-tab filtered</td>
+</tr>
+<tr>
+<td><code>/api/rules?batch_id={id}</code></td>
+<td>GET</td>
+<td><code>fetch_all_extractions</code> + filter</td>
+<td>Rules sub-tab filtered from Batches</td>
+</tr>
+<tr>
+<td><code>/api/rules/quality</code></td>
+<td>GET</td>
+<td>Direct SQL (decision_quality)</td>
+<td>Decision Quality sub-tab</td>
+</tr>
+<tr>
+<td><code>/api/rules/soft-thresholds</code></td>
+<td>GET</td>
+<td>Direct SQL (threshold_type=soft)</td>
+<td>Decision Quality sub-tab</td>
+</tr>
+<tr>
+<td><code>/api/batches</code></td>
+<td>GET</td>
+<td>Direct SQL (GROUP BY batch_id)</td>
+<td>Batches sub-tab</td>
+</tr>
+<tr>
+<td><code>/api/graph/summary</code></td>
+<td>GET</td>
+<td><code>graph.summary()</code></td>
+<td>Summary cards</td>
+</tr>
+<tr>
+<td><code>/api/graph/trace?q={risk}&amp;product={type}</code></td>
+<td>GET</td>
+<td><code>graph.trace(q, product_type)</code></td>
+<td>Expanded row decision path</td>
+</tr>
+<tr>
+<td><code>/api/graph/rules</code></td>
+<td>GET</td>
+<td><code>graph.list_all_rules()</code></td>
+<td>Summary charts</td>
+</tr>
+<tr>
+<td><code>/api/graph/rule/{name}</code></td>
+<td>GET</td>
+<td><code>graph.get_rule(name)</code></td>
+<td>Expanded row detail</td>
+</tr>
+<tr>
+<td><code>/api/graph/unmitigated</code></td>
+<td>GET</td>
+<td><code>graph.unmitigated_declines()</code></td>
+<td>Hard Stops sub-tab</td>
+</tr>
+<tr>
+<td><code>/api/graph/conflicts?q={risk}</code></td>
+<td>GET</td>
+<td><code>graph.conflicting_rules(q)</code></td>
+<td>Conflict warning banner</td>
+</tr>
+<tr>
+<td><code>/api/status-counts</code></td>
+<td>GET</td>
+<td>Direct SQL (GROUP BY status)</td>
+<td>Summary cards</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="environment-variables-required">Environment Variables Required<a class="headerlink" href="#environment-variables-required" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>MEMORY_DATABASE_URL=postgresql://...   # Neon Postgres connection
+ZEP_API_KEY=...                 # Zep Cloud API key
+</code></pre></div>
+<hr />
+<h2 id="build-priority">Build Priority<a class="headerlink" href="#build-priority" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Summary cards + bar charts</strong> — top strip, always visible, quick win</li>
+<li><strong>Rules sub-tab</strong> — main content, filterable table with expandable rows</li>
+<li><strong>Decision Quality sub-tab</strong> — aligned vs divergent split + soft thresholds</li>
+<li><strong>Hard Stops sub-tab</strong> — small list, low effort</li>
+<li><strong>Batches sub-tab</strong> — pipeline history</li>
+<li><strong>Expanded row decision path</strong> — inline graph trace (most complex visual)</li>
+<li><strong>Conflict warning banner</strong> — check on page load, show if any exist</li>
+</ol>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 01:43:20 UTC">February 10, 2026</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 01:43:20 UTC">February 10, 2026</span>
+  </span>
+
+    
+    
+      
+  
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Contributors">
+      
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4"/></svg>
+      
+    </span>
+    <nav>
+      
+        <a href="mailto:matt.evanoff@mgtinsurance.com">Matt Evanoff</a>
+    </nav>
+  </span>
+
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.instant", "navigation.tracking", "navigation.top", "content.code.copy", "content.tabs.link", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

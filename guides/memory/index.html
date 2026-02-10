@@ -1,0 +1,3905 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluation tooling and metrics for agent workflows">
+      
+      
+      
+      
+        <link rel="prev" href="../slack/">
+      
+      
+        <link rel="next" href="../../metric-registry/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/mountains-light.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Knowledge Graph Memory - Eval Workbench</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#knowledge-graph-memory" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Eval Workbench" class="md-header__button md-logo" aria-label="Eval Workbench" data-md-component="logo">
+      
+  <img src="../../assets/mountains-light.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Eval Workbench
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Knowledge Graph Memory
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MGT-Insurance/eval-workbench" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Home
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../metric-registry/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Metric Registry
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep-dives/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Deep Dives
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Eval Workbench" class="md-nav__button md-logo" aria-label="Eval Workbench" data-md-component="logo">
+      
+  <img src="../../assets/mountains-light.svg" alt="logo">
+
+    </a>
+    Eval Workbench
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MGT-Insurance/eval-workbench" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Home
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../athena-langfuse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Langfuse (Athena)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shared-langfuse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Langfuse (Shared)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring Config (YAML)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../slack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Knowledge Graph Memory
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Knowledge Graph Memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works-end-to-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works (End-to-End)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How It Works (End-to-End)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-1-raw-text-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1: Raw Text Input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-llm-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2: LLM Extraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-graph-ingestion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3: Graph Ingestion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-4-runtime-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 4: Runtime Retrieval
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hard-vs-soft-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hard vs Soft Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ontology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ontology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ontology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#athena-ontology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Athena Ontology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ontology-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ontology Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-new-ontology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a New Ontology
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-tenancy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Tenancy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#yaml-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        YAML Config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shared-vs-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared vs Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-flow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow Diagram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-server-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Server Readiness
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-pipeline-raw-text-graph-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full pipeline (raw text → graph → search)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-yaml-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From YAML config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pre-extracted-rules-skip-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-extracted rules (skip LLM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-mitigant-to-an-existing-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a mitigant to an existing rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#demo-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-entry-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Entry Points
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Entry Points">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-1-direct-python-api-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path 1: Direct Python API (current)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-2-mcp-tools-future" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path 2: MCP Tools (future)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-path-to-choose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which path to choose
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-look-cheat-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Where to look" cheat-sheet
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metric Registry
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Metric Registry
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/shared/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Shared
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/shared/slack/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slack
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_2_2" id="__nav_4_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Slack
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/acceptance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acceptance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/composite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/engagement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engagement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/escalation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Escalation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/frustration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frustration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/intervention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Intervention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/interaction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interaction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/override/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Override
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/override_satisfaction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Override Satisfaction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/recommendation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommendation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/resolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/sentiment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sentiment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/shared/slack/slack_compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slack Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/athena/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Athena
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Athena
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../metric-registry/athena/recommendation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommendation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3_2" id="__nav_4_3_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recommendation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/citation_accuracy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citation Accuracy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/citation_fidelity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citation Fidelity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/decision_quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/refer_reason/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Refer Reason
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/underwriting_completeness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Underwriting Completeness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/underwriting_faithfulness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Underwriting Faithfulness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metric-registry/athena/recommendation/underwriting_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Underwriting Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../deep-dives/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deep Dives
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deep Dives
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep-dives/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep-dives/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep-dives/schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works-end-to-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works (End-to-End)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How It Works (End-to-End)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-1-raw-text-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1: Raw Text Input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-llm-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2: LLM Extraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-graph-ingestion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3: Graph Ingestion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-4-runtime-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 4: Runtime Retrieval
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hard-vs-soft-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hard vs Soft Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ontology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ontology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ontology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#athena-ontology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Athena Ontology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ontology-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ontology Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-new-ontology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a New Ontology
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-tenancy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Tenancy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#yaml-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        YAML Config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shared-vs-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared vs Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-flow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow Diagram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-server-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Server Readiness
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-pipeline-raw-text-graph-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full pipeline (raw text → graph → search)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-yaml-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From YAML config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pre-extracted-rules-skip-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-extracted rules (skip LLM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-mitigant-to-an-existing-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a mitigant to an existing rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#demo-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-entry-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Entry Points
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Entry Points">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-1-direct-python-api-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path 1: Direct Python API (current)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-2-mcp-tools-future" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path 2: MCP Tools (future)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-path-to-choose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which path to choose
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-look-cheat-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Where to look" cheat-sheet
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="knowledge-graph-memory">Knowledge Graph Memory<a class="headerlink" href="#knowledge-graph-memory" title="Permanent link">&para;</a></h1>
+<p>Persistent knowledge graph memory for AI agents. Currently used by Athena (underwriting)
+to store risk factors, rules, decision logic, and their relationships — then retrieve them
+semantically at runtime.</p>
+<p>Built on <a href="https://www.getzep.com/">Zep Cloud</a> Graphiti for graph storage and semantic search.</p>
+<hr />
+<h2 id="how-it-works-end-to-end">How It Works (End-to-End)<a class="headerlink" href="#how-it-works-end-to-end" title="Permanent link">&para;</a></h2>
+<p>The memory system has four stages. Raw knowledge goes in one end; structured, searchable
+graph edges come out the other.</p>
+<div class="highlight"><pre><span></span><code> ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+ │  1. Raw Text     │────▶│  2. Extraction   │────▶│  3. Ingestion   │────▶│  4. Retrieval    │
+ │                  │     │                  │     │                  │     │                  │
+ │ Manuals, SME     │     │ LLM parses text  │     │ Edges stored in  │     │ Semantic search  │
+ │ notes, training  │     │ into structured  │     │ Zep knowledge    │     │ returns relevant │
+ │ feedback, prod   │     │ rule dicts       │     │ graph per agent  │     │ rules + paths    │
+ │ learnings        │     │                  │     │                  │     │                  │
+ └─────────────────┘     └─────────────────┘     └─────────────────┘     └─────────────────┘
+                           RuleExtractor            ZepGraphStore          AthenaGraphAnalytics
+                           (OpenAI)                 (Zep Cloud)            (search / trace)
+</code></pre></div>
+<hr />
+<h3 id="stage-1-raw-text-input">Stage 1: Raw Text Input<a class="headerlink" href="#stage-1-raw-text-input" title="Permanent link">&para;</a></h3>
+<p>The input is unstructured text — anything that contains underwriting knowledge:</p>
+<ul>
+<li><strong>Underwriting manual excerpts</strong> — formal rules and limits</li>
+<li><strong>Training session notes</strong> — SME-taught heuristics and guidelines</li>
+<li><strong>SME interview transcripts</strong> — tribal knowledge and known flexibility</li>
+<li><strong>Production decision logs</strong> — the richest source: real outcomes, decision quality, learned patterns</li>
+<li><strong>Compliance bulletins</strong> — hard regulatory constraints</li>
+</ul>
+<p>Production case reviews are especially valuable because they reveal <em>multiple</em> rules
+per text block, compound triggers, and cases where real decisions diverged from stated
+rules (making a "hard" rule effectively soft):</p>
+<div class="highlight"><pre><span></span><code><span class="n">raw_texts</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># Manual excerpt — gives you the stated rule</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gas stations are automatically referred for senior underwriter review due to</span>
+<span class="sd">    fuel storage liability. This applies to all LRO policies. However, if a fire</span>
+<span class="sd">    suppression system is installed and the station is located more than 200ft from</span>
+<span class="sd">    residential areas, the referral can be waived at the underwriter&#39;s discretion.</span>
+<span class="sd">    Source: Underwriting Manual v3.2&quot;&quot;&quot;</span><span class="p">,</span>
+
+    <span class="c1"># Production case review — gives you compound triggers, decision quality, data fields</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Athena correctly recommended decline for a lessor&#39;s risk warehouse with</span>
+<span class="sd">    catastrophic recent loss ($600K representing 23.5% of building exposure),</span>
+<span class="sd">    pricing 37% below minimum threshold, and prior carrier non-renewal. The</span>
+<span class="sd">    combination of recent major loss + below-minimum pricing + prior carrier</span>
+<span class="sd">    rejection is an automatic decline regardless of other positive factors.&quot;&quot;&quot;</span><span class="p">,</span>
+
+    <span class="c1"># Divergent production decision — reveals that a &quot;hard&quot; rule is actually soft</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The property rate of 0.19% is below the 0.25% minimum threshold, which</span>
+<span class="sd">    would normally trigger a referral. However, the underwriter approved because</span>
+<span class="sd">    this was a BASIC cause of loss policy with wind/hail exclusion. The lower</span>
+<span class="sd">    rate was appropriate for the limited coverage scope. Athena should learn</span>
+<span class="sd">    that low property rates are often justified for BASIC CoL policies.&quot;&quot;&quot;</span><span class="p">,</span>
+
+    <span class="c1"># Data quality pattern — a non-traditional rule</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The building exposure from Magic Dust was $2.3M vs customer input of $1.1M —</span>
+<span class="sd">    a 109% discrepancy. The address format &quot;404-600 Main St&quot; indicates this may be</span>
+<span class="sd">    a multi-location risk quoted as a single location. Flag for verification.&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>You can pass a single string, a list of strings, or a dict of strings. The pipeline
+handles all three.</p>
+<hr />
+<h3 id="stage-2-llm-extraction">Stage 2: LLM Extraction<a class="headerlink" href="#stage-2-llm-extraction" title="Permanent link">&para;</a></h3>
+<p>The <code>RuleExtractor</code> sends raw text to an LLM (default: <code>gpt-4o</code>) with a system prompt
+engineered to extract structured underwriting rules. The LLM returns JSON:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuleExtractor</span>
+
+<span class="n">extractor</span> <span class="o">=</span> <span class="n">RuleExtractor</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s1">&#39;gpt-4o&#39;</span><span class="p">)</span>
+<span class="n">rules</span> <span class="o">=</span> <span class="n">extractor</span><span class="o">.</span><span class="n">extract_batch</span><span class="p">([</span><span class="n">raw_text</span><span class="p">])</span>
+</code></pre></div>
+<p>Each extracted rule is a dict. A single text block (especially production case reviews)
+often yields <strong>multiple</strong> rules. The extractor distinguishes between hard deterministic
+rules, soft guidelines, compound triggers, data quality patterns, and more.</p>
+<p><strong>Hard rule</strong> (no threshold flexibility):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;risk_factor&quot;</span><span class="p">:</span> <span class="s2">&quot;Gas Station&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;risk_category&quot;</span><span class="p">:</span> <span class="s2">&quot;occupancy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rule_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Gas Station Auto-Refer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;product_type&quot;</span><span class="p">:</span> <span class="s2">&quot;LRO&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;refer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;outcome_description&quot;</span><span class="p">:</span> <span class="s2">&quot;Gas stations must be referred to senior underwriter due to fuel storage liability.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mitigants&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Fire suppression system installed&quot;</span><span class="p">,</span> <span class="s2">&quot;Located &gt;200ft from residential&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;Underwriting Manual v3.2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;source_type&quot;</span><span class="p">:</span> <span class="s2">&quot;manual&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;threshold_type&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;historical_exceptions&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;decision_quality&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;compound_trigger&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;data_fields&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Compound trigger from a production case</strong> (multiple conditions must combine):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;risk_factor&quot;</span><span class="p">:</span> <span class="s2">&quot;Adverse Selection Trifecta&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;risk_category&quot;</span><span class="p">:</span> <span class="s2">&quot;eligibility&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rule_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Adverse Selection Auto-Decline&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;product_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ALL&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;decline&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;outcome_description&quot;</span><span class="p">:</span> <span class="s2">&quot;Combination of recent major loss (&gt;20</span><span class="si">% o</span><span class="s2">f building exposure) + below-minimum pricing + prior carrier non-renewal is an automatic decline regardless of other positive factors.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mitigants&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;Production Decision Log - warehouse decline case&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;source_type&quot;</span><span class="p">:</span> <span class="s2">&quot;production&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;threshold_type&quot;</span><span class="p">:</span> <span class="s2">&quot;hard&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;historical_exceptions&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;decision_quality&quot;</span><span class="p">:</span> <span class="s2">&quot;aligned&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compound_trigger&quot;</span><span class="p">:</span> <span class="s2">&quot;recent_major_loss AND below_minimum_pricing AND prior_carrier_rejection&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;data_fields&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;auxData.rateData.input.total_loss_payment&quot;</span><span class="p">,</span> <span class="s2">&quot;auxData.swallowProject.property_rate&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Soft threshold with divergent decision</strong> (LLM learned the real rule is softer than the manual):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;risk_factor&quot;</span><span class="p">:</span> <span class="s2">&quot;Property Rate Below Minimum&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;risk_category&quot;</span><span class="p">:</span> <span class="s2">&quot;pricing&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rule_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Low Property Rate Referral&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;product_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Property&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;refer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;outcome_description&quot;</span><span class="p">:</span> <span class="s2">&quot;Property rate below 0.25% triggers referral. However, rates below threshold are often legitimate for BASIC cause of loss policies with wind/hail exclusions.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mitigants&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;BASIC cause of loss (limited coverage scope)&quot;</span><span class="p">,</span> <span class="s2">&quot;Wind/hail exclusion in place&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;Production Decision Log&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;source_type&quot;</span><span class="p">:</span> <span class="s2">&quot;production&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;field&quot;</span><span class="p">:</span> <span class="s2">&quot;property_rate&quot;</span><span class="p">,</span> <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;lt&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mf">0.0025</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;rate&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;threshold_type&quot;</span><span class="p">:</span> <span class="s2">&quot;soft&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;historical_exceptions&quot;</span><span class="p">:</span> <span class="s2">&quot;Approved at 0.19</span><span class="si">% f</span><span class="s2">or newer construction with BASIC cause of loss and wind/hail exclusion&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;decision_quality&quot;</span><span class="p">:</span> <span class="s2">&quot;divergent&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compound_trigger&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;data_fields&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;auxData.rateData.input.property_rate&quot;</span><span class="p">,</span> <span class="s2">&quot;underwritingFlags.property_rate_low_Refer&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Data quality pattern</strong> (non-traditional risk factor):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;risk_factor&quot;</span><span class="p">:</span> <span class="s2">&quot;Building Exposure Discrepancy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;risk_category&quot;</span><span class="p">:</span> <span class="s2">&quot;data_quality&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rule_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Magic Dust Exposure Mismatch Flag&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;product_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ALL&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;flag_for_review&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;outcome_description&quot;</span><span class="p">:</span> <span class="s2">&quot;When Magic Dust building exposure differs from customer input by &gt;20%, flag for verification. Address ranges (e.g. 404-600) may indicate multi-location risk.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mitigants&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Recent appraisal on file&quot;</span><span class="p">,</span> <span class="s2">&quot;Physical inspection completed&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;Production Decision Log&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;source_type&quot;</span><span class="p">:</span> <span class="s2">&quot;production&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;field&quot;</span><span class="p">:</span> <span class="s2">&quot;building_exposure_discrepancy_pct&quot;</span><span class="p">,</span> <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;gt&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;percent&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;threshold_type&quot;</span><span class="p">:</span> <span class="s2">&quot;soft&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;historical_exceptions&quot;</span><span class="p">:</span> <span class="s2">&quot;Cases approved after visual verification confirmed Magic Dust data was incorrect&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;decision_quality&quot;</span><span class="p">:</span> <span class="s2">&quot;divergent&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compound_trigger&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;data_fields&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;auxData.rateData.input.building_exposure&quot;</span><span class="p">,</span> <span class="s2">&quot;magicDustByElement.building_area&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The key extraction fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>risk_category</code></td>
+<td>Category: <code>occupancy</code>, <code>construction</code>, <code>location</code>, <code>operations</code>, <code>eligibility</code>, <code>pricing</code>, <code>data_quality</code>, <code>geographic_appetite</code>, <code>catastrophe</code>, <code>classification</code>, <code>process</code></td>
+</tr>
+<tr>
+<td><code>threshold</code></td>
+<td>Structured numeric boundary: <code>{field, operator, value, unit}</code></td>
+</tr>
+<tr>
+<td><code>threshold_type</code></td>
+<td><code>"hard"</code> (absolute, never exceeded) or <code>"soft"</code> (known flexibility)</td>
+</tr>
+<tr>
+<td><code>historical_exceptions</code></td>
+<td>Plain-text description of real-world deviations from the rule</td>
+</tr>
+<tr>
+<td><code>decision_quality</code></td>
+<td>From production cases: <code>"aligned"</code> (AI matched UW), <code>"divergent"</code> (disagreed), <code>"partial"</code></td>
+</tr>
+<tr>
+<td><code>compound_trigger</code></td>
+<td>Multi-condition rule: <code>"condition_a AND condition_b AND condition_c"</code></td>
+</tr>
+<tr>
+<td><code>data_fields</code></td>
+<td>System field paths referenced (e.g. <code>auxData.rateData.input.property_rate</code>)</td>
+</tr>
+<tr>
+<td><code>source_type</code></td>
+<td>Where the knowledge came from: <code>manual</code>, <code>training</code>, <code>sme</code>, <code>production</code>, <code>compliance</code></td>
+</tr>
+<tr>
+<td><code>action</code></td>
+<td>Prescribed action: <code>refer</code>, <code>decline</code>, <code>approve_with_conditions</code>, <code>exclude</code>, <code>verify</code>, <code>flag_for_review</code></td>
+</tr>
+</tbody>
+</table>
+<p>The extraction prompt teaches the LLM to:</p>
+<ul>
+<li>Extract <strong>multiple rules</strong> per text block (production case reviews often contain 3-5+)</li>
+<li>Look for <strong>numeric thresholds</strong> embedded in prose ("$75/sq ft", "0.25% rate", "$1.5M frame limit")</li>
+<li>Distinguish <strong>hard vs soft</strong> thresholds from language signals ("always" vs "generally")</li>
+<li>Capture <strong>compound triggers</strong> when multiple conditions must combine</li>
+<li>Recognize <strong>data quality patterns</strong> (exposure discrepancies, address ranges, zero-value fields)</li>
+<li>Recognize <strong>geographic appetite</strong> boundaries (Tier 1 counties, state exclusions)</li>
+<li>Recognize <strong>pricing rules</strong> (rate minimums, TIV/sqft thresholds)</li>
+<li>When a production case shows a <strong>divergent decision</strong>, extract both the original rule AND the learned exception</li>
+</ul>
+<hr />
+<h3 id="stage-3-graph-ingestion">Stage 3: Graph Ingestion<a class="headerlink" href="#stage-3-graph-ingestion" title="Permanent link">&para;</a></h3>
+<p>Each extracted rule is converted into a set of graph edges that follow the Athena ontology,
+then ingested into Zep's knowledge graph.</p>
+<p>The <code>_rule_to_ingest_payload()</code> method on the pipeline builds these edges. For hard rules:</p>
+<div class="highlight"><pre><span></span><code>Gas Station ──TRIGGERS──▶ Gas Station Auto-Refer ──RESULTS_IN──▶ Refer
+                                    ▲
+                                    │
+            Fire suppression system ──OVERRIDES
+            Located &gt;200ft          ──OVERRIDES
+                                    │
+                                    ▼
+            Gas Station Auto-Refer ──DERIVED_FROM──▶ Underwriting Manual v3.2
+</code></pre></div>
+<p>For production-sourced rules, all contextual metadata — thresholds, historical exceptions,
+decision quality, compound triggers, and data field references — are embedded directly in
+the edge properties and outcome description. This is intentional — Zep does semantic search
+over fact text, so the nuance needs to be <strong>in the facts</strong>, not just in the graph topology.</p>
+<p><strong>Soft threshold example:</strong></p>
+<div class="highlight"><pre><span></span><code>Employee Count ──TRIGGERS──▶ Swallow API Employee Limit ──RESULTS_IN──▶ Decline
+                  │                       ▲
+                  │ threshold: gt 20      │
+                  │ threshold_type: soft  │
+                  │ historical: &quot;up to    Strong loss history ──OVERRIDES
+                  │   23 approved&quot;        Well-established biz ──OVERRIDES
+                  │                       │
+                  │                       ▼
+                  │             Swallow API Employee Limit ──DERIVED_FROM──▶ Production Decisions
+                  │
+                  └─▶ Outcome includes: &quot;Limit is 20, but UWs approved up to 23...&quot;
+</code></pre></div>
+<p><strong>Compound trigger example:</strong></p>
+<div class="highlight"><pre><span></span><code>Adverse Selection Trifecta ──TRIGGERS──▶ Adverse Selection Auto-Decline ──RESULTS_IN──▶ Decline
+                  │
+                  │ threshold_type: hard
+                  │ compound_trigger: &quot;recent_major_loss AND below_minimum_pricing
+                  │                    AND prior_carrier_rejection&quot;
+                  │ decision_quality: aligned
+                  │ data_fields: [auxData.rateData.input.total_loss_payment, ...]
+                  │
+                  └─▶ Outcome includes: &quot;Combination of major loss + low pricing +
+                      prior rejection = automatic decline regardless of other positives&quot;
+</code></pre></div>
+<p>When someone later searches "employee count 22", Zep's semantic search surfaces the fact
+with the full context — including that 22 falls in the soft zone between the stated limit
+(20) and the historical maximum (23). When someone searches "prior loss and coverage gap",
+the compound trigger rule surfaces with the full multi-condition context.</p>
+<p>In code:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZepGraphStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaRulePipeline</span><span class="p">,</span> <span class="n">ATHENA_ONTOLOGY</span>
+
+<span class="n">store</span> <span class="o">=</span> <span class="n">ZepGraphStore</span><span class="p">(</span><span class="n">agent_name</span><span class="o">=</span><span class="s1">&#39;athena&#39;</span><span class="p">,</span> <span class="n">ontology</span><span class="o">=</span><span class="n">ATHENA_ONTOLOGY</span><span class="p">)</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AthenaRulePipeline</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+
+<span class="c1"># Full pipeline: raw text → LLM extraction → graph ingestion</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">raw_text</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Processed: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">items_processed</span><span class="si">}</span><span class="s1">, Ingested: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">items_ingested</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>The <code>ZepGraphStore</code> serializes each edge set to JSON and calls <code>client.graph.add()</code>.
+Each agent gets its own Zep user (e.g. <code>athena_global_rules</code>) for multi-tenancy isolation.</p>
+<hr />
+<h3 id="stage-4-runtime-retrieval">Stage 4: Runtime Retrieval<a class="headerlink" href="#stage-4-runtime-retrieval" title="Permanent link">&para;</a></h3>
+<p>At query time, <code>AthenaGraphAnalytics</code> provides three retrieval modes:</p>
+<h4 id="quick-search-query">Quick search — <code>query()</code><a class="headerlink" href="#quick-search-query" title="Permanent link">&para;</a></h4>
+<p>Returns matching edges filtered by product type. Use this for fast lookups
+in the underwriting workflow.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaGraphAnalytics</span>
+
+<span class="n">analytics</span> <span class="o">=</span> <span class="n">AthenaGraphAnalytics</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;Gas Station&#39;</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="s1">&#39;LRO&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">--&gt; </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>There's also a domain alias:</p>
+<div class="highlight"><pre><span></span><code><span class="n">results</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">check_risk_appetite</span><span class="p">(</span><span class="s1">&#39;Gas Station&#39;</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="s1">&#39;LRO&#39;</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="decision-path-trace-trace">Decision path trace — <code>trace()</code><a class="headerlink" href="#decision-path-trace-trace" title="Permanent link">&para;</a></h4>
+<p>Returns the full decision tree: RiskFactor → Rule → Outcome, with any applicable
+mitigants. Use this for explainability and audit trails.</p>
+<div class="highlight"><pre><span></span><code><span class="n">paths</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="s1">&#39;Gas Station&#39;</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="s1">&#39;LRO&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Risk:      </span><span class="si">{</span><span class="n">path</span><span class="p">[</span><span class="s1">&#39;risk_factor&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rule:      </span><span class="si">{</span><span class="n">path</span><span class="p">[</span><span class="s1">&#39;rule&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Outcomes:  </span><span class="si">{</span><span class="n">path</span><span class="p">[</span><span class="s1">&#39;outcomes&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mitigants: </span><span class="si">{</span><span class="n">path</span><span class="p">[</span><span class="s1">&#39;mitigants&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="export-export">Export — <code>export()</code><a class="headerlink" href="#export-export" title="Permanent link">&para;</a></h4>
+<p>Dumps the entire graph as structured dicts. Use this for audits, backups, or
+feeding into other systems.</p>
+<div class="highlight"><pre><span></span><code><span class="n">all_rules</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">export</span><span class="p">()</span>
+<span class="n">analytics</span><span class="o">.</span><span class="n">export_to_json</span><span class="p">(</span><span class="s1">&#39;rules_backup.json&#39;</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">&para;</a></h4>
+<p>Renders the graph as a networkx/matplotlib plot. Requires the <code>memory</code> optional
+dependencies.</p>
+<div class="highlight"><pre><span></span><code><span class="n">analytics</span><span class="o">.</span><span class="n">visualize</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Athena Underwriting Rules&#39;</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="hard-vs-soft-rules">Hard vs Soft Rules<a class="headerlink" href="#hard-vs-soft-rules" title="Permanent link">&para;</a></h2>
+<p>Not all underwriting rules are binary. The system distinguishes between:</p>
+<p><strong>Hard rules</strong> — absolute limits with no flexibility. The rule is the rule.</p>
+<ul>
+<li>Cannabis operations → always decline</li>
+<li>Coastal distance &lt; 1 mile → always refer (no exceptions without wind mitigation)</li>
+<li>These have <code>threshold_type: "hard"</code> (or <code>null</code> if there's no numeric boundary)</li>
+</ul>
+<p><strong>Soft rules</strong> — guidelines with known flexibility where UW discretion applies.</p>
+<ul>
+<li>Employee count &gt; 20 → manual says decline, but UWs have approved up to 23</li>
+<li>Frame TIV &gt; $1M → manual says refer, but seniors have approved $1.25M with sprinklers</li>
+<li>Vacant &gt; 60 days → manual says decline, but approved with active renovation permits</li>
+<li>These have <code>threshold_type: "soft"</code> and a populated <code>historical_exceptions</code> field</li>
+</ul>
+<p><strong>Why this matters for retrieval:</strong> When Athena searches for "employee count 22",
+Zep returns the fact with the full context: the stated limit (20), the threshold type
+(soft), and the historical precedent (approved up to 23). Athena can then make a
+nuanced recommendation instead of a blanket decline — e.g., "This exceeds the stated
+limit of 20 but falls within the historical approval range of up to 23. Consider
+approving if loss history is clean."</p>
+<p><strong>How it gets into the graph:</strong> The richness comes from two places:</p>
+<ol>
+<li>
+<p><strong>The extraction prompt</strong> teaches the LLM to look for signals of flexibility in
+   the source text ("generally", "typically", "has been approved", etc.) and to
+   capture deviations in <code>historical_exceptions</code>.</p>
+</li>
+<li>
+<p><strong>The pipeline</strong> embeds threshold metadata and historical context directly into
+   the edge properties and outcome description, so the full nuance is stored as
+   searchable fact text in Zep.</p>
+</li>
+</ol>
+<p><strong>Beyond hard vs soft — other rule patterns the system captures:</strong></p>
+<ul>
+<li>
+<p><strong>Compound triggers</strong> — rules that only fire when multiple conditions combine
+  (e.g. "recent major loss AND below-minimum pricing AND prior carrier rejection").
+  The <code>compound_trigger</code> field captures the multi-condition logic.</p>
+</li>
+<li>
+<p><strong>Data quality rules</strong> — non-traditional risk factors like exposure discrepancies,
+  address range anomalies, or zero-value fields. Use <code>risk_category: "data_quality"</code>.</p>
+</li>
+<li>
+<p><strong>Geographic appetite</strong> — hard boundaries based on state, county tier, or coastal
+  distance. These are typically absolute ("California out of appetite"), with
+  <code>risk_category: "geographic_appetite"</code>.</p>
+</li>
+<li>
+<p><strong>Pricing thresholds</strong> — rate minimums, TIV/sqft floors, premium bounds. Often soft
+  in practice because the stated minimum doesn't account for coverage scope variations.
+  Use <code>risk_category: "pricing"</code>.</p>
+</li>
+<li>
+<p><strong>Process rules</strong> — behavioral patterns like "refer for data correction, don't decline"
+  when a blocking issue is correctable. Use <code>risk_category: "process"</code>.</p>
+</li>
+</ul>
+<p><strong>Source variety matters:</strong> Soft rules emerge when you ingest from multiple source types.
+A manual alone only gives you the hard limit. The flexibility appears when you also ingest:</p>
+<ul>
+<li>Production decision logs ("we approved 23 employees last quarter")</li>
+<li>SME interviews ("the 20 limit is a guideline, not a hard stop")</li>
+<li>Training notes ("for well-established businesses, we have room on employee count")</li>
+</ul>
+<p>Set <code>source_type</code> accordingly so the graph captures the provenance.</p>
+<hr />
+<h2 id="ontology">Ontology<a class="headerlink" href="#ontology" title="Permanent link">&para;</a></h2>
+<p>The ontology defines the vocabulary of the knowledge graph — what types of nodes and
+edges exist and what they mean. This is enforced by Pydantic frozen models and used
+to guide LLM extraction.</p>
+<h3 id="athena-ontology">Athena Ontology<a class="headerlink" href="#athena-ontology" title="Permanent link">&para;</a></h3>
+<p><strong>5 node types:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RiskFactor</strong></td>
+<td>An observable characteristic that affects underwriting (e.g. Gas Station, Employee Count)</td>
+</tr>
+<tr>
+<td><strong>Rule</strong></td>
+<td>An underwriting rule or guideline — can be hard (absolute) or soft (flexible). Has <code>threshold_type</code> property.</td>
+</tr>
+<tr>
+<td><strong>Outcome</strong></td>
+<td>The result of applying a rule (Refer, Decline, Approve with Conditions). Description includes threshold context.</td>
+</tr>
+<tr>
+<td><strong>Mitigant</strong></td>
+<td>A condition that can override or reduce a rule's impact</td>
+</tr>
+<tr>
+<td><strong>Source</strong></td>
+<td>Origin of the knowledge (manual, training, SME, production, compliance)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>4 edge types (relations):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Relation</th>
+<th>Source → Target</th>
+<th>Key Properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TRIGGERS</strong></td>
+<td>RiskFactor → Rule</td>
+<td><code>threshold</code>, <code>threshold_type</code>, <code>historical_exceptions</code>, <code>confidence</code>, <code>decision_quality</code>, <code>compound_trigger</code>, <code>data_fields</code></td>
+</tr>
+<tr>
+<td><strong>RESULTS_IN</strong></td>
+<td>Rule → Outcome</td>
+<td>Outcome description enriched with threshold + historical context</td>
+</tr>
+<tr>
+<td><strong>OVERRIDES</strong></td>
+<td>Mitigant → Rule</td>
+<td>A mitigant can override a rule</td>
+</tr>
+<tr>
+<td><strong>DERIVED_FROM</strong></td>
+<td>Rule → Source</td>
+<td>Source <code>type</code>: manual, training, sme, production, compliance</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ontology-registry">Ontology Registry<a class="headerlink" href="#ontology-registry" title="Permanent link">&para;</a></h3>
+<p>Ontologies are registered at import time, following the same pattern as metric registration:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ontology_registry</span>
+
+<span class="c1"># Importing the athena memory module triggers registration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATHENA_ONTOLOGY</span>
+
+<span class="n">ontology_registry</span><span class="o">.</span><span class="n">list_ontologies</span><span class="p">()</span>  <span class="c1"># [&#39;athena_underwriting&#39;]</span>
+<span class="n">ontology_registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;athena_underwriting&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_prompt_context</span><span class="p">()</span>  <span class="c1"># Markdown for LLM prompts</span>
+</code></pre></div>
+<h3 id="creating-a-new-ontology">Creating a New Ontology<a class="headerlink" href="#creating-a-new-ontology" title="Permanent link">&para;</a></h3>
+<p>To add a knowledge graph for a new agent, define an <code>OntologyDefinition</code> and register it:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.memory</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">OntologyDefinition</span><span class="p">,</span>
+    <span class="n">NodeTypeDefinition</span><span class="p">,</span>
+    <span class="n">EdgeTypeDefinition</span><span class="p">,</span>
+    <span class="n">ontology_registry</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">MY_ONTOLOGY</span> <span class="o">=</span> <span class="n">OntologyDefinition</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_agent_domain&#39;</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s1">&#39;1.0.0&#39;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Knowledge graph for ...&#39;</span><span class="p">,</span>
+    <span class="n">node_types</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">NodeTypeDefinition</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="n">required_properties</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]),</span>
+    <span class="p">],</span>
+    <span class="n">edge_types</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">EdgeTypeDefinition</span><span class="p">(</span><span class="n">relation</span><span class="o">=</span><span class="s1">&#39;RELATES_TO&#39;</span><span class="p">,</span> <span class="n">source_label</span><span class="o">=</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="n">target_label</span><span class="o">=</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;...&#39;</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">ontology_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">MY_ONTOLOGY</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="multi-tenancy">Multi-Tenancy<a class="headerlink" href="#multi-tenancy" title="Permanent link">&para;</a></h2>
+<p>Each agent gets its own isolated graph via a Zep user. The user ID is generated from
+a template in settings:</p>
+<div class="highlight"><pre><span></span><code>user_id_template: &quot;{agent_name}_global_rules&quot;
+
+athena  → athena_global_rules
+abby  → abby_global_rules
+</code></pre></div>
+<p>This means agents cannot accidentally read or overwrite each other's knowledge. A future
+MCP server can expose cross-agent search by querying multiple stores.</p>
+<hr />
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<h3 id="yaml-config">YAML Config<a class="headerlink" href="#yaml-config" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># implementations/athena/config/memory.yaml</span>
+<span class="nt">memory</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">zep</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">api_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${ZEP_API_KEY}&quot;</span>
+<span class="w">    </span><span class="nt">admin_email</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;athena@system.local&quot;</span>
+<span class="w">    </span><span class="nt">user_id_template</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{agent_name}_global_rules&quot;</span>
+<span class="w">  </span><span class="nt">extractor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;gpt-4o&quot;</span>
+<span class="w">  </span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</code></pre></div>
+<h3 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ZEP_API_KEY</code></td>
+<td>Zep Cloud API key</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>ZEP_BASE_URL</code></td>
+<td>Zep Cloud base URL (self-hosted only)</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>These can also be set in AthenaSettings:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaSettings</span>
+
+<span class="n">settings</span> <span class="o">=</span> <span class="n">AthenaSettings</span><span class="p">()</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">zep_api_key</span>   <span class="c1"># from ZEP_API_KEY or .env</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">zep_base_url</span>  <span class="c1"># from ZEP_BASE_URL or .env</span>
+</code></pre></div>
+<h3 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h3>
+<p>The memory module uses optional dependencies to keep the core package lightweight:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>eval-workbench<span class="o">[</span>memory<span class="o">]</span>
+</code></pre></div>
+<p>This installs <code>zep-cloud</code>, <code>networkx</code>, and <code>matplotlib</code>.</p>
+<hr />
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<h3 id="file-layout">File Layout<a class="headerlink" href="#file-layout" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>src/eval_workbench/
+  shared/memory/                      # Shared abstractions
+    __init__.py                       # Public API re-exports
+    ontology.py                       # OntologyDefinition + OntologyRegistry
+    store.py                          # BaseGraphStore ABC + data models
+    pipeline.py                       # BasePipeline ABC
+    analytics.py                      # BaseGraphAnalytics ABC
+    settings.py                       # ZepSettings
+    zep/
+      store.py                        # ZepGraphStore (Zep Cloud backend)
+
+  implementations/athena/memory/      # Athena-specific
+    __init__.py                       # Ontology registration
+    ontology.py                       # ATHENA_ONTOLOGY constant
+    extractors.py                     # RuleExtractor (OpenAI)
+    pipeline.py                       # AthenaRulePipeline
+    analytics.py                      # AthenaGraphAnalytics
+</code></pre></div>
+<h3 id="shared-vs-implementation">Shared vs Implementation<a class="headerlink" href="#shared-vs-implementation" title="Permanent link">&para;</a></h3>
+<p>The split follows the same pattern as metrics and monitoring:</p>
+<ul>
+<li>
+<p><strong><code>shared/memory/</code></strong> defines the <strong>interfaces</strong>: <code>BaseGraphStore</code>, <code>BasePipeline</code>,
+  <code>BaseGraphAnalytics</code>, <code>OntologyDefinition</code>. These are stable abstractions that any
+  agent can build on.</p>
+</li>
+<li>
+<p><strong><code>implementations/athena/memory/</code></strong> provides the <strong>Athena-specific glue</strong>: the
+  underwriting ontology, the rule extractor prompt, the pipeline that builds ontology-correct
+  edges, and the analytics layer with domain methods like <code>check_risk_appetite()</code>.</p>
+</li>
+</ul>
+<p>To add memory for a new agent, you implement the same pattern — define an ontology,
+write an extractor, subclass the pipeline and analytics ABCs.</p>
+<h3 id="data-flow-diagram">Data Flow Diagram<a class="headerlink" href="#data-flow-diagram" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>                    ┌───────────────────────────────────────┐
+                    │         AthenaRulePipeline             │
+                    │                                       │
+  Raw text ────────▶│  1. RuleExtractor.extract_batch()     │
+                    │     (OpenAI gpt-4o)                   │
+                    │          │                             │
+                    │          ▼                             │
+                    │  2. _rule_to_ingest_payload()          │
+                    │     (builds TRIGGERS, RESULTS_IN,      │
+                    │      OVERRIDES, DERIVED_FROM edges)    │
+                    │          │                             │
+                    │          ▼                             │
+                    │  3. ZepGraphStore.ingest()             │
+                    │     (JSON → Zep Cloud API)            │
+                    └───────────────────────────────────────┘
+                                       │
+                                       │  stored in Zep per-agent user
+                                       ▼
+                    ┌───────────────────────────────────────┐
+                    │         AthenaGraphAnalytics           │
+                    │                                       │
+  &quot;Gas Station&quot; ───▶│  .query()          → matching edges   │
+  &quot;Gas Station&quot; ───▶│  .trace()          → full paths       │
+  &quot;*&quot;           ───▶│  .export()         → all knowledge    │
+  &quot;Gas Station&quot; ───▶│  .check_risk_appetite() → alias       │
+                    │                                       │
+                    │  All go through ZepGraphStore.search() │
+                    │  → semantic search over the graph      │
+                    └───────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="mcp-server-readiness">MCP Server Readiness<a class="headerlink" href="#mcp-server-readiness" title="Permanent link">&para;</a></h2>
+<p>The interfaces are designed so an MCP server can wrap them directly. All return types
+are Pydantic models that serialize to JSON natively.</p>
+<table>
+<thead>
+<tr>
+<th>MCP Tool</th>
+<th>Maps To</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory_search</code></td>
+<td><code>store.search(query)</code></td>
+<td>Query</td>
+</tr>
+<tr>
+<td><code>memory_check_risk</code></td>
+<td><code>analytics.check_risk_appetite(...)</code></td>
+<td>Query</td>
+</tr>
+<tr>
+<td><code>memory_trace_path</code></td>
+<td><code>analytics.trace(...)</code></td>
+<td>Query</td>
+</tr>
+<tr>
+<td><code>memory_export_rules</code></td>
+<td><code>analytics.export()</code></td>
+<td>Query</td>
+</tr>
+<tr>
+<td><code>memory_list_ontologies</code></td>
+<td><code>ontology_registry.list_ontologies()</code></td>
+<td>Query</td>
+</tr>
+<tr>
+<td><code>memory_get_ontology</code></td>
+<td><code>ontology_registry.get(name).to_prompt_context()</code></td>
+<td>Query</td>
+</tr>
+<tr>
+<td><code>memory_ingest_rule</code></td>
+<td><code>store.ingest(payload)</code></td>
+<td>Mutation</td>
+</tr>
+<tr>
+<td><code>memory_add_mitigant</code></td>
+<td><code>store.add_mitigant(rule, mitigant)</code></td>
+<td>Mutation</td>
+</tr>
+<tr>
+<td><code>memory_run_pipeline</code></td>
+<td><code>pipeline.run(raw_data)</code></td>
+<td>Mutation</td>
+</tr>
+<tr>
+<td><code>memory_clear_graph</code></td>
+<td><code>store.clear()</code></td>
+<td>Mutation</td>
+</tr>
+</tbody>
+</table>
+<p>The ontology registry enables dynamic tool discovery per agent — an MCP server can
+list available ontologies and expose agent-specific tools.</p>
+<hr />
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<h3 id="full-pipeline-raw-text-graph-search">Full pipeline (raw text → graph → search)<a class="headerlink" href="#full-pipeline-raw-text-graph-search" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZepGraphStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ATHENA_ONTOLOGY</span><span class="p">,</span>
+    <span class="n">AthenaRulePipeline</span><span class="p">,</span>
+    <span class="n">AthenaGraphAnalytics</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Build the store</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">ZepGraphStore</span><span class="p">(</span><span class="n">agent_name</span><span class="o">=</span><span class="s1">&#39;athena&#39;</span><span class="p">,</span> <span class="n">ontology</span><span class="o">=</span><span class="n">ATHENA_ONTOLOGY</span><span class="p">)</span>
+
+<span class="c1"># 2. Ingest production learnings through the pipeline</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AthenaRulePipeline</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">([</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Athena correctly recommended decline for a lessor&#39;s risk warehouse with</span>
+<span class="sd">    catastrophic recent loss ($600K representing 23.5% of building exposure),</span>
+<span class="sd">    pricing 37% below minimum threshold, and prior carrier non-renewal. The</span>
+<span class="sd">    combination of recent major loss + below-minimum pricing + prior carrier</span>
+<span class="sd">    rejection is an automatic decline regardless of other positive factors.&quot;&quot;&quot;</span><span class="p">,</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Swallow API employee count limit is 20 per the manual, but historical</span>
+<span class="sd">    underwriters have approved up to 23 employees for well-established businesses</span>
+<span class="sd">    with strong loss history. This is a soft threshold, not a hard stop.&quot;&quot;&quot;</span><span class="p">,</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;California (CA) is currently out of appetite because the company is not yet</span>
+<span class="sd">    approved to operate in that state. Geographic restrictions based on state</span>
+<span class="sd">    approval should trigger early declination.&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Processed: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">items_processed</span><span class="si">}</span><span class="s1">, Ingested: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">items_ingested</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Sample output</strong> (what the LLM extractor produces from the above):</p>
+<div class="highlight"><pre><span></span><code>Processed: 7, Ingested: 7
+</code></pre></div>
+<p>The extractor finds ~7 rules across the 3 texts. For example, the warehouse text
+produces a compound trigger rule and a pricing rule. Here's what the extracted dicts
+look like and the edges they generate:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Rule 1 (from the warehouse learning):</span>
+<span class="c1"># {</span>
+<span class="c1">#     &quot;risk_factor&quot;: &quot;Adverse Selection Trifecta&quot;,</span>
+<span class="c1">#     &quot;risk_category&quot;: &quot;eligibility&quot;,</span>
+<span class="c1">#     &quot;rule_name&quot;: &quot;Adverse Selection Auto-Decline&quot;,</span>
+<span class="c1">#     &quot;action&quot;: &quot;decline&quot;,</span>
+<span class="c1">#     &quot;threshold_type&quot;: &quot;hard&quot;,</span>
+<span class="c1">#     &quot;compound_trigger&quot;: &quot;recent_major_loss AND below_minimum_pricing AND prior_carrier_rejection&quot;,</span>
+<span class="c1">#     &quot;decision_quality&quot;: &quot;aligned&quot;,</span>
+<span class="c1">#     &quot;data_fields&quot;: [&quot;auxData.rateData.input.total_loss_payment&quot;, ...]</span>
+<span class="c1"># }</span>
+<span class="c1">#</span>
+<span class="c1"># → Adverse Selection Trifecta --TRIGGERS--&gt; Adverse Selection Auto-Decline</span>
+<span class="c1"># → Adverse Selection Auto-Decline --RESULTS_IN--&gt; Decline</span>
+<span class="c1"># → Adverse Selection Auto-Decline --DERIVED_FROM--&gt; Production Decision Log</span>
+
+<span class="c1"># Rule 2 (from the employee count learning):</span>
+<span class="c1"># {</span>
+<span class="c1">#     &quot;risk_factor&quot;: &quot;Employee Count&quot;,</span>
+<span class="c1">#     &quot;rule_name&quot;: &quot;Swallow API Employee Limit&quot;,</span>
+<span class="c1">#     &quot;action&quot;: &quot;decline&quot;,</span>
+<span class="c1">#     &quot;threshold&quot;: {&quot;field&quot;: &quot;employee_count&quot;, &quot;operator&quot;: &quot;gt&quot;, &quot;value&quot;: 20},</span>
+<span class="c1">#     &quot;threshold_type&quot;: &quot;soft&quot;,</span>
+<span class="c1">#     &quot;historical_exceptions&quot;: &quot;UWs have approved up to 23 employees&quot;</span>
+<span class="c1"># }</span>
+<span class="c1">#</span>
+<span class="c1"># → Employee Count --TRIGGERS--&gt; Swallow API Employee Limit</span>
+<span class="c1">#     (threshold_type: soft, historical: &quot;up to 23 approved&quot;)</span>
+<span class="c1"># → Swallow API Employee Limit --RESULTS_IN--&gt; Decline</span>
+<span class="c1">#     (description includes &quot;...but UWs have approved up to 23...&quot;)</span>
+<span class="c1"># → Strong loss history --OVERRIDES--&gt; Swallow API Employee Limit</span>
+
+<span class="c1"># Rule 3 (from the California learning):</span>
+<span class="c1"># {</span>
+<span class="c1">#     &quot;risk_factor&quot;: &quot;California State&quot;,</span>
+<span class="c1">#     &quot;risk_category&quot;: &quot;geographic_appetite&quot;,</span>
+<span class="c1">#     &quot;rule_name&quot;: &quot;California Out of Appetite&quot;,</span>
+<span class="c1">#     &quot;action&quot;: &quot;decline&quot;,</span>
+<span class="c1">#     &quot;threshold_type&quot;: &quot;hard&quot;</span>
+<span class="c1"># }</span>
+</code></pre></div>
+<p>Then at query time:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 3. Search</span>
+<span class="n">analytics</span> <span class="o">=</span> <span class="n">AthenaGraphAnalytics</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+
+<span class="c1"># Hard rule — clear answer</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">check_risk_appetite</span><span class="p">(</span><span class="s1">&#39;California&#39;</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="s1">&#39;BOP&#39;</span><span class="p">)</span>
+<span class="c1"># → &quot;California State --TRIGGERS--&gt; California Out of Appetite&quot;</span>
+<span class="c1">#   threshold_type: hard, no exceptions</span>
+
+<span class="c1"># Soft threshold — nuanced answer with historical context</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">check_risk_appetite</span><span class="p">(</span><span class="s1">&#39;employee count 22&#39;</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="s1">&#39;BOP&#39;</span><span class="p">)</span>
+<span class="c1"># → &quot;Employee Count --TRIGGERS--&gt; Swallow API Employee Limit&quot;</span>
+<span class="c1">#   threshold_type: soft</span>
+<span class="c1">#   historical: &quot;UWs have approved up to 23 employees&quot;</span>
+<span class="c1">#   outcome: &quot;Limit is 20 per manual, but UWs approved up to 23...&quot;</span>
+
+<span class="c1"># Compound trigger — surfaces the multi-condition rule</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">check_risk_appetite</span><span class="p">(</span><span class="s1">&#39;prior loss and coverage gap&#39;</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="s1">&#39;ALL&#39;</span><span class="p">)</span>
+<span class="c1"># → &quot;Adverse Selection Trifecta --TRIGGERS--&gt; Adverse Selection Auto-Decline&quot;</span>
+<span class="c1">#   compound: &quot;recent_major_loss AND below_minimum_pricing AND prior_carrier_rejection&quot;</span>
+</code></pre></div>
+<h3 id="from-yaml-config">From YAML config<a class="headerlink" href="#from-yaml-config" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AthenaRulePipeline</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span>
+    <span class="s1">&#39;src/eval_workbench/implementations/athena/config/memory.yaml&#39;</span>
+<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">raw_texts</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="pre-extracted-rules-skip-llm">Pre-extracted rules (skip LLM)<a class="headerlink" href="#pre-extracted-rules-skip-llm" title="Permanent link">&para;</a></h3>
+<p>If you already have structured rules (e.g. from a spreadsheet or manual curation),
+you can skip the extractor and ingest directly:</p>
+<div class="highlight"><pre><span></span><code><span class="n">store</span> <span class="o">=</span> <span class="n">ZepGraphStore</span><span class="p">(</span><span class="n">agent_name</span><span class="o">=</span><span class="s1">&#39;athena&#39;</span><span class="p">,</span> <span class="n">ontology</span><span class="o">=</span><span class="n">ATHENA_ONTOLOGY</span><span class="p">)</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AthenaRulePipeline</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+
+<span class="n">rule</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;risk_factor&#39;</span><span class="p">:</span> <span class="s1">&#39;Gas Station&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;rule_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Gas Station Auto-Refer&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;product_type&#39;</span><span class="p">:</span> <span class="s1">&#39;LRO&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="s1">&#39;refer&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;outcome_description&#39;</span><span class="p">:</span> <span class="s1">&#39;Referred due to fuel storage liability.&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mitigants&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Fire suppression system installed&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;Underwriting Manual v3.2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;confidence&#39;</span><span class="p">:</span> <span class="s1">&#39;high&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="n">AthenaRulePipeline</span><span class="o">.</span><span class="n">_rule_to_ingest_payload</span><span class="p">(</span><span class="n">rule</span><span class="p">)</span>
+<span class="n">store</span><span class="o">.</span><span class="n">ingest</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="adding-a-mitigant-to-an-existing-rule">Adding a mitigant to an existing rule<a class="headerlink" href="#adding-a-mitigant-to-an-existing-rule" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">store</span><span class="o">.</span><span class="n">add_mitigant</span><span class="p">(</span><span class="s1">&#39;Gas Station Auto-Refer&#39;</span><span class="p">,</span> <span class="s1">&#39;Annual fire inspection on file&#39;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="demo-script">Demo script<a class="headerlink" href="#demo-script" title="Permanent link">&para;</a></h3>
+<p>A runnable demo with sample rules is available at:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>private_scripts/run_memory_graph.py<span class="w">          </span><span class="c1"># full demo</span>
+python<span class="w"> </span>private_scripts/run_memory_graph.py<span class="w"> </span>--clear<span class="w">   </span><span class="c1"># clear + re-ingest</span>
+python<span class="w"> </span>private_scripts/run_memory_graph.py<span class="w"> </span>--export<span class="w"> </span>rules.json
+</code></pre></div>
+<p>Requires <code>ZEP_API_KEY</code> to be set.</p>
+<hr />
+<h2 id="agent-entry-points">Agent Entry Points<a class="headerlink" href="#agent-entry-points" title="Permanent link">&para;</a></h2>
+<p>This section describes how an AI agent (like Athena) actually <em>uses</em> the memory system
+at runtime. There are two integration paths: direct Python API and MCP tools.</p>
+<h3 id="path-1-direct-python-api-current">Path 1: Direct Python API (current)<a class="headerlink" href="#path-1-direct-python-api-current" title="Permanent link">&para;</a></h3>
+<p>The agent's workflow code imports and calls the analytics layer directly. This is the
+simplest path and works for agents running in the same Python process.</p>
+<p><strong>At agent initialization:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZepGraphStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ATHENA_ONTOLOGY</span><span class="p">,</span>
+    <span class="n">AthenaGraphAnalytics</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Build once, reuse across the agent&#39;s lifetime</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">ZepGraphStore</span><span class="p">(</span><span class="n">agent_name</span><span class="o">=</span><span class="s1">&#39;athena&#39;</span><span class="p">,</span> <span class="n">ontology</span><span class="o">=</span><span class="n">ATHENA_ONTOLOGY</span><span class="p">)</span>
+<span class="n">analytics</span> <span class="o">=</span> <span class="n">AthenaGraphAnalytics</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>During underwriting evaluation</strong> (the main entry point for the agent):</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_submission</span><span class="p">(</span><span class="n">submission</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Where the agent calls into memory during its decision-making loop.&quot;&quot;&quot;</span>
+
+    <span class="n">risk_factor</span> <span class="o">=</span> <span class="n">submission</span><span class="p">[</span><span class="s1">&#39;occupancy_description&#39;</span><span class="p">]</span>  <span class="c1"># e.g. &quot;Gas Station&quot;</span>
+    <span class="n">product_type</span> <span class="o">=</span> <span class="n">submission</span><span class="p">[</span><span class="s1">&#39;product_type&#39;</span><span class="p">]</span>           <span class="c1"># e.g. &quot;LRO&quot;</span>
+
+    <span class="c1"># Primary entry point: check if this risk is in the knowledge graph</span>
+    <span class="n">rules</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">check_risk_appetite</span><span class="p">(</span><span class="n">risk_factor</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="n">product_type</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;action&#39;</span><span class="p">)</span>          <span class="c1"># &quot;refer&quot;, &quot;decline&quot;, etc.</span>
+        <span class="n">threshold_type</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;threshold_type&#39;</span><span class="p">)</span>  <span class="c1"># &quot;hard&quot; or &quot;soft&quot;</span>
+        <span class="n">historical</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;historical_exceptions&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;decline&#39;</span> <span class="ow">and</span> <span class="n">threshold_type</span> <span class="o">==</span> <span class="s1">&#39;hard&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;decision&#39;</span><span class="p">:</span> <span class="s1">&#39;decline&#39;</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="p">[</span><span class="s1">&#39;outcome&#39;</span><span class="p">]}</span>
+        <span class="k">elif</span> <span class="n">threshold_type</span> <span class="o">==</span> <span class="s1">&#39;soft&#39;</span> <span class="ow">and</span> <span class="n">historical</span><span class="p">:</span>
+            <span class="c1"># Nuanced decision — the agent can weigh flexibility</span>
+            <span class="o">...</span>
+
+    <span class="c1"># For explainability / audit trail</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">analytics</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">risk_factor</span><span class="p">,</span> <span class="n">product_type</span><span class="o">=</span><span class="n">product_type</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;decision&#39;</span><span class="p">:</span> <span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="s1">&#39;reasoning_chain&#39;</span><span class="p">:</span> <span class="n">paths</span><span class="p">}</span>
+</code></pre></div>
+<p><strong>For knowledge ingestion</strong> (called by an admin workflow, CI/CD, or a learning pipeline —
+not during real-time evaluation):</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.implementations.athena.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaRulePipeline</span>
+
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AthenaRulePipeline</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+
+<span class="c1"># Ingest raw production learnings (LLM extraction + graph storage)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">raw_learnings_text</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<p>The key insight: <strong>retrieval is on the hot path, ingestion is not.</strong> The agent queries
+the graph during every submission evaluation, but ingestion happens offline when new
+learnings are collected.</p>
+<h3 id="path-2-mcp-tools-future">Path 2: MCP Tools (future)<a class="headerlink" href="#path-2-mcp-tools-future" title="Permanent link">&para;</a></h3>
+<p>When the memory system is wrapped in an MCP server, the agent's LLM calls tools
+instead of Python functions. The tool signatures map directly to the Python API:</p>
+<div class="highlight"><pre><span></span><code>Agent LLM                          MCP Server                    Memory System
+─────────                          ──────────                    ─────────────
+&quot;Check if Gas Station              memory_check_risk             analytics.check_risk_appetite(
+ is in appetite for LRO&quot;  ──────▶  {risk_factor: &quot;Gas Station&quot;,    &quot;Gas Station&quot;,
+                                    product_type: &quot;LRO&quot;}          product_type=&quot;LRO&quot;
+                                          │                      )
+                                          ▼                         │
+                                   Returns JSON with               ▼
+                                   matching rules, thresholds,   GraphSearchResult
+                                   historical exceptions         → serialized to JSON
+</code></pre></div>
+<p>The MCP tool names and their Python API equivalents:</p>
+<table>
+<thead>
+<tr>
+<th>Agent asks...</th>
+<th>MCP Tool</th>
+<th>Python Entry Point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"Is this risk in appetite?"</td>
+<td><code>memory_check_risk</code></td>
+<td><code>analytics.check_risk_appetite(risk, product_type=...)</code></td>
+</tr>
+<tr>
+<td>"What rules apply here?"</td>
+<td><code>memory_search</code></td>
+<td><code>store.search(query, limit=...)</code></td>
+</tr>
+<tr>
+<td>"Show the full decision path"</td>
+<td><code>memory_trace_path</code></td>
+<td><code>analytics.trace(risk, product_type=...)</code></td>
+</tr>
+<tr>
+<td>"What does our ontology cover?"</td>
+<td><code>memory_get_ontology</code></td>
+<td><code>ontology_registry.get(name).to_prompt_context()</code></td>
+</tr>
+<tr>
+<td>"Record this new learning"</td>
+<td><code>memory_run_pipeline</code></td>
+<td><code>pipeline.run(raw_data)</code></td>
+</tr>
+</tbody>
+</table>
+<p>In this path, the LLM decides <em>when</em> to query memory based on its system prompt. A
+typical system prompt injection:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Inject the ontology into the agent&#39;s system prompt so it knows what to search for</span>
+<span class="n">ontology_context</span> <span class="o">=</span> <span class="n">ATHENA_ONTOLOGY</span><span class="o">.</span><span class="n">to_prompt_context</span><span class="p">()</span>
+<span class="n">system_prompt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">You have access to an underwriting knowledge graph. Use the memory_check_risk tool</span>
+<span class="s2">to look up any risk factor before making a recommendation. The graph contains:</span>
+
+<span class="si">{</span><span class="n">ontology_context</span><span class="si">}</span>
+
+<span class="s2">Always check memory before recommending decline or referral.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="which-path-to-choose">Which path to choose<a class="headerlink" href="#which-path-to-choose" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Consideration</th>
+<th>Direct Python API</th>
+<th>MCP Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Setup complexity</td>
+<td>Lower — just import and call</td>
+<td>Higher — requires MCP server</td>
+</tr>
+<tr>
+<td>Agent autonomy</td>
+<td>Agent code decides when to query</td>
+<td>LLM decides when to query</td>
+</tr>
+<tr>
+<td>Multi-language</td>
+<td>Python only</td>
+<td>Any language that speaks MCP</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>Lower — no HTTP hop</td>
+<td>Slightly higher — MCP protocol overhead</td>
+</tr>
+<tr>
+<td>Best for</td>
+<td>Deterministic agent workflows</td>
+<td>LLM-driven autonomous agents</td>
+</tr>
+</tbody>
+</table>
+<p>Most agents will start with the direct Python API and migrate to MCP tools when they
+need the LLM to autonomously decide when to query memory.</p>
+<hr />
+<h2 id="where-to-look-cheat-sheet">"Where to look" cheat-sheet<a class="headerlink" href="#where-to-look-cheat-sheet" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shared ABCs + data models</td>
+<td><code>src/eval_workbench/shared/memory/</code></td>
+</tr>
+<tr>
+<td>Zep backend implementation</td>
+<td><code>src/eval_workbench/shared/memory/zep/store.py</code></td>
+</tr>
+<tr>
+<td>Athena ontology definition</td>
+<td><code>src/eval_workbench/implementations/athena/memory/ontology.py</code></td>
+</tr>
+<tr>
+<td>LLM rule extractor</td>
+<td><code>src/eval_workbench/implementations/athena/memory/extractors.py</code></td>
+</tr>
+<tr>
+<td>Athena ingestion pipeline</td>
+<td><code>src/eval_workbench/implementations/athena/memory/pipeline.py</code></td>
+</tr>
+<tr>
+<td>Athena analytics / search</td>
+<td><code>src/eval_workbench/implementations/athena/memory/analytics.py</code></td>
+</tr>
+<tr>
+<td>YAML config</td>
+<td><code>src/eval_workbench/implementations/athena/config/memory.yaml</code></td>
+</tr>
+<tr>
+<td>Zep settings</td>
+<td><code>src/eval_workbench/shared/memory/settings.py</code></td>
+</tr>
+<tr>
+<td>Runnable demo</td>
+<td><code>private_scripts/run_memory_graph.py</code></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 01:43:20 UTC">February 10, 2026</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 01:43:20 UTC">February 10, 2026</span>
+  </span>
+
+    
+    
+      
+  
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Contributors">
+      
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4"/></svg>
+      
+    </span>
+    <nav>
+      
+        <a href="mailto:matt.evanoff@mgtinsurance.com">Matt Evanoff</a>
+    </nav>
+  </span>
+
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.instant", "navigation.tracking", "navigation.top", "content.code.copy", "content.tabs.link", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
