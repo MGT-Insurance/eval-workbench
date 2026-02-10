@@ -2285,8 +2285,8 @@
 <div class="grid-item" style="text-align: center;">
 <span style="font-size: 2rem;">⚡</span><br>
 <strong>Default Threshold</strong><br>
-<code style="font-size: 1.5rem; color: var(--md-primary);">—</code><br>
-<small style="color: var(--md-text-muted);">Uses score_range only</small>
+<code style="font-size: 1.5rem; color: var(--md-primary);">0.8</code><br>
+<small style="color: var(--md-text-muted);">High Bar</small>
 </div>
 
 <div class="grid-item" style="text-align: center;">
@@ -2328,31 +2328,6 @@
 </tbody>
 </table>
 </div>
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Comparing AI to human decisions</li>
-<li>Both decision and reasoning matter</li>
-<li>Evaluating underwriting recommendations</li>
-<li>Training data has human annotations</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No ground truth decision available</li>
-<li>Only measuring completeness</li>
-<li>Decisions are always exploratory</li>
-<li>No reasoning comparison needed</li>
-</ul>
-</div>
-
-</div>
-
-<hr />
 <details>
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64z"/></svg></span> Computation</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3c-1.27 0-2.4.8-2.82 2H3v2h1.95L2 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3L6.05 7h3.12c.33.85.98 1.5 1.83 1.83V20H2v2h20v-2h-9V8.82c.85-.32 1.5-.97 1.82-1.82h3.13L15 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3l-2.95-7H21V5h-6.17C14.4 3.8 13.27 3 12 3m0 2a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m-6.5 5.25L7 14H4zm13 0L20 14h-3z"/></svg></span> Scoring System</label></div>
@@ -2452,13 +2427,13 @@
 <tr>
 <td><code>outcome_weight</code></td>
 <td><code>float</code></td>
-<td><code>0.6</code></td>
+<td><code>1.0</code></td>
 <td>Weight for decision match component</td>
 </tr>
 <tr>
 <td><code>reasoning_weight</code></td>
 <td><code>float</code></td>
-<td><code>0.4</code></td>
+<td><code>0.0</code></td>
 <td>Weight for reasoning coverage</td>
 </tr>
 <tr>
@@ -2470,11 +2445,15 @@
 <tr>
 <td><code>recommendation_column_name</code></td>
 <td><code>str</code></td>
-<td><code>None</code></td>
+<td><code>brief_recommendation</code></td>
 <td>Additional output field to analyze</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition info">
+<p class="admonition-title">Default Behavior</p>
+<p>By default, <code>outcome_weight=1.0</code> and <code>reasoning_weight=0.0</code>, meaning the score is purely based on decision match (1.0 or 0.0). Set <code>reasoning_weight &gt; 0</code> to include reasoning coverage analysis.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Hard Fail Mode</p>
 <p>When <code>hard_fail_on_outcome_mismatch=True</code> (default), any decision mismatch results in a score of 0.0, regardless of reasoning quality. Disable this for softer evaluation.</p>
@@ -2537,16 +2516,21 @@
 <summary><strong>📊 DecisionQualityResult Structure</strong></summary>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">DecisionQualityResult</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="p">{</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;overall_score&quot;</span><span class="p">:</span> <span class="mf">0.85</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;overall_score&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">&quot;outcome_match&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="s2">&quot;outcome_score&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="s2">&quot;human_decision_detected&quot;</span><span class="p">:</span> <span class="s2">&quot;decline&quot;</span><span class="p">,</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="s2">&quot;ai_decision_detected&quot;</span><span class="p">:</span> <span class="s2">&quot;decline&quot;</span><span class="p">,</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="s2">&quot;reasoning_score&quot;</span><span class="p">:</span> <span class="mf">0.625</span><span class="p">,</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="s2">&quot;matched_concepts&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;building age&quot;</span><span class="p">,</span> <span class="s2">&quot;condition&quot;</span><span class="p">],</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="s2">&quot;missing_concepts&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;roof age&quot;</span><span class="p">]</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">}</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">)</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="s2">&quot;matched_concepts&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="p">{</span><span class="s2">&quot;concept&quot;</span><span class="p">:</span> <span class="s2">&quot;building age&quot;</span><span class="p">},</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="p">{</span><span class="s2">&quot;concept&quot;</span><span class="p">:</span> <span class="s2">&quot;condition&quot;</span><span class="p">}</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="p">],</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="s2">&quot;missing_concepts&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        <span class="p">{</span><span class="s2">&quot;concept&quot;</span><span class="p">:</span> <span class="s2">&quot;roof age&quot;</span><span class="p">,</span> <span class="s2">&quot;impact&quot;</span><span class="p">:</span> <span class="s2">&quot;High&quot;</span><span class="p">}</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="p">]</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="p">}</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="signal-fields">Signal Fields<a class="headerlink" href="#signal-fields" title="Permanent link">&para;</a></h3>
 <table>
@@ -2585,28 +2569,29 @@
 </tr>
 <tr>
 <td><code>reasoning_score</code></td>
-<td><code>float</code></td>
-<td>Reasoning coverage score</td>
+<td><code>float \| None</code></td>
+<td>Impact-weighted reasoning coverage score (None when no risk factors extracted)</td>
 </tr>
 <tr>
 <td><code>matched_concepts</code></td>
-<td><code>List[str]</code></td>
-<td>Risk factors mentioned by AI</td>
+<td><code>List[ReasoningMatch]</code></td>
+<td>Risk factors mentioned by AI (each has <code>concept</code>)</td>
 </tr>
 <tr>
 <td><code>missing_concepts</code></td>
-<td><code>List[str]</code></td>
-<td>Risk factors AI missed</td>
+<td><code>List[ReasoningGap]</code></td>
+<td>Risk factors AI missed (each has <code>concept</code> and <code>impact</code>)</td>
 </tr>
 </tbody>
 </table>
 </details>
 <hr />
 <h2 id="example-scenarios">Example Scenarios<a class="headerlink" href="#example-scenarios" title="Permanent link">&para;</a></h2>
-<details>
-<summary><strong>✅ Scenario 1: Perfect Match (Score: 1.0)</strong></summary>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Pass (1.0)</label><label for="__tabbed_4_2">Partial (0.73)</label><label for="__tabbed_4_3">Fail (0.0)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
 <div class="admonition success">
-<p class="admonition-title">Decision + Reasoning Aligned</p>
+<p class="admonition-title">Decision Match (Default Weights)</p>
 <p><strong>Human Decision:</strong></p>
 <blockquote>
 <p>"Decline - prior claims history and high BPP value are concerns."</p>
@@ -2637,13 +2622,17 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Final Score:</strong> <code>(0.6 × 1.0) + (0.4 × 1.0) = 1.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M.41 13.41 6 19l1.41-1.42L1.83 12m20.41-6.42L11.66 16.17 7.5 12l-1.43 1.41L11.66 19l12-12M18 7l-1.41-1.42-6.35 6.35 1.42 1.41z"/></svg></span></p>
+<p><strong>Final Score:</strong> <code>(1.0 × 1.0) + (0.0 × 1.0) = 1.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M.41 13.41 6 19l1.41-1.42L1.83 12m20.41-6.42L11.66 16.17 7.5 12l-1.43 1.41L11.66 19l12-12M18 7l-1.41-1.42-6.35 6.35 1.42 1.41z"/></svg></span></p>
+<div class="admonition tip">
+<p class="admonition-title">With custom weights <code>outcome_weight=0.6, reasoning_weight=0.4</code></p>
+<p>Score would be <code>(0.6 × 1.0) + (0.4 × 1.0) = 1.0</code></p>
 </div>
-</details>
-<details>
-<summary><strong>⚠️ Scenario 2: Decision Match, Incomplete Reasoning (Score: 0.7)</strong></summary>
+</div>
+</div>
+<div class="tabbed-block">
 <div class="admonition warning">
-<p class="admonition-title">Correct Decision, Missing Factors</p>
+<p class="admonition-title">Correct Decision, Missing Factors (Custom Weights)</p>
+<p>With <code>outcome_weight=0.6, reasoning_weight=0.4</code>:</p>
 <p><strong>Human Decision:</strong></p>
 <blockquote>
 <p>"Approve - good claims history, reasonable BPP, building in good condition."</p>
@@ -2676,9 +2665,8 @@
 </table>
 <p><strong>Final Score:</strong> <code>(0.6 × 1.0) + (0.4 × 0.33) = 0.73</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 14h-2V9h2m0 9h-2v-2h2M1 21h22L12 2z"/></svg></span></p>
 </div>
-</details>
-<details>
-<summary><strong>❌ Scenario 3: Decision Mismatch (Score: 0.0)</strong></summary>
+</div>
+<div class="tabbed-block">
 <div class="admonition failure">
 <p class="admonition-title">Wrong Decision (Hard Fail)</p>
 <p><strong>Human Decision:</strong></p>
@@ -2713,7 +2701,9 @@
 </table>
 <p><strong>Final Score:</strong> <code>0.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span></p>
 </div>
-</details>
+</div>
+</div>
+</div>
 <hr />
 <h2 id="why-it-matters">Why It Matters<a class="headerlink" href="#why-it-matters" title="Permanent link">&para;</a></h2>
 <div class="grid-container">
@@ -2779,7 +2769,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 4, 2026 21:34:04 UTC">February 4, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 23:50:31 UTC">February 10, 2026</span>
   </span>
 
     
@@ -2841,7 +2831,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2025 MGT Insurance
+      &copy; 2026 MGT Insurance
     </div>
   
   

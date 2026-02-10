@@ -2328,31 +2328,6 @@
 </tbody>
 </table>
 </div>
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Detecting hallucinations</li>
-<li>Verifying factual accuracy</li>
-<li>Source data is available</li>
-<li>High-stakes recommendations</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No source data available</li>
-<li>Evaluating opinions/judgments</li>
-<li>Checking structural completeness</li>
-<li>Output is purely generative</li>
-</ul>
-</div>
-
-</div>
-
-<hr />
 <details>
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64z"/></svg></span> Computation</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3c-1.27 0-2.4.8-2.82 2H3v2h1.95L2 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3L6.05 7h3.12c.33.85.98 1.5 1.83 1.83V20H2v2h20v-2h-9V8.82c.85-.32 1.5-.97 1.82-1.82h3.13L15 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3l-2.95-7H21V5h-6.17C14.4 3.8 13.27 3 12 3m0 2a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m-6.5 5.25L7 14H4zm13 0L20 14h-3z"/></svg></span> Verification Modes</label></div>
@@ -2453,21 +2428,17 @@
 <tr>
 <td><code>max_claims</code></td>
 <td><code>int</code></td>
-<td><code>50</code></td>
+<td><code>10</code></td>
 <td>Maximum claims to verify</td>
 </tr>
 <tr>
 <td><code>max_concurrent</code></td>
 <td><code>int</code></td>
-<td><code>10</code></td>
+<td><code>5</code></td>
 <td>Concurrency limit for LLM verification</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition info">
-<p class="admonition-title">Performance Tuning</p>
-<p>For large recommendations, use <code>heuristic_then_llm</code> mode with appropriate <code>max_concurrent</code> to balance accuracy and speed.</p>
-</div>
 </div>
 </div>
 </div>
@@ -2536,40 +2507,44 @@
 <summary><strong>📊 UnderwritingFaithfulnessResult Structure</strong></summary>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">UnderwritingFaithfulnessResult</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="p">{</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;overall_score&quot;</span><span class="p">:</span> <span class="mf">0.85</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;overall_score&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">&quot;total_claims&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="s2">&quot;supported_claims&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="s2">&quot;hallucinations&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="s2">&quot;claim_details&quot;</span><span class="p">:</span> <span class="p">[</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="p">{</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>            <span class="s2">&quot;claim&quot;</span><span class="p">:</span> <span class="s2">&quot;Revenue is $2.1M&quot;</span><span class="p">,</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;supported&quot;</span><span class="p">,</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>            <span class="s2">&quot;evidence&quot;</span><span class="p">:</span> <span class="s2">&quot;financials.revenue: 2100000&quot;</span><span class="p">,</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.95</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;✅ Supported&quot;</span><span class="p">,</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>            <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;Exact numeric match in source data.&quot;</span><span class="p">,</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>            <span class="s2">&quot;decision_source&quot;</span><span class="p">:</span> <span class="s2">&quot;llm&quot;</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="p">},</span>
 </span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        <span class="p">{</span>
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>            <span class="s2">&quot;claim&quot;</span><span class="p">:</span> <span class="s2">&quot;Building was constructed in 2019&quot;</span><span class="p">,</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;supported&quot;</span><span class="p">,</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>            <span class="s2">&quot;evidence&quot;</span><span class="p">:</span> <span class="s2">&quot;property.year_built: 2019&quot;</span><span class="p">,</span>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.98</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;✅ Supported&quot;</span><span class="p">,</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>            <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;Year built matches property.year_built.&quot;</span><span class="p">,</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>            <span class="s2">&quot;decision_source&quot;</span><span class="p">:</span> <span class="s2">&quot;llm&quot;</span>
 </span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>        <span class="p">},</span>
 </span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>        <span class="p">{</span>
 </span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>            <span class="s2">&quot;claim&quot;</span><span class="p">:</span> <span class="s2">&quot;No claims in 5 years&quot;</span><span class="p">,</span>
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;supported&quot;</span><span class="p">,</span>
-</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>            <span class="s2">&quot;evidence&quot;</span><span class="p">:</span> <span class="s2">&quot;claims.five_year_count: 0&quot;</span><span class="p">,</span>
-</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.92</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;✅ Supported&quot;</span><span class="p">,</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>            <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;claims.five_year_count: 0 confirms zero claims.&quot;</span><span class="p">,</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>            <span class="s2">&quot;decision_source&quot;</span><span class="p">:</span> <span class="s2">&quot;llm&quot;</span>
 </span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>        <span class="p">},</span>
 </span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>        <span class="p">{</span>
 </span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>            <span class="s2">&quot;claim&quot;</span><span class="p">:</span> <span class="s2">&quot;Premium is $1,200&quot;</span><span class="p">,</span>
-</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;unsupported&quot;</span><span class="p">,</span>
-</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>            <span class="s2">&quot;evidence&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
-</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.1</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;❌ Hallucinated/Unsupported&quot;</span><span class="p">,</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>            <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;No premium data found in source.&quot;</span><span class="p">,</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>            <span class="s2">&quot;decision_source&quot;</span><span class="p">:</span> <span class="s2">&quot;llm&quot;</span>
 </span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>        <span class="p">}</span>
 </span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="p">],</span>
-</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    <span class="s2">&quot;unverified_claims&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Premium is $1,200&quot;</span><span class="p">]</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    <span class="s2">&quot;unverified_claims&quot;</span><span class="p">:</span> <span class="p">[]</span>
 </span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="p">}</span>
 </span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="p">)</span>
 </span></code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">Unverified vs Hallucinated</p>
+<p><code>unverified_claims</code> lists claims that exceeded <code>max_claims</code> and were not checked. <code>claim_details</code> contains verdicts for all checked claims.</p>
+</div>
 <h3 id="signal-fields">Signal Fields<a class="headerlink" href="#signal-fields" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2588,7 +2563,7 @@
 <tr>
 <td><code>total_claims</code></td>
 <td><code>int</code></td>
-<td>Total atomic claims extracted</td>
+<td>Total atomic claims extracted (capped by <code>max_claims</code>)</td>
 </tr>
 <tr>
 <td><code>supported_claims</code></td>
@@ -2602,21 +2577,22 @@
 </tr>
 <tr>
 <td><code>claim_details</code></td>
-<td><code>List</code></td>
-<td>Per-claim verification details</td>
+<td><code>List[dict]</code></td>
+<td>Per-claim details (<code>claim</code>, <code>status</code>, <code>reason</code>, <code>decision_source</code>)</td>
 </tr>
 <tr>
 <td><code>unverified_claims</code></td>
 <td><code>List[str]</code></td>
-<td>List of unsupported claims</td>
+<td>Claims that exceeded <code>max_claims</code> and were not checked</td>
 </tr>
 </tbody>
 </table>
 </details>
 <hr />
 <h2 id="example-scenarios">Example Scenarios<a class="headerlink" href="#example-scenarios" title="Permanent link">&para;</a></h2>
-<details>
-<summary><strong>✅ Scenario 1: All Claims Verified (Score: 1.0)</strong></summary>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Pass (1.0)</label><label for="__tabbed_4_2">Partial (0.67)</label><label for="__tabbed_4_3">Fail (0.0)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
 <div class="admonition success">
 <p class="admonition-title">Fully Faithful Recommendation</p>
 <p><strong>Recommendation:</strong></p>
@@ -2659,9 +2635,8 @@
 </table>
 <p><strong>Final Score:</strong> <code>3 / 3 = 1.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M.41 13.41 6 19l1.41-1.42L1.83 12m20.41-6.42L11.66 16.17 7.5 12l-1.43 1.41L11.66 19l12-12M18 7l-1.41-1.42-6.35 6.35 1.42 1.41z"/></svg></span></p>
 </div>
-</details>
-<details>
-<summary><strong>⚠️ Scenario 2: Hallucination Detected (Score: 0.67)</strong></summary>
+</div>
+<div class="tabbed-block">
 <div class="admonition warning">
 <p class="admonition-title">Unsupported Claim Found</p>
 <p><strong>Recommendation:</strong></p>
@@ -2703,9 +2678,8 @@
 </table>
 <p><strong>Final Score:</strong> <code>2 / 3 = 0.67</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 14h-2V9h2m0 9h-2v-2h2M1 21h22L12 2z"/></svg></span></p>
 </div>
-</details>
-<details>
-<summary><strong>❌ Scenario 3: Significant Hallucinations (Score: 0.25)</strong></summary>
+</div>
+<div class="tabbed-block">
 <div class="admonition failure">
 <p class="admonition-title">Multiple Unsupported Claims</p>
 <p><strong>Recommendation:</strong></p>
@@ -2751,7 +2725,9 @@
 </table>
 <p><strong>Final Score:</strong> <code>0 / 4 = 0.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span></p>
 </div>
-</details>
+</div>
+</div>
+</div>
 <hr />
 <h2 id="why-it-matters">Why It Matters<a class="headerlink" href="#why-it-matters" title="Permanent link">&para;</a></h2>
 <div class="grid-container">
@@ -2817,7 +2793,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 4, 2026 21:34:04 UTC">February 4, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 23:50:31 UTC">February 10, 2026</span>
   </span>
 
     
@@ -2879,7 +2855,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2025 MGT Insurance
+      &copy; 2026 MGT Insurance
     </div>
   
   

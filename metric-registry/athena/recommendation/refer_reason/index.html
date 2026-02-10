@@ -2312,31 +2312,6 @@
 </tbody>
 </table>
 </div>
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Understanding referral patterns</li>
-<li>Building analytics dashboards</li>
-<li>Categorizing decline reasons</li>
-<li>Training data analysis</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Evaluating quality (use Decision Quality)</li>
-<li>Checking rule compliance (use Underwriting Rules)</li>
-<li>Approval outcomes</li>
-<li>Scoring is required</li>
-</ul>
-</div>
-
-</div>
-
-<hr />
 <details>
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64z"/></svg></span> Computation</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.5 7A1.5 1.5 0 0 1 4 5.5 1.5 1.5 0 0 1 5.5 4 1.5 1.5 0 0 1 7 5.5 1.5 1.5 0 0 1 5.5 7m15.91 4.58-9-9C12.05 2.22 11.55 2 11 2H4c-1.11 0-2 .89-2 2v7c0 .55.22 1.05.59 1.41l8.99 9c.37.36.87.59 1.42.59s1.05-.23 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.56-.23-1.06-.59-1.42"/></svg></span> Reason Categories</label></div>
@@ -2386,32 +2361,162 @@
     style I fill:#8B9F4F,stroke:#6B7A3A,stroke-width:3px,color:#fff</code></pre>
 </div>
 <div class="tabbed-block">
-<div class="grid-container">
-<p><div class="grid-item" style="border-left: 4px solid #ef4444; padding-left: 1rem;">
-<strong style="color: #ef4444;">Claims History</strong>
-<br><small>Prior claims or loss history issues</small>
-</div></p>
-<p><div class="grid-item" style="border-left: 4px solid #f59e0b; padding-left: 1rem;">
-<strong style="color: #f59e0b;">BPP Value</strong>
-<br><small>Business personal property limits</small>
-</div></p>
-<p><div class="grid-item" style="border-left: 4px solid #3b82f6; padding-left: 1rem;">
-<strong style="color: #3b82f6;">New Business</strong>
-<br><small>Organization age concerns</small>
-</div></p>
-<p><div class="grid-item" style="border-left: 4px solid #8b5cf6; padding-left: 1rem;">
-<strong style="color: #8b5cf6;">Building Coverage</strong>
-<br><small>Non-owned building or coverage issues</small>
-</div></p>
-<p><div class="grid-item" style="border-left: 4px solid #10b981; padding-left: 1rem;">
-<strong style="color: #10b981;">Employee Count</strong>
-<br><small>High employee count concerns</small>
-</div></p>
-<p><div class="grid-item" style="border-left: 4px solid #6b7280; padding-left: 1rem;">
-<strong style="color: #6b7280;">Other</strong>
-<br><small>Classification, location, or other factors</small>
-</div></p>
-</div>
+<p>The metric uses 18 granular <code>ReasonCategory</code> values grouped by actionable type:</p>
+<p><strong>Coverage &amp; Pricing</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+<th>Actionable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Excessive Coverage Requested</code></td>
+<td>Coverage limits materially exceed typical thresholds</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Inadequate / Suspicious Valuation</code></td>
+<td>Coverage amounts appear insufficient or implausible</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Pricing Anomaly - Too Low</code></td>
+<td>Calculated premium appears unusually low</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Pricing Anomaly - Too High</code></td>
+<td>Calculated premium appears unusually high</td>
+<td>market</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Property &amp; Location</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+<th>Actionable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Property Condition Concerns</code></td>
+<td>Elevated risk from property condition</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Construction / Exposure Threshold</code></td>
+<td>Property characteristics exceed thresholds</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Location / CAT Risk</code></td>
+<td>Elevated catastrophe or environmental risk</td>
+<td>market</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Data &amp; Classification</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+<th>Actionable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Data Conflict / Mismatch</code></td>
+<td>Discrepancies between customer and third-party data</td>
+<td>system</td>
+</tr>
+<tr>
+<td><code>Implausible / Invalid Data</code></td>
+<td>One or more inputs appear invalid</td>
+<td>system</td>
+</tr>
+<tr>
+<td><code>Missing / Unverifiable Data</code></td>
+<td>Required data cannot be verified</td>
+<td>system</td>
+</tr>
+<tr>
+<td><code>Industry / Class Code Error</code></td>
+<td>Business classification appears incorrect</td>
+<td>policy</td>
+</tr>
+<tr>
+<td><code>Unrelated / Ancillary Operations</code></td>
+<td>Operations outside primary stated class</td>
+<td>policy</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Business &amp; Operational</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+<th>Actionable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Startup / New Venture</code></td>
+<td>Limited or no operating history</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Multi-Location / Complex Ops</code></td>
+<td>Multiple locations requiring manual review</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Financial / Operational Inconsistency</code></td>
+<td>Operational metrics are internally inconsistent</td>
+<td>market</td>
+</tr>
+<tr>
+<td><code>Ownership / Insurable Interest Issue</code></td>
+<td>Coverage for property without insurable interest</td>
+<td>policy</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Compliance &amp; Procedural</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+<th>Actionable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sanctions / Watchlists</code></td>
+<td>Potential regulatory or sanctions concern</td>
+<td>policy</td>
+</tr>
+<tr>
+<td><code>Procedural / Temporary Block</code></td>
+<td>Procedural rather than risk-based referral</td>
+<td>system</td>
+</tr>
+<tr>
+<td><code>Other / Unknown</code></td>
+<td>Does not fit a defined category</td>
+<td>unknown</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
@@ -2459,18 +2564,18 @@
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">metric</span> <span class="o">=</span> <span class="n">ReferReason</span><span class="p">()</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">item</span> <span class="o">=</span> <span class="n">DatasetItem</span><span class="p">(</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">actual_output</span><span class="o">=</span><span class="s2">&quot;Decline due to prior claims history and high BPP coverage request.&quot;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">actual_output</span><span class="o">=</span><span class="s2">&quot;Refer to underwriting. Roof is 28 years old, exceeding 20-year threshold.&quot;</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">metric</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">explanation</span><span class="p">)</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># &quot;Claims History&quot;</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># &quot;Property Condition Concerns&quot;</span>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">primary_category</span><span class="p">)</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># ReasonCategory.CLAIMS_HISTORY</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># ReasonCategory.PROPERTY_CONDITION</span>
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">all_reasons</span><span class="p">)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="c1"># [{&quot;category&quot;: &quot;Claims History&quot;, ...}, {&quot;category&quot;: &quot;BPP Value&quot;, ...}]</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="c1"># [ExtractedReason(reason_text=&quot;...&quot;, category=ReasonCategory.PROPERTY_CONDITION, reasoning=&quot;...&quot;), ...]</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
@@ -2511,31 +2616,31 @@
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">result</span><span class="o">.</span><span class="n">signals</span>              <span class="c1"># Full analysis breakdown</span>
 </span></code></pre></div>
 <details>
-<summary><strong>📊 ReferReasonResult Structure</strong></summary>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">ReferReasonResult</span><span class="p">(</span>
+<summary><strong>📊 ReasonAnalysisResult Structure</strong></summary>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">ReasonAnalysisResult</span><span class="p">(</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="p">{</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">&quot;is_negative_outcome&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="s2">&quot;outcome_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Referral&quot;</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="s2">&quot;outcome_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Refer to Underwriter&quot;</span><span class="p">,</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="s2">&quot;primary_reason&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;Claims History&quot;</span><span class="p">,</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="s2">&quot;reasoning&quot;</span><span class="p">:</span> <span class="s2">&quot;Prior claims mentioned as primary concern&quot;</span><span class="p">,</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.92</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="s2">&quot;reason_text&quot;</span><span class="p">:</span> <span class="s2">&quot;Roof is 28 years old, exceeding 20-year threshold&quot;</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;Property Condition Concerns&quot;</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="s2">&quot;reasoning&quot;</span><span class="p">:</span> <span class="s2">&quot;Explicit mention of roof age exceeding policy threshold.&quot;</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="p">},</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="s2">&quot;primary_category&quot;</span><span class="p">:</span> <span class="s2">&quot;Claims History&quot;</span><span class="p">,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="s2">&quot;primary_category&quot;</span><span class="p">:</span> <span class="s2">&quot;Property Condition Concerns&quot;</span><span class="p">,</span>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="s2">&quot;all_reasons&quot;</span><span class="p">:</span> <span class="p">[</span>
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>        <span class="p">{</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>            <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;Claims History&quot;</span><span class="p">,</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>            <span class="s2">&quot;reasoning&quot;</span><span class="p">:</span> <span class="s2">&quot;Prior claims mentioned&quot;</span><span class="p">,</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.92</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>            <span class="s2">&quot;reason_text&quot;</span><span class="p">:</span> <span class="s2">&quot;Roof is 28 years old, exceeding 20-year threshold&quot;</span><span class="p">,</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>            <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;Property Condition Concerns&quot;</span><span class="p">,</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>            <span class="s2">&quot;reasoning&quot;</span><span class="p">:</span> <span class="s2">&quot;Explicit mention of roof age exceeding policy threshold.&quot;</span>
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>        <span class="p">},</span>
 </span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        <span class="p">{</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>            <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;BPP Value&quot;</span><span class="p">,</span>
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>            <span class="s2">&quot;reasoning&quot;</span><span class="p">:</span> <span class="s2">&quot;High BPP coverage request&quot;</span><span class="p">,</span>
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.85</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>            <span class="s2">&quot;reason_text&quot;</span><span class="p">:</span> <span class="s2">&quot;Original knob-and-tube wiring from 1950s&quot;</span><span class="p">,</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>            <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;Property Condition Concerns&quot;</span><span class="p">,</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>            <span class="s2">&quot;reasoning&quot;</span><span class="p">:</span> <span class="s2">&quot;Outdated wiring type is a known fire hazard concern.&quot;</span>
 </span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>        <span class="p">}</span>
 </span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    <span class="p">],</span>
 </span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    <span class="s2">&quot;reason_count&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    <span class="s2">&quot;actionable_type&quot;</span><span class="p">:</span> <span class="s2">&quot;policy&quot;</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    <span class="s2">&quot;actionable_type&quot;</span><span class="p">:</span> <span class="s2">&quot;market&quot;</span>
 </span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="p">}</span>
 </span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="p">)</span>
 </span></code></pre></div>
@@ -2557,21 +2662,21 @@
 <tr>
 <td><code>outcome_label</code></td>
 <td><code>str</code></td>
-<td>Referral, Decline, Approved, or Unknown</td>
+<td>Refer to Underwriter, Decline, Approved, or Unknown</td>
 </tr>
 <tr>
 <td><code>primary_reason</code></td>
-<td><code>dict</code></td>
-<td>Most significant reason details</td>
+<td><code>ExtractedReason</code></td>
+<td>Most significant reason (<code>reason_text</code>, <code>category</code>, <code>reasoning</code>)</td>
 </tr>
 <tr>
 <td><code>primary_category</code></td>
-<td><code>str</code></td>
-<td>Category of primary reason</td>
+<td><code>ReasonCategory</code></td>
+<td>Category enum of the primary reason</td>
 </tr>
 <tr>
 <td><code>all_reasons</code></td>
-<td><code>List</code></td>
+<td><code>List[ExtractedReason]</code></td>
 <td>All extracted reasons</td>
 </tr>
 <tr>
@@ -2582,20 +2687,21 @@
 <tr>
 <td><code>actionable_type</code></td>
 <td><code>str</code></td>
-<td>market, system, or policy</td>
+<td>market, system, policy, or unknown</td>
 </tr>
 </tbody>
 </table>
 </details>
 <hr />
 <h2 id="example-scenarios">Example Scenarios<a class="headerlink" href="#example-scenarios" title="Permanent link">&para;</a></h2>
-<details>
-<summary><strong>📊 Scenario 1: Single Clear Reason</strong></summary>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Single Reason</label><label for="__tabbed_4_2">Multiple Reasons</label><label for="__tabbed_4_3">Approval (N/A)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
 <div class="admonition info">
-<p class="admonition-title">Claims History</p>
+<p class="admonition-title">Property Condition</p>
 <p><strong>Recommendation:</strong></p>
 <blockquote>
-<p>"Decline - applicant has 3 claims in the past 2 years."</p>
+<p>"Refer to underwriting - roof is 28 years old, exceeding 20-year threshold."</p>
 </blockquote>
 <p><strong>Analysis:</strong></p>
 <table>
@@ -2608,11 +2714,11 @@
 <tbody>
 <tr>
 <td>Outcome</td>
-<td>Decline</td>
+<td>Refer to Underwriter</td>
 </tr>
 <tr>
 <td>Primary Category</td>
-<td>Claims History</td>
+<td>Property Condition Concerns</td>
 </tr>
 <tr>
 <td>Reason Count</td>
@@ -2620,20 +2726,19 @@
 </tr>
 <tr>
 <td>Actionable Type</td>
-<td>policy</td>
+<td>market</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Explanation:</strong> <code>"Claims History"</code></p>
+<p><strong>Explanation:</strong> <code>"Property Condition Concerns"</code></p>
 </div>
-</details>
-<details>
-<summary><strong>📊 Scenario 2: Multiple Reasons</strong></summary>
+</div>
+<div class="tabbed-block">
 <div class="admonition info">
 <p class="admonition-title">Multiple Factors</p>
 <p><strong>Recommendation:</strong></p>
 <blockquote>
-<p>"Refer - new business (2024), high BPP ($350k), and 25 employees."</p>
+<p>"Refer - new business (2024), BPP limit of $3.5M appears excessive for $800k sales, and year built conflicts between customer data and enrichment."</p>
 </blockquote>
 <p><strong>Analysis:</strong></p>
 <table>
@@ -2646,11 +2751,11 @@
 <tbody>
 <tr>
 <td>Outcome</td>
-<td>Referral</td>
+<td>Refer to Underwriter</td>
 </tr>
 <tr>
 <td>Primary Category</td>
-<td>New Business</td>
+<td>Excessive Coverage Requested</td>
 </tr>
 <tr>
 <td>Reason Count</td>
@@ -2658,19 +2763,18 @@
 </tr>
 <tr>
 <td>All Reasons</td>
-<td>New Business, BPP Value, Employee Count</td>
+<td>Excessive Coverage Requested, Data Conflict / Mismatch, Startup / New Venture</td>
 </tr>
 <tr>
 <td>Actionable Type</td>
-<td>system</td>
+<td>market</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Explanation:</strong> <code>"New Business"</code></p>
+<p><strong>Explanation:</strong> <code>"Excessive Coverage Requested"</code></p>
 </div>
-</details>
-<details>
-<summary><strong>📊 Scenario 3: Approval (No Analysis)</strong></summary>
+</div>
+<div class="tabbed-block">
 <div class="admonition info">
 <p class="admonition-title">Not Applicable</p>
 <p><strong>Recommendation:</strong></p>
@@ -2702,7 +2806,9 @@
 </table>
 <p><strong>Note:</strong> Analysis only runs for negative outcomes.</p>
 </div>
-</details>
+</div>
+</div>
+</div>
 <hr />
 <h2 id="actionable-types">Actionable Types<a class="headerlink" href="#actionable-types" title="Permanent link">&para;</a></h2>
 <div class="grid-container">
@@ -2792,7 +2898,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 4, 2026 21:34:04 UTC">February 4, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 23:50:31 UTC">February 10, 2026</span>
   </span>
 
     
@@ -2854,7 +2960,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2025 MGT Insurance
+      &copy; 2026 MGT Insurance
     </div>
   
   

@@ -2312,31 +2312,6 @@
 </tbody>
 </table>
 </div>
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Enforcing underwriting guidelines</li>
-<li>Tracking referral reasons</li>
-<li>Auditing decision consistency</li>
-<li>Validating rule compliance</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No structured input data</li>
-<li>Rules don't apply</li>
-<li>Evaluating reasoning quality</li>
-<li>Non-underwriting decisions</li>
-</ul>
-</div>
-
-</div>
-
-<hr />
 <details>
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64z"/></svg></span> Detection Pipeline</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3c-1.27 0-2.4.8-2.82 2H3v2h1.95L2 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3L6.05 7h3.12c.33.85.98 1.5 1.83 1.83V20H2v2h20v-2h-9V8.82c.85-.32 1.5-.97 1.82-1.82h3.13L15 14c-.47 2 1 3 3.5 3s4.06-1 3.5-3l-2.95-7H21V5h-6.17C14.4 3.8 13.27 3 12 3m0 2a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m-6.5 5.25L7 14H4zm13 0L20 14h-3z"/></svg></span> Scoring Logic</label></div>
@@ -2581,26 +2556,26 @@
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">result</span><span class="o">.</span><span class="n">signals</span>              <span class="c1"># Full diagnostic breakdown</span>
 </span></code></pre></div>
 <details>
-<summary><strong>📊 UnderwritingRulesResult Structure</strong></summary>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">UnderwritingRulesResult</span><span class="p">(</span>
+<summary><strong>📊 TriggerReport Structure</strong></summary>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">TriggerReport</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="p">{</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">&quot;is_referral&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="s2">&quot;outcome_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Referral&quot;</span><span class="p">,</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="s2">&quot;primary_trigger&quot;</span><span class="p">:</span> <span class="s2">&quot;bppValue&quot;</span><span class="p">,</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="s2">&quot;detected_events&quot;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="p">{</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>            <span class="s2">&quot;trigger&quot;</span><span class="p">:</span> <span class="s2">&quot;bppValue&quot;</span><span class="p">,</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="s2">&quot;severity&quot;</span><span class="p">:</span> <span class="s2">&quot;hard&quot;</span><span class="p">,</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>            <span class="s2">&quot;detection_method&quot;</span><span class="p">:</span> <span class="s2">&quot;structured&quot;</span><span class="p">,</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>            <span class="s2">&quot;details&quot;</span><span class="p">:</span> <span class="s2">&quot;BPP limit $300,000 exceeds $250,000 threshold&quot;</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        <span class="p">}</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="p">],</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="s2">&quot;structured_values&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>        <span class="s2">&quot;bpp_limit&quot;</span><span class="p">:</span> <span class="mi">300000</span><span class="p">,</span>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>        <span class="s2">&quot;gross_sales&quot;</span><span class="p">:</span> <span class="mi">1500000</span>
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    <span class="p">}</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;is_referral&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">&quot;active_triggers&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="p">{</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>            <span class="s2">&quot;trigger_name&quot;</span><span class="p">:</span> <span class="s2">&quot;bppValue&quot;</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>            <span class="s2">&quot;detection_method&quot;</span><span class="p">:</span> <span class="s2">&quot;regex&quot;</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>            <span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="s2">&quot;bop_bpp_limit=300000&quot;</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>            <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">1.0</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="p">}</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="p">],</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="s2">&quot;primary_referral_reason&quot;</span><span class="p">:</span> <span class="s2">&quot;bppValue&quot;</span><span class="p">,</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="s2">&quot;summary_text&quot;</span><span class="p">:</span> <span class="s2">&quot;bppValue&quot;</span><span class="p">,</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="s2">&quot;outcome_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Refer&quot;</span><span class="p">,</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="s2">&quot;trigger_count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="s2">&quot;llm_fallback_used&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    <span class="s2">&quot;min_confidence&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    <span class="s2">&quot;has_hard_trigger&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    <span class="s2">&quot;unknown_reasoning&quot;</span><span class="p">:</span> <span class="n">null</span>
 </span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="p">}</span>
 </span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="p">)</span>
 </span></code></pre></div>
@@ -2615,14 +2590,24 @@
 </thead>
 <tbody>
 <tr>
-<td><code>score</code></td>
-<td><code>float</code></td>
-<td>1.0 if consistent, 0.0 if not</td>
-</tr>
-<tr>
 <td><code>is_referral</code></td>
 <td><code>bool</code></td>
 <td>Whether outcome is referral/decline</td>
+</tr>
+<tr>
+<td><code>active_triggers</code></td>
+<td><code>List[TriggerEvent]</code></td>
+<td>Detected triggers (<code>trigger_name</code>, <code>detection_method</code>, <code>context</code>, <code>confidence</code>)</td>
+</tr>
+<tr>
+<td><code>primary_referral_reason</code></td>
+<td><code>TriggerName</code></td>
+<td>Most significant trigger (by priority)</td>
+</tr>
+<tr>
+<td><code>summary_text</code></td>
+<td><code>str</code></td>
+<td>Comma-separated trigger names</td>
 </tr>
 <tr>
 <td><code>outcome_label</code></td>
@@ -2630,27 +2615,38 @@
 <td>Normalized outcome label</td>
 </tr>
 <tr>
-<td><code>primary_trigger</code></td>
-<td><code>str</code></td>
-<td>Most significant trigger</td>
+<td><code>trigger_count</code></td>
+<td><code>int</code></td>
+<td>Number of triggers detected</td>
 </tr>
 <tr>
-<td><code>detected_events</code></td>
-<td><code>List</code></td>
-<td>All detected triggers with details</td>
+<td><code>llm_fallback_used</code></td>
+<td><code>bool</code></td>
+<td>Whether LLM classifier was invoked</td>
 </tr>
 <tr>
-<td><code>structured_values</code></td>
-<td><code>dict</code></td>
-<td>Extracted field values</td>
+<td><code>min_confidence</code></td>
+<td><code>float</code></td>
+<td>Minimum confidence across all triggers</td>
+</tr>
+<tr>
+<td><code>has_hard_trigger</code></td>
+<td><code>bool</code></td>
+<td>Whether any hard-severity trigger was detected</td>
+</tr>
+<tr>
+<td><code>unknown_reasoning</code></td>
+<td><code>str \| None</code></td>
+<td>LLM explanation when no trigger matched</td>
 </tr>
 </tbody>
 </table>
 </details>
 <hr />
 <h2 id="example-scenarios">Example Scenarios<a class="headerlink" href="#example-scenarios" title="Permanent link">&para;</a></h2>
-<details>
-<summary><strong>✅ Scenario 1: Consistent Referral (Score: 1.0)</strong></summary>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:3"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Pass (1.0) - Referral</label><label for="__tabbed_5_2">Pass (1.0) - Approval</label><label for="__tabbed_5_3">Fail (0.0)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
 <div class="admonition success">
 <p class="admonition-title">Referral Matches Triggers</p>
 <p><strong>Recommendation:</strong></p>
@@ -2685,9 +2681,8 @@
 </table>
 <p><strong>Final Score:</strong> <code>1.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M.41 13.41 6 19l1.41-1.42L1.83 12m20.41-6.42L11.66 16.17 7.5 12l-1.43 1.41L11.66 19l12-12M18 7l-1.41-1.42-6.35 6.35 1.42 1.41z"/></svg></span></p>
 </div>
-</details>
-<details>
-<summary><strong>✅ Scenario 2: Non-Refer Outcome (Score: 1.0)</strong></summary>
+</div>
+<div class="tabbed-block">
 <div class="admonition success">
 <p class="admonition-title">Skipped (Not in Scope)</p>
 <p><strong>Recommendation:</strong></p>
@@ -2722,9 +2717,8 @@
 </table>
 <p><strong>Final Score:</strong> <code>1.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M.41 13.41 6 19l1.41-1.42L1.83 12m20.41-6.42L11.66 16.17 7.5 12l-1.43 1.41L11.66 19l12-12M18 7l-1.41-1.42-6.35 6.35 1.42 1.41z"/></svg></span></p>
 </div>
-</details>
-<details>
-<summary><strong>❌ Scenario 3: Refer with No Detected Trigger (Score: 0.0)</strong></summary>
+</div>
+<div class="tabbed-block">
 <div class="admonition failure">
 <p class="admonition-title">Unknown Trigger</p>
 <p><strong>Recommendation:</strong></p>
@@ -2759,7 +2753,9 @@
 </table>
 <p><strong>Final Score:</strong> <code>0.0</code> <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span></p>
 </div>
-</details>
+</div>
+</div>
+</div>
 <hr />
 <h2 id="why-it-matters">Why It Matters<a class="headerlink" href="#why-it-matters" title="Permanent link">&para;</a></h2>
 <div class="grid-container">
@@ -2825,7 +2821,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 5, 2026 04:04:55 UTC">February 5, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 23:50:31 UTC">February 10, 2026</span>
   </span>
 
     
@@ -2887,7 +2883,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2025 MGT Insurance
+      &copy; 2026 MGT Insurance
     </div>
   
   
