@@ -44,29 +44,6 @@
     | `recommendation_confidence` | AI's confidence level |
     | `case_id` | Extracted case identifier |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Tracking recommendation patterns</li>
-<li>Building KPI dashboards</li>
-<li>Extracting case metadata</li>
-<li>Analyzing recommendation distribution</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Need acceptance tracking (use Acceptance)</li>
-<li>Need override detection (use Override)</li>
-<li>Evaluating quality</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

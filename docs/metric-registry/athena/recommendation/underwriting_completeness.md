@@ -44,32 +44,6 @@
     | **0.5** | :material-alert: Missing or weak supporting components |
     | **0.0** | :material-close: No clear decision (hard gate) |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Evaluating recommendation structure</li>
-<li>Ensuring actionable outputs</li>
-<li>Training agents on proper format</li>
-<li>Quality assurance for underwriting</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Checking factual accuracy</li>
-<li>Comparing to ground truth</li>
-<li>Evaluating informal responses</li>
-<li>Non-recommendation content</li>
-</ul>
-</div>
-
-</div>
-
----
-
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 
@@ -287,66 +261,57 @@ UnderwritingCompletenessResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: Complete Recommendation (Score: 0.95)</strong></summary>
+=== "Pass (0.95)"
 
-!!! success "All Components Present"
+    !!! success "All Components Present"
 
-    **Recommendation:**
-    > "**Approve** this application. The business has excellent financials with $2.1M annual revenue, no prior claims in 5 years, and the building is well-maintained (constructed 2019). Proceed to bind the policy immediately."
+        **Recommendation:**
+        > "**Approve** this application. The business has excellent financials with $2.1M annual revenue, no prior claims in 5 years, and the building is well-maintained (constructed 2019). Proceed to bind the policy immediately."
 
-    **Analysis:**
+        **Analysis:**
 
-    | Criterion | Score | Finding |
-    |-----------|-------|---------|
-    | Decision | 1.0 | Clear "Approve" |
-    | Rationale | 0.95 | Multiple factors explained |
-    | Evidence | 0.90 | Specific data cited |
-    | NextStep | 0.85 | Clear action |
+        | Criterion | Score | Finding |
+        |-----------|-------|---------|
+        | Decision | 1.0 | Clear "Approve" |
+        | Rationale | 0.95 | Multiple factors explained |
+        | Evidence | 0.90 | Specific data cited |
+        | NextStep | 0.85 | Clear action |
 
-    **Final Score:** `0.95` :material-check-all:
+        **Final Score:** `0.95` :material-check-all:
 
-</details>
+=== "Partial (0.65)"
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Weak Components (Score: 0.65)</strong></summary>
+    !!! warning "Missing Elements"
 
-!!! warning "Missing Elements"
+        **Recommendation:**
+        > "Approve. Good risk."
 
-    **Recommendation:**
-    > "Approve. Good risk."
+        **Analysis:**
 
-    **Analysis:**
+        | Criterion | Score | Finding |
+        |-----------|-------|---------|
+        | Decision | 1.0 | Clear "Approve" |
+        | Rationale | 0.4 | Vague "good risk" |
+        | Evidence | 0.2 | No specific data |
+        | NextStep | 0.0 | No next steps |
 
-    | Criterion | Score | Finding |
-    |-----------|-------|---------|
-    | Decision | 1.0 | Clear "Approve" |
-    | Rationale | 0.4 | Vague "good risk" |
-    | Evidence | 0.2 | No specific data |
-    | NextStep | 0.0 | No next steps |
+        **Final Score:** `0.65` :material-alert:
 
-    **Final Score:** `0.65` :material-alert:
+=== "Fail (0.0)"
 
-</details>
+    !!! failure "Hard Gate Triggered"
 
-<details markdown="1">
-<summary><strong>❌ Scenario 3: No Decision (Score: 0.0)</strong></summary>
+        **Recommendation:**
+        > "The building is 10 years old with $500k revenue. There have been 2 claims in the past 3 years."
 
-!!! failure "Hard Gate Triggered"
+        **Analysis:**
 
-    **Recommendation:**
-    > "The building is 10 years old with $500k revenue. There have been 2 claims in the past 3 years."
+        | Criterion | Score | Finding |
+        |-----------|-------|---------|
+        | Decision | 0.0 | No decision stated |
+        | Hard Gate | Triggered | Score forced to 0.0 |
 
-    **Analysis:**
-
-    | Criterion | Score | Finding |
-    |-----------|-------|---------|
-    | Decision | 0.0 | No decision stated |
-    | Hard Gate | Triggered | Score forced to 0.0 |
-
-    **Final Score:** `0.0` :material-close:
-
-</details>
+        **Final Score:** `0.0` :material-close:
 
 ---
 

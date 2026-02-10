@@ -44,32 +44,6 @@
     | **0.7** | :material-alert: Some claims not verifiable |
     | **< 0.7** | :material-close: Significant hallucination risk |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Detecting hallucinations</li>
-<li>Verifying factual accuracy</li>
-<li>Source data is available</li>
-<li>High-stakes recommendations</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No source data available</li>
-<li>Evaluating opinions/judgments</li>
-<li>Checking structural completeness</li>
-<li>Output is purely generative</li>
-</ul>
-</div>
-
-</div>
-
----
-
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 
@@ -295,90 +269,81 @@ UnderwritingFaithfulnessResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: All Claims Verified (Score: 1.0)</strong></summary>
+=== "Pass (1.0)"
 
-!!! success "Fully Faithful Recommendation"
+    !!! success "Fully Faithful Recommendation"
 
-    **Recommendation:**
-    > "Approve. Revenue is $1.5M. Building age is 8 years. Zero claims."
+        **Recommendation:**
+        > "Approve. Revenue is $1.5M. Building age is 8 years. Zero claims."
 
-    **Source Data:**
-    ```json
-    {
-        "financials": {"revenue": 1500000},
-        "property": {"building_age": 8},
-        "claims": {"count": 0}
-    }
-    ```
+        **Source Data:**
+        ```json
+        {
+            "financials": {"revenue": 1500000},
+            "property": {"building_age": 8},
+            "claims": {"count": 0}
+        }
+        ```
 
-    **Analysis:**
+        **Analysis:**
 
-    | Claim | Evidence | Status |
-    |-------|----------|--------|
-    | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
-    | Building age 8 years | `property.building_age: 8` | ✅ Supported |
-    | Zero claims | `claims.count: 0` | ✅ Supported |
+        | Claim | Evidence | Status |
+        |-------|----------|--------|
+        | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
+        | Building age 8 years | `property.building_age: 8` | ✅ Supported |
+        | Zero claims | `claims.count: 0` | ✅ Supported |
 
-    **Final Score:** `3 / 3 = 1.0` :material-check-all:
+        **Final Score:** `3 / 3 = 1.0` :material-check-all:
 
-</details>
+=== "Partial (0.67)"
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Hallucination Detected (Score: 0.67)</strong></summary>
+    !!! warning "Unsupported Claim Found"
 
-!!! warning "Unsupported Claim Found"
+        **Recommendation:**
+        > "Revenue is $1.5M. Building age is 8 years. **Premium is $1,200.**"
 
-    **Recommendation:**
-    > "Revenue is $1.5M. Building age is 8 years. **Premium is $1,200.**"
+        **Source Data:**
+        ```json
+        {
+            "financials": {"revenue": 1500000},
+            "property": {"building_age": 8}
+        }
+        ```
 
-    **Source Data:**
-    ```json
-    {
-        "financials": {"revenue": 1500000},
-        "property": {"building_age": 8}
-    }
-    ```
+        **Analysis:**
 
-    **Analysis:**
+        | Claim | Evidence | Status |
+        |-------|----------|--------|
+        | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
+        | Building age 8 years | `property.building_age: 8` | ✅ Supported |
+        | Premium $1,200 | Not found | ❌ Hallucination |
 
-    | Claim | Evidence | Status |
-    |-------|----------|--------|
-    | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
-    | Building age 8 years | `property.building_age: 8` | ✅ Supported |
-    | Premium $1,200 | Not found | ❌ Hallucination |
+        **Final Score:** `2 / 3 = 0.67` :material-alert:
 
-    **Final Score:** `2 / 3 = 0.67` :material-alert:
+=== "Fail (0.0)"
 
-</details>
+    !!! failure "Multiple Unsupported Claims"
 
-<details markdown="1">
-<summary><strong>❌ Scenario 3: Significant Hallucinations (Score: 0.25)</strong></summary>
+        **Recommendation:**
+        > "Revenue is $5M. Building is brand new. Located in a low-risk zone. Premium is competitive."
 
-!!! failure "Multiple Unsupported Claims"
+        **Source Data:**
+        ```json
+        {
+            "financials": {"revenue": 1000000}
+        }
+        ```
 
-    **Recommendation:**
-    > "Revenue is $5M. Building is brand new. Located in a low-risk zone. Premium is competitive."
+        **Analysis:**
 
-    **Source Data:**
-    ```json
-    {
-        "financials": {"revenue": 1000000}
-    }
-    ```
+        | Claim | Evidence | Status |
+        |-------|----------|--------|
+        | Revenue $5M | Contradicts source ($1M) | ❌ False |
+        | Building brand new | Not found | ❌ Hallucination |
+        | Low-risk zone | Not found | ❌ Hallucination |
+        | Competitive premium | Not found | ❌ Hallucination |
 
-    **Analysis:**
-
-    | Claim | Evidence | Status |
-    |-------|----------|--------|
-    | Revenue $5M | Contradicts source ($1M) | ❌ False |
-    | Building brand new | Not found | ❌ Hallucination |
-    | Low-risk zone | Not found | ❌ Hallucination |
-    | Competitive premium | Not found | ❌ Hallucination |
-
-    **Final Score:** `0 / 4 = 0.0` :material-close:
-
-</details>
+        **Final Score:** `0 / 4 = 0.0` :material-close:
 
 ---
 

@@ -43,29 +43,6 @@
     | **0.5** | :material-alert: Possible escalation |
     | **0.0** | :material-close: No escalation |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Tracking escalation rates</li>
-<li>Identifying AI limitations</li>
-<li>Measuring automation success</li>
-<li>Understanding escalation patterns</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No human participants possible</li>
-<li>All threads are human-handled</li>
-<li>Need detailed intervention type (use Intervention)</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

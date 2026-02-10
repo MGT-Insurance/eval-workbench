@@ -43,29 +43,6 @@
     | **0.4-0.6** | :material-alert: Mild frustration |
     | **0.7-1.0** | :material-close: High frustration |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Monitoring user experience</li>
-<li>Detecting problematic interactions</li>
-<li>Building frustration KPIs</li>
-<li>Alerting on high frustration</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No human messages in thread</li>
-<li>Need broader sentiment (use Sentiment)</li>
-<li>Analyzing AI-only responses</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

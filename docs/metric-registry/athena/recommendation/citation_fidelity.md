@@ -44,30 +44,6 @@
     | **0.5** | :material-alert: Half the citations are invalid |
     | **< 0.5** | :material-close: Many paths don't resolve |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Citations use JSON path format</li>
-<li>You need to verify data accuracy</li>
-<li>Checking that cited values match the text</li>
-<li>Validating structured data references</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Citations use numeric format (use Citation Accuracy)</li>
-<li>No JSON data available</li>
-<li>Output doesn't contain bracket citations</li>
-<li>Free-form references without paths</li>
-</ul>
-</div>
-
-</div>
-
 !!! tip "See Also: Citation Accuracy"
     **Citation Fidelity** validates path citations like `[quote.field]` against JSON.
     **[Citation Accuracy](./citation_accuracy.md)** validates numeric citations like `[1]` against reference lists.
@@ -270,58 +246,52 @@ CitationFidelityResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: All Paths Resolve (Score: 1.0)</strong></summary>
+=== "Pass (1.0)"
 
-!!! success "Valid JSON Path Citations"
+    !!! success "Valid JSON Path Citations"
 
-    **Output:**
-    > "Building age is 15 years [property.building_age]. Revenue: $2.5M [financials.revenue]."
+        **Output:**
+        > "Building age is 15 years [property.building_age]. Revenue: $2.5M [financials.revenue]."
 
-    **Expected Output (JSON):**
-    ```json
-    {
-        "property": {"building_age": 15},
-        "financials": {"revenue": 2500000}
-    }
-    ```
+        **Expected Output (JSON):**
+        ```json
+        {
+            "property": {"building_age": 15},
+            "financials": {"revenue": 2500000}
+        }
+        ```
 
-    **Analysis:**
+        **Analysis:**
 
-    | Citation | Path | Resolved Value | Status |
-    |----------|------|----------------|--------|
-    | `[property.building_age]` | `property.building_age` | `15` | ✅ Valid |
-    | `[financials.revenue]` | `financials.revenue` | `2500000` | ✅ Valid |
+        | Citation | Path | Resolved Value | Status |
+        |----------|------|----------------|--------|
+        | `[property.building_age]` | `property.building_age` | `15` | ✅ Valid |
+        | `[financials.revenue]` | `financials.revenue` | `2500000` | ✅ Valid |
 
-    **Final Score:** `2 / 2 = 1.0` :material-check-all:
+        **Final Score:** `2 / 2 = 1.0` :material-check-all:
 
-</details>
+=== "Partial (0.5)"
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Invalid Path (Score: 0.5)</strong></summary>
+    !!! warning "Some Paths Don't Resolve"
 
-!!! warning "Some Paths Don't Resolve"
+        **Output:**
+        > "Premium is $1,200 [quote.premium]. Deductible: $500 [quote.deductible]."
 
-    **Output:**
-    > "Premium is $1,200 [quote.premium]. Deductible: $500 [quote.deductible]."
+        **Expected Output (JSON):**
+        ```json
+        {
+            "quote": {"premium": 1200}
+        }
+        ```
 
-    **Expected Output (JSON):**
-    ```json
-    {
-        "quote": {"premium": 1200}
-    }
-    ```
+        **Analysis:**
 
-    **Analysis:**
+        | Citation | Path | Resolved Value | Status |
+        |----------|------|----------------|--------|
+        | `[quote.premium]` | `quote.premium` | `1200` | ✅ Valid |
+        | `[quote.deductible]` | `quote.deductible` | Not found | ❌ Invalid |
 
-    | Citation | Path | Resolved Value | Status |
-    |----------|------|----------------|--------|
-    | `[quote.premium]` | `quote.premium` | `1200` | ✅ Valid |
-    | `[quote.deductible]` | `quote.deductible` | Not found | ❌ Invalid |
-
-    **Final Score:** `1 / 2 = 0.5` :material-alert:
-
-</details>
+        **Final Score:** `1 / 2 = 0.5` :material-alert:
 
 ---
 

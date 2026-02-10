@@ -44,32 +44,6 @@
     | **0.5** | :material-alert: Decision match but reasoning gaps |
     | **0.0** | :material-close: Wrong decision (hard fail enabled) |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Comparing AI to human decisions</li>
-<li>Both decision and reasoning matter</li>
-<li>Evaluating underwriting recommendations</li>
-<li>Training data has human annotations</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No ground truth decision available</li>
-<li>Only measuring completeness</li>
-<li>Decisions are always exploratory</li>
-<li>No reasoning comparison needed</li>
-</ul>
-</div>
-
-</div>
-
----
-
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 
@@ -269,71 +243,62 @@ DecisionQualityResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: Perfect Match (Score: 1.0)</strong></summary>
+=== "Pass (1.0)"
 
-!!! success "Decision + Reasoning Aligned"
+    !!! success "Decision + Reasoning Aligned"
 
-    **Human Decision:**
-    > "Decline - prior claims history and high BPP value are concerns."
+        **Human Decision:**
+        > "Decline - prior claims history and high BPP value are concerns."
 
-    **AI Recommendation:**
-    > "Recommend Decline. The applicant has prior claims on record and the BPP coverage requested exceeds typical thresholds."
+        **AI Recommendation:**
+        > "Recommend Decline. The applicant has prior claims on record and the BPP coverage requested exceeds typical thresholds."
 
-    **Analysis:**
+        **Analysis:**
 
-    | Component | Score | Details |
-    |-----------|-------|---------|
-    | Decision Match | 1.0 | Both: Decline |
-    | Reasoning Coverage | 1.0 | All factors mentioned |
+        | Component | Score | Details |
+        |-----------|-------|---------|
+        | Decision Match | 1.0 | Both: Decline |
+        | Reasoning Coverage | 1.0 | All factors mentioned |
 
-    **Final Score:** `(0.6 × 1.0) + (0.4 × 1.0) = 1.0` :material-check-all:
+        **Final Score:** `(0.6 × 1.0) + (0.4 × 1.0) = 1.0` :material-check-all:
 
-</details>
+=== "Partial (0.73)"
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Decision Match, Incomplete Reasoning (Score: 0.7)</strong></summary>
+    !!! warning "Correct Decision, Missing Factors"
 
-!!! warning "Correct Decision, Missing Factors"
+        **Human Decision:**
+        > "Approve - good claims history, reasonable BPP, building in good condition."
 
-    **Human Decision:**
-    > "Approve - good claims history, reasonable BPP, building in good condition."
+        **AI Recommendation:**
+        > "Recommend Approve based on clean claims history."
 
-    **AI Recommendation:**
-    > "Recommend Approve based on clean claims history."
+        **Analysis:**
 
-    **Analysis:**
+        | Component | Score | Details |
+        |-----------|-------|---------|
+        | Decision Match | 1.0 | Both: Approve |
+        | Reasoning Coverage | 0.33 | Only 1 of 3 factors mentioned |
 
-    | Component | Score | Details |
-    |-----------|-------|---------|
-    | Decision Match | 1.0 | Both: Approve |
-    | Reasoning Coverage | 0.33 | Only 1 of 3 factors mentioned |
+        **Final Score:** `(0.6 × 1.0) + (0.4 × 0.33) = 0.73` :material-alert:
 
-    **Final Score:** `(0.6 × 1.0) + (0.4 × 0.33) = 0.73` :material-alert:
+=== "Fail (0.0)"
 
-</details>
+    !!! failure "Wrong Decision (Hard Fail)"
 
-<details markdown="1">
-<summary><strong>❌ Scenario 3: Decision Mismatch (Score: 0.0)</strong></summary>
+        **Human Decision:**
+        > "Decline - too many risk factors."
 
-!!! failure "Wrong Decision (Hard Fail)"
+        **AI Recommendation:**
+        > "Recommend Approve based on revenue metrics."
 
-    **Human Decision:**
-    > "Decline - too many risk factors."
+        **Analysis:**
 
-    **AI Recommendation:**
-    > "Recommend Approve based on revenue metrics."
+        | Component | Score | Details |
+        |-----------|-------|---------|
+        | Decision Match | 0.0 | Human: Decline, AI: Approve |
+        | Hard Fail | Triggered | Score forced to 0.0 |
 
-    **Analysis:**
-
-    | Component | Score | Details |
-    |-----------|-------|---------|
-    | Decision Match | 0.0 | Human: Decline, AI: Approve |
-    | Hard Fail | Triggered | Score forced to 0.0 |
-
-    **Final Score:** `0.0` :material-close:
-
-</details>
+        **Final Score:** `0.0` :material-close:
 
 ---
 

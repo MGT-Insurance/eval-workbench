@@ -44,29 +44,6 @@
     | **hard** | Correction or significant change |
     | **authority** | Approval or authorization required |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Measuring STP rates</li>
-<li>Categorizing intervention types</li>
-<li>Identifying friction points</li>
-<li>Understanding human involvement</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Only need escalation detection (use Escalation)</li>
-<li>Measuring sentiment</li>
-<li>All threads require human input</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

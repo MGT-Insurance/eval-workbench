@@ -44,29 +44,6 @@
     | `is_interactive` | Whether the thread has back-and-forth |
     | `is_ai_initiated` | Whether AI started the thread |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Building KPI dashboards</li>
-<li>Counting interactions</li>
-<li>Identifying interactive vs. one-way threads</li>
-<li>Extracting thread metadata</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Need engagement depth (use Engagement)</li>
-<li>Need quality analysis</li>
-<li>Need sentiment analysis</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

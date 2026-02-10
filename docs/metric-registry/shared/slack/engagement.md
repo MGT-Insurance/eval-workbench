@@ -44,29 +44,6 @@
     | `mention_count` | @mentions in the thread |
     | `unique_participants` | Distinct users involved |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Measuring conversation depth</li>
-<li>Identifying highly interactive threads</li>
-<li>Tracking participation patterns</li>
-<li>Building engagement KPIs</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Need quality assessment</li>
-<li>Single-message threads</li>
-<li>Measuring sentiment</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

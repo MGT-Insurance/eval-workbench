@@ -43,32 +43,6 @@
     | `all_reasons` | Complete list of extracted reasons |
     | `actionable_type` | Classification: market, system, or policy |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Understanding referral patterns</li>
-<li>Building analytics dashboards</li>
-<li>Categorizing decline reasons</li>
-<li>Training data analysis</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Evaluating quality (use Decision Quality)</li>
-<li>Checking rule compliance (use Underwriting Rules)</li>
-<li>Approval outcomes</li>
-<li>Scoring is required</li>
-</ul>
-</div>
-
-</div>
-
----
-
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 
@@ -288,68 +262,59 @@ ReferReasonResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>📊 Scenario 1: Single Clear Reason</strong></summary>
+=== "Single Reason"
 
-!!! info "Claims History"
+    !!! info "Claims History"
 
-    **Recommendation:**
-    > "Decline - applicant has 3 claims in the past 2 years."
+        **Recommendation:**
+        > "Decline - applicant has 3 claims in the past 2 years."
 
-    **Analysis:**
+        **Analysis:**
 
-    | Field | Value |
-    |-------|-------|
-    | Outcome | Decline |
-    | Primary Category | Claims History |
-    | Reason Count | 1 |
-    | Actionable Type | policy |
+        | Field | Value |
+        |-------|-------|
+        | Outcome | Decline |
+        | Primary Category | Claims History |
+        | Reason Count | 1 |
+        | Actionable Type | policy |
 
-    **Explanation:** `"Claims History"`
+        **Explanation:** `"Claims History"`
 
-</details>
+=== "Multiple Reasons"
 
-<details markdown="1">
-<summary><strong>📊 Scenario 2: Multiple Reasons</strong></summary>
+    !!! info "Multiple Factors"
 
-!!! info "Multiple Factors"
+        **Recommendation:**
+        > "Refer - new business (2024), high BPP ($350k), and 25 employees."
 
-    **Recommendation:**
-    > "Refer - new business (2024), high BPP ($350k), and 25 employees."
+        **Analysis:**
 
-    **Analysis:**
+        | Field | Value |
+        |-------|-------|
+        | Outcome | Referral |
+        | Primary Category | New Business |
+        | Reason Count | 3 |
+        | All Reasons | New Business, BPP Value, Employee Count |
+        | Actionable Type | system |
 
-    | Field | Value |
-    |-------|-------|
-    | Outcome | Referral |
-    | Primary Category | New Business |
-    | Reason Count | 3 |
-    | All Reasons | New Business, BPP Value, Employee Count |
-    | Actionable Type | system |
+        **Explanation:** `"New Business"`
 
-    **Explanation:** `"New Business"`
+=== "Approval (N/A)"
 
-</details>
+    !!! info "Not Applicable"
 
-<details markdown="1">
-<summary><strong>📊 Scenario 3: Approval (No Analysis)</strong></summary>
+        **Recommendation:**
+        > "Approve - all criteria within guidelines."
 
-!!! info "Not Applicable"
+        **Analysis:**
 
-    **Recommendation:**
-    > "Approve - all criteria within guidelines."
+        | Field | Value |
+        |-------|-------|
+        | Outcome | Approved |
+        | Primary Category | None |
+        | Reason Count | 0 |
 
-    **Analysis:**
-
-    | Field | Value |
-    |-------|-------|
-    | Outcome | Approved |
-    | Primary Category | None |
-    | Reason Count | 0 |
-
-    **Note:** Analysis only runs for negative outcomes.
-
-</details>
+        **Note:** Analysis only runs for negative outcomes.
 
 ---
 

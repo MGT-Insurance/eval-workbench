@@ -43,29 +43,6 @@
     | **0.5** | :material-alert: Possible override |
     | **0.0** | :material-close: No override |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Tracking override rates</li>
-<li>Understanding AI vs. human decisions</li>
-<li>Identifying improvement areas</li>
-<li>Building override KPIs</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No AI recommendation present</li>
-<li>Need acceptance tracking (use Acceptance)</li>
-<li>Measuring general intervention (use Intervention)</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

@@ -43,29 +43,6 @@
     | **0.4-0.7** | :material-alert: Neutral sentiment |
     | **0.0-0.4** | :material-close: Frustrated/negative |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Monitoring overall user experience</li>
-<li>Tracking satisfaction trends</li>
-<li>Building sentiment KPIs</li>
-<li>Identifying problematic interactions</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No human messages present</li>
-<li>Need specific frustration (use Frustration)</li>
-<li>AI-only threads</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Configuration

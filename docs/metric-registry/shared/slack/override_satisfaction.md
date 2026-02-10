@@ -43,29 +43,6 @@
     | **0.5-0.7** | :material-alert: Adequate explanation |
     | **< 0.5** | :material-close: Poor or missing explanation |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Ensuring overrides are documented</li>
-<li>Building audit trails</li>
-<li>Improving override quality</li>
-<li>Compliance requirements</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No override present</li>
-<li>Only detecting overrides (use Override)</li>
-<li>Documentation not required</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Configuration
