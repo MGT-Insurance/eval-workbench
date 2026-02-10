@@ -1,22 +1,235 @@
 from __future__ import annotations
 
+import json
 import logging
 from collections import defaultdict
-from typing import Any, Protocol, TypeGuard
+from typing import Any, Literal, Protocol, TypeGuard
 
 from eval_workbench.shared.memory.analytics import BaseGraphAnalytics
 from eval_workbench.shared.memory.store import BaseGraphStore, GraphSearchResult
 
 logger = logging.getLogger(__name__)
 
+# NOTE: This module intentionally supports notebook-friendly display helpers.
+
+_PrettyFormat = Literal['text', 'markdown']
+_PrettyTraceStyle = Literal['ascii', 'bullets']
+
+
+class PrettyList(list):
+    """A list that renders nicely in notebooks/repls.
+
+    Behaves like a normal list for programmatic use, but when displayed it shows
+    a human-friendly representation.
+    """
+
+    def __init__(
+        self,
+        items: list[Any],
+        *,
+        pretty_text: str,
+        pretty_markdown: str | None = None,
+    ) -> None:
+        super().__init__(items)
+        self.pretty_text = pretty_text
+        self.pretty_markdown = pretty_markdown
+
+    def __repr__(self) -> str:  # pragma: no cover (display-only)
+        return self.pretty_text
+
+    def __str__(self) -> str:  # pragma: no cover (display-only)
+        return self.pretty_text
+
+    def _repr_markdown_(self) -> str:  # pragma: no cover (display-only)
+        if self.pretty_markdown is not None:
+            return self.pretty_markdown
+        return f'```text\n{self.pretty_text}\n```'
+
+
+class PrettyDict(dict):
+    """A dict that renders nicely in notebooks/repls."""
+
+    def __init__(
+        self,
+        data: dict[str, Any],
+        *,
+        pretty_text: str,
+        pretty_markdown: str | None = None,
+    ) -> None:
+        super().__init__(data)
+        self.pretty_text = pretty_text
+        self.pretty_markdown = pretty_markdown
+
+    def __repr__(self) -> str:  # pragma: no cover (display-only)
+        return self.pretty_text
+
+    def __str__(self) -> str:  # pragma: no cover (display-only)
+        return self.pretty_text
+
+    def _repr_markdown_(self) -> str:  # pragma: no cover (display-only)
+        if self.pretty_markdown is not None:
+            return self.pretty_markdown
+        return f'```text\n{self.pretty_text}\n```'
+
+
+def _json_pretty(value: Any) -> tuple[str, str]:
+    text = json.dumps(value, indent=2, default=str)
+    md = f'```json\n{text}\n```'
+    return text, md
+
+
+def _format_compact_props(props: dict[str, Any] | None, *, drop: set[str] | None = None) -> str:
+    """Format a dict as compact `k=v` pairs, stable key order."""
+    if not props:
+        return ''
+    drop = drop or set()
+    parts: list[str] = []
+    for k in sorted(props.keys()):
+        if k in drop:
+            continue
+        v = props.get(k)
+        if v is None or v == '':
+            continue
+        if isinstance(v, (dict, list)):
+            v_str = json.dumps(v, separators=(',', ':'), default=str)
+        else:
+            v_str = str(v)
+        parts.append(f'{k}={v_str}')
+    return ', '.join(parts)
+
+
+def _wrap_pretty_list(
+    items: list[Any],
+    *,
+    pretty: bool,
+    pretty_format: _PrettyFormat,
+    pretty_text: str,
+    pretty_markdown: str | None = None,
+) -> list[Any]:
+    if not pretty:
+        return items
+    if pretty_format == 'text':
+        return PrettyList(items, pretty_text=pretty_text)
+    return PrettyList(items, pretty_text=pretty_text, pretty_markdown=pretty_markdown)
+
+
+def _wrap_pretty_dict(
+    data: dict[str, Any],
+    *,
+    pretty: bool,
+    pretty_format: _PrettyFormat,
+    pretty_text: str,
+    pretty_markdown: str | None = None,
+) -> dict[str, Any]:
+    if not pretty:
+        return data
+    if pretty_format == 'text':
+        return PrettyDict(data, pretty_text=pretty_text)
+    return PrettyDict(data, pretty_text=pretty_text, pretty_markdown=pretty_markdown)
+
+
+def _render_trace_ascii(paths: list[dict], *, title: str) -> str:
+    """Render trace paths as a clean monospace flow/tree diagram.
+
+    Uses box-drawing characters for readability in notebooks.
+    """
+
+    def _pick_meta(trig: dict[str, Any]) -> str:
+        # Show the most useful keys first (and avoid UUID noise).
+        wanted = [
+            'condition',
+            'product_type',
+            'threshold_type',
+            'confidence',
+            'decision_quality',
+            'action',
+        ]
+        parts: list[str] = []
+        for k in wanted:
+            v = trig.get(k)
+            if v is None or v == '':
+                continue
+            if k == 'condition':
+                parts.append(f'condition="{v}"')
+            else:
+                parts.append(f'{k}={v}')
+
+        # If none of the expected keys exist, fall back to compact props.
+        if not parts:
+            fallback = _format_compact_props(trig, drop={'uuid'})
+            if fallback:
+                return fallback
+            return ''
+
+        return ', '.join(parts)
+
+    lines: list[str] = [title, '']
+
+    for idx, p in enumerate(paths, start=1):
+        risk = str(p.get('risk_factor', '') or '')
+        rule = str(p.get('rule', '') or '')
+        trig = p.get('trigger_properties') or {}
+
+        meta = _pick_meta(trig if isinstance(trig, dict) else {})
+
+        outcomes = [
+            o.get('outcome')
+            for o in (p.get('outcomes') or [])
+            if isinstance(o, dict) and o.get('outcome')
+        ]
+        mitigants = [m for m in (p.get('mitigants') or []) if m]
+
+        lines.append(f'{idx}. [RiskFactor] {risk}')
+        if meta:
+            lines.append(f'   └─ TRIGGERS ({meta})')
+        else:
+            lines.append('   └─ TRIGGERS')
+        lines.append(f'      └─ [Rule] {rule}')
+
+        # Branches off the rule node
+        branches: list[tuple[str, list[str]]] = []
+        if mitigants:
+            branches.append(('OVERRIDES', [', '.join(str(m) for m in mitigants)]))
+        if outcomes:
+            branches.append(('RESULTS_IN', [str(o) for o in outcomes]))
+        else:
+            branches.append(('RESULTS_IN', ['(none)']))
+
+        for b_i, (label, vals) in enumerate(branches):
+            is_last_branch = b_i == len(branches) - 1
+            stem = '      └─' if is_last_branch else '      ├─'
+            cont = '         ' if is_last_branch else '      │  '
+
+            if len(vals) == 1:
+                lines.append(f'{stem} {label}: {vals[0]}')
+            else:
+                lines.append(f'{stem} {label}:')
+                for v_i, v in enumerate(vals):
+                    v_stem = '         └─' if v_i == len(vals) - 1 else '         ├─'
+                    lines.append(f'{cont}{v_stem} {v}')
+
+        lines.append('')
+
+    return '\n'.join(lines).rstrip()
+
+
 
 class _CypherStore(Protocol):
     def cypher(self, query: str, params: dict | None = None) -> Any: ...
 
 
+class _SearchStore(Protocol):
+    def search(self, query: str, *, limit: int = 10, scope: str | None = None) -> Any: ...
+
+
 def _has_cypher(store: BaseGraphStore) -> TypeGuard[_CypherStore]:
     """Check if the store supports direct Cypher queries (FalkorDB)."""
     return hasattr(store, 'cypher') and callable(getattr(store, 'cypher', None))
+
+
+def _has_search(store: Any) -> TypeGuard[_SearchStore]:
+    """Type guard to satisfy static checking for BaseGraphStore.search()."""
+    return hasattr(store, 'search') and callable(getattr(store, 'search', None))
 
 
 class AthenaGraphAnalytics(BaseGraphAnalytics):
@@ -28,7 +241,13 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
     """
 
     def query(
-        self, input: str, *, product_type: str | None = None, **kwargs
+        self,
+        input: str,
+        *,
+        product_type: str | None = None,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+        **kwargs,
     ) -> list[dict]:
         """Search for underwriting rules triggered by a risk factor.
 
@@ -39,27 +258,71 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         product_type:
             Optional product type filter (e.g. "LRO", "BOP").
         """
+        # Zep benefits from "query expansion" (semantic retrieval); Falkor's
+        # substring name matching does not. If we append product_type when
+        # using Falkor, we often get zero matches because node names don't
+        # include things like "LRO"/"BOP".
         search_query = input
-        if product_type:
+        if product_type and not _has_cypher(self.store):
             search_query = f'{input} {product_type}'
 
         limit = kwargs.get('limit', 10)
+        if not _has_search(self.store):
+            raise TypeError('Configured graph store does not implement search()')
         result = self.store.search(search_query, limit=limit)
-        return self._parse_triggers(result, input, product_type)
+        items = self._parse_triggers(result, input, product_type)
+        if not pretty:
+            return items
+
+        title = f'Query: {input}' + (
+            f' (product_type={product_type})' if product_type else ''
+        )
+        text_lines = [title]
+        md_lines = [f'**{title}**']
+        for e in items:
+            props = e.get('properties') or {}
+            props_str = _format_compact_props(props, drop={'uuid', 'fact'})
+            line = f"- {e.get('source','')} --{e.get('relation','')}--> {e.get('target','')}"
+            if props_str:
+                line += f" ({props_str})"
+            text_lines.append(line)
+            md_lines.append(line)
+
+        pretty_text = '\n'.join(text_lines)
+        pretty_md = '\n'.join(md_lines)
+        return _wrap_pretty_list(
+            items,
+            pretty=pretty,
+            pretty_format=pretty_format,
+            pretty_text=pretty_text,
+            pretty_markdown=pretty_md,
+        )
 
     def trace(
-        self, input: str, *, product_type: str | None = None, **kwargs
+        self,
+        input: str,
+        *,
+        product_type: str | None = None,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+        pretty_style: _PrettyTraceStyle = 'ascii',
+        **kwargs,
     ) -> list[dict]:
         """Trace the full decision path for a risk factor.
 
         Returns a structured list showing RiskFactor -> Rule -> Outcome
         with any applicable mitigants.
         """
+        # See note in query(): only expand the query for stores that rely on
+        # semantic retrieval (e.g. Zep). Falkor name-matching breaks if we
+        # append product_type tokens.
         search_query = input
-        if product_type:
+        if product_type and not _has_cypher(self.store):
             search_query = f'{input} {product_type}'
 
         limit = kwargs.get('limit', 25)
+        if not _has_search(self.store):
+            raise TypeError('Configured graph store does not implement search()')
         result = self.store.search(search_query, limit=limit)
 
         if result.is_empty:
@@ -92,11 +355,24 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             rule_mitigants.setdefault(edge.target_node_uuid, []).append(mitigant_name)
 
         # Assemble full paths
+        wanted_product = product_type.lower() if product_type else None
+
         for edge in triggers:
             source = node_map.get(edge.source_node_uuid)
             target = node_map.get(edge.target_node_uuid)
             risk_name = source.name if source else edge.source_node_uuid
             rule_name = target.name if target else edge.target_node_uuid
+
+            # Filter by product type at the trigger edge level.
+            # In this graph, product applicability is attached to the TRIGGERS
+            # edge (and sometimes also duplicated on the Rule node).
+            if wanted_product:
+                trigger_prod = edge.properties.get('product_type') or (
+                    target.properties.get('product_type') if target else ''
+                )
+                trigger_prod_norm = str(trigger_prod or '').lower()
+                if trigger_prod_norm and trigger_prod_norm not in ('all', wanted_product):
+                    continue
 
             path = {
                 'risk_factor': risk_name,
@@ -107,7 +383,60 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             }
             paths.append(path)
 
-        return paths
+        if not pretty:
+            return paths
+
+        title = f'Trace: {input}' + (
+            f' (product_type={product_type})' if product_type else ''
+        )
+
+        if pretty_style == 'ascii':
+            ascii_text = _render_trace_ascii(paths, title=title)
+            # For markdown display, render as a code block to preserve alignment.
+            ascii_md = f'```text\n{ascii_text}\n```'
+            return _wrap_pretty_list(
+                paths,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=ascii_text,
+                pretty_markdown=ascii_md,
+            )
+
+        text_lines: list[str] = [title]
+        md_lines: list[str] = [f'**{title}**']
+
+        for i, p in enumerate(paths, start=1):
+            trig = p.get('trigger_properties') or {}
+            trig_str = _format_compact_props(
+                trig,
+                drop={'uuid'},
+            )
+            outcomes = [o.get('outcome') for o in (p.get('outcomes') or []) if o.get('outcome')]
+            mitigants = p.get('mitigants') or []
+
+            text_lines.append(f'{i}. Risk: {p.get("risk_factor","")}')
+            text_lines.append(f'   Rule: {p.get("rule","")}' + (f' ({trig_str})' if trig_str else ''))
+            if outcomes:
+                text_lines.append(f'   Outcome(s): {", ".join(outcomes)}')
+            if mitigants:
+                text_lines.append(f'   Mitigant(s): {", ".join(mitigants)}')
+
+            md_lines.append(f'{i}. **Risk**: {p.get("risk_factor","")}')
+            md_lines.append(f'   - **Rule**: {p.get("rule","")}' + (f' ({trig_str})' if trig_str else ''))
+            if outcomes:
+                md_lines.append(f'   - **Outcome(s)**: {", ".join(outcomes)}')
+            if mitigants:
+                md_lines.append(f'   - **Mitigant(s)**: {", ".join(mitigants)}')
+
+        pretty_text = '\n'.join(text_lines)
+        pretty_md = '\n'.join(md_lines)
+        return _wrap_pretty_list(
+            paths,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=pretty_text,
+            pretty_markdown=pretty_md,
+        )
 
     def export(self, **kwargs) -> list[dict]:
         """Export all knowledge from the graph as structured dicts."""
@@ -116,7 +445,19 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         if result.is_empty:
             return []
 
-        return self._parse_triggers(result, query='*', product_type=None)
+        items = self._parse_triggers(result, query='*', product_type=None)
+        pretty = bool(kwargs.get('pretty', False))
+        pretty_format: _PrettyFormat = kwargs.get('pretty_format', 'markdown')
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
     def check_risk_appetite(
         self,
@@ -128,7 +469,14 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         """Domain alias for ``query()``."""
         return self.query(risk_factor, product_type=product_type, **kwargs)
 
-    def get_rule(self, rule_name: str, *, limit: int = 25) -> dict | None:
+    def get_rule(
+        self,
+        rule_name: str,
+        *,
+        limit: int = 25,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> dict | None:
         """Look up a specific rule and all its connected edges.
 
         Returns a dict with the rule name, its trigger (risk factor),
@@ -185,7 +533,7 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 target = node_map.get(edge.target_node_uuid)
                 sources.append(target.name if target else edge.target_node_uuid)
 
-        return {
+        data = {
             'rule_name': rule_name,
             'risk_factor': risk_factor,
             'trigger_properties': trigger_props,
@@ -193,6 +541,16 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             'mitigants': mitigants,
             'sources': sources,
         }
+        if not pretty:
+            return data
+        text, md = _json_pretty(data)
+        return _wrap_pretty_dict(
+            data,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
     def _build_rule_index(self, result: GraphSearchResult) -> list[dict]:
         """Build a deduplicated list of rules from any search result.
@@ -265,7 +623,13 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
         return list(rule_info.values())
 
-    def list_all_rules(self, *, limit: int = 500) -> list[dict]:
+    def list_all_rules(
+        self,
+        *,
+        limit: int = 500,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[dict]:
         """Return every rule in the graph with its action and product type."""
         if _has_cypher(self.store):
             res = self.store.cypher(
@@ -275,7 +639,7 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 'r.threshold_type AS threshold_type '
                 f'LIMIT {limit}'
             )
-            return [
+            items = [
                 {
                     'risk_factor': row[0] or '',
                     'rule_name': row[1] or '',
@@ -285,11 +649,38 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 }
                 for row in res.result_set
             ]
+            if not pretty:
+                return items
+            text, md = _json_pretty(items)
+            return _wrap_pretty_list(
+                items,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         result = self.store.search('*', limit=limit)
-        return self._build_rule_index(result)
+        items = self._build_rule_index(result)
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def rules_by_action(self, action: str, *, limit: int = 500) -> list[dict]:
+    def rules_by_action(
+        self,
+        action: str,
+        *,
+        limit: int = 500,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[dict]:
         """Return all rules matching a given action (e.g. 'decline', 'refer')."""
         if _has_cypher(self.store):
             from eval_workbench.shared.memory.falkor.store import _escape_cypher
@@ -303,7 +694,7 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 'r.threshold_type AS threshold_type '
                 f'LIMIT {limit}'
             )
-            return [
+            items = [
                 {
                     'risk_factor': row[0] or '',
                     'rule_name': row[1] or '',
@@ -313,20 +704,47 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 }
                 for row in res.result_set
             ]
+            if not pretty:
+                return items
+            text, md = _json_pretty(items)
+            return _wrap_pretty_list(
+                items,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         result = self.store.search(action, limit=limit)
         all_rules = self._build_rule_index(result)
 
         action_lower = action.lower()
-        return [
+        items = [
             r
             for r in all_rules
             if action_lower in r.get('action', '').lower()
             or action_lower in r.get('fact', '').lower()
             or action_lower in ' '.join(r.get('outcomes', [])).lower()
         ]
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def rules_by_product(self, product_type: str, *, limit: int = 500) -> list[dict]:
+    def rules_by_product(
+        self,
+        product_type: str,
+        *,
+        limit: int = 500,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[dict]:
         """Return all rules applicable to a product type (e.g. 'BOP', 'Property').
 
         Includes rules with ``product_type='ALL'``.
@@ -343,7 +761,7 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 'r.threshold_type AS threshold_type '
                 f'LIMIT {limit}'
             )
-            return [
+            items = [
                 {
                     'risk_factor': row[0] or '',
                     'rule_name': row[1] or '',
@@ -353,19 +771,45 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 }
                 for row in res.result_set
             ]
+            if not pretty:
+                return items
+            text, md = _json_pretty(items)
+            return _wrap_pretty_list(
+                items,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         result = self.store.search(product_type, limit=limit)
         all_rules = self._build_rule_index(result)
 
-        return [
+        items = [
             r
             for r in all_rules
             if not r.get('product_type')
             or r['product_type'] in ('ALL', product_type)
             or product_type.lower() in r.get('fact', '').lower()
         ]
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def uncovered_risks(self, *, limit: int = 500) -> list[str]:
+    def uncovered_risks(
+        self,
+        *,
+        limit: int = 500,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[str]:
         """Find risk factor nodes that have no TRIGGERS edges to any rule.
 
         Identifies potential gaps in the knowledge base.
@@ -392,9 +836,27 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         covered = triggered_sources | trigger_target_uuids
         orphan_uuids = all_node_uuids - covered
 
-        return [node_map[uid].name for uid in orphan_uuids if uid in node_map]
+        items = [node_map[uid].name for uid in orphan_uuids if uid in node_map]
+        if not pretty:
+            return items
+        text = 'Uncovered risks:\n' + '\n'.join(f'- {x}' for x in items)
+        md = '**Uncovered risks:**\n' + '\n'.join(f'- {x}' for x in items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def mitigants_for_rule(self, rule_name: str, *, limit: int = 25) -> list[str]:
+    def mitigants_for_rule(
+        self,
+        rule_name: str,
+        *,
+        limit: int = 25,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[str]:
         """Return all mitigant names that OVERRIDE a given rule."""
         if _has_cypher(self.store):
             from eval_workbench.shared.memory.falkor.store import _escape_cypher
@@ -404,7 +866,18 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 f"MATCH (m:Mitigant)-[:OVERRIDES]->(r:Rule {{name: '{escaped}'}}) "
                 f'RETURN m.name LIMIT {limit}'
             )
-            return [row[0] for row in res.result_set if row[0]]
+            items = [row[0] for row in res.result_set if row[0]]
+            if not pretty:
+                return items
+            text = f'Mitigants for rule: {rule_name}\n' + '\n'.join(f'- {x}' for x in items)
+            md = f'**Mitigants for rule: {rule_name}**\n' + '\n'.join(f'- {x}' for x in items)
+            return _wrap_pretty_list(
+                items,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         result = self.store.search(rule_name, limit=limit)
         if result.is_empty:
@@ -419,9 +892,27 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 source = node_map.get(edge.source_node_uuid)
                 mitigants.append(source.name if source else edge.source_node_uuid)
 
-        return mitigants
+        items = mitigants
+        if not pretty:
+            return items
+        text = f'Mitigants for rule: {rule_name}\n' + '\n'.join(f'- {x}' for x in items)
+        md = f'**Mitigants for rule: {rule_name}**\n' + '\n'.join(f'- {x}' for x in items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def rules_mitigated_by(self, mitigant: str, *, limit: int = 25) -> list[str]:
+    def rules_mitigated_by(
+        self,
+        mitigant: str,
+        *,
+        limit: int = 25,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[str]:
         """Return all rule names that a given mitigant OVERRIDES."""
         if _has_cypher(self.store):
             from eval_workbench.shared.memory.falkor.store import _escape_cypher
@@ -431,7 +922,18 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 f"MATCH (m:Mitigant {{name: '{escaped}'}})-[:OVERRIDES]->(r:Rule) "
                 f'RETURN r.name LIMIT {limit}'
             )
-            return [row[0] for row in res.result_set if row[0]]
+            items = [row[0] for row in res.result_set if row[0]]
+            if not pretty:
+                return items
+            text = f'Rules mitigated by: {mitigant}\n' + '\n'.join(f'- {x}' for x in items)
+            md = f'**Rules mitigated by: {mitigant}**\n' + '\n'.join(f'- {x}' for x in items)
+            return _wrap_pretty_list(
+                items,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         result = self.store.search(mitigant, limit=limit)
         if result.is_empty:
@@ -446,9 +948,26 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 target = node_map.get(edge.target_node_uuid)
                 rules.append(target.name if target else edge.target_node_uuid)
 
-        return rules
+        items = rules
+        if not pretty:
+            return items
+        text = f'Rules mitigated by: {mitigant}\n' + '\n'.join(f'- {x}' for x in items)
+        md = f'**Rules mitigated by: {mitigant}**\n' + '\n'.join(f'- {x}' for x in items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def unmitigated_declines(self, *, limit: int = 500) -> list[dict]:
+    def unmitigated_declines(
+        self,
+        *,
+        limit: int = 500,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[dict]:
         """Find decline rules with zero mitigants — hard stops with no overrides."""
         if _has_cypher(self.store):
             res = self.store.cypher(
@@ -458,7 +977,7 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 'r.product_type AS product_type '
                 f'LIMIT {limit}'
             )
-            return [
+            items = [
                 {
                     'rule_name': row[1] or '',
                     'risk_factor': row[0] or '',
@@ -466,6 +985,16 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 }
                 for row in res.result_set
             ]
+            if not pretty:
+                return items
+            text, md = _json_pretty(items)
+            return _wrap_pretty_list(
+                items,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         result = self.store.search('decline', limit=limit)
         if result.is_empty:
@@ -505,9 +1034,26 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 }
             )
 
-        return rules
+        items = rules
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def conflicting_rules(self, risk_factor: str, *, limit: int = 50) -> list[dict]:
+    def conflicting_rules(
+        self,
+        risk_factor: str,
+        *,
+        limit: int = 50,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[dict]:
         """Find rules where the same risk factor triggers conflicting actions.
 
         For example, a risk factor that triggers both 'decline' and 'refer'
@@ -549,9 +1095,26 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                     }
                 )
 
-        return conflicts
+        items = conflicts
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def overlapping_thresholds(self, field: str, *, limit: int = 100) -> list[dict]:
+    def overlapping_thresholds(
+        self,
+        field: str,
+        *,
+        limit: int = 100,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> list[dict]:
         """Find rules with thresholds on the same field but different values.
 
         Searches for edges whose threshold metadata references the given
@@ -584,7 +1147,17 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 }
             )
 
-        return matches
+        items = matches
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
     def evaluate(
         self,
@@ -593,6 +1166,8 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
         product_type: str | None = None,
         context: dict | None = None,
         limit: int = 25,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
     ) -> list[dict]:
         """Evaluate a risk factor against the knowledge graph.
 
@@ -643,20 +1218,46 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 }
             )
 
-        return evaluated
+        items = evaluated
+        if not pretty:
+            return items
+        text, md = _json_pretty(items)
+        return _wrap_pretty_list(
+            items,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
-    def summary(self, *, limit: int = 500) -> dict:
+    def summary(
+        self,
+        *,
+        limit: int = 500,
+        pretty: bool = False,
+        pretty_format: _PrettyFormat = 'markdown',
+    ) -> dict:
         """Return aggregate statistics about the knowledge graph.
 
         Returns counts of nodes by type, edges by relation, rules by
         action, and rules by product type.
         """
         if _has_cypher(self.store):
-            return self._summary_cypher(self.store)
+            data = self._summary_cypher(self.store)
+            if not pretty:
+                return data
+            text, md = _json_pretty(data)
+            return _wrap_pretty_dict(
+                data,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         result = self.store.search('*', limit=limit)
         if result.is_empty:
-            return {
+            data = {
                 'total_nodes': 0,
                 'total_edges': 0,
                 'nodes_by_type': {},
@@ -664,6 +1265,16 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
                 'rules_by_action': {},
                 'rules_by_product': {},
             }
+            if not pretty:
+                return data
+            text, md = _json_pretty(data)
+            return _wrap_pretty_dict(
+                data,
+                pretty=True,
+                pretty_format=pretty_format,
+                pretty_text=text,
+                pretty_markdown=md,
+            )
 
         node_map = result.node_map
 
@@ -708,7 +1319,7 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
 
         nodes_by_type = {k: len(v) for k, v in node_types.items()}
 
-        return {
+        data = {
             'total_nodes': len(result.nodes),
             'total_edges': len(result.edges),
             'nodes_by_type': dict(nodes_by_type),
@@ -716,6 +1327,16 @@ class AthenaGraphAnalytics(BaseGraphAnalytics):
             'rules_by_action': dict(rules_by_action),
             'rules_by_product': dict(rules_by_product),
         }
+        if not pretty:
+            return data
+        text, md = _json_pretty(data)
+        return _wrap_pretty_dict(
+            data,
+            pretty=True,
+            pretty_format=pretty_format,
+            pretty_text=text,
+            pretty_markdown=md,
+        )
 
     def _summary_cypher(self, store: _CypherStore) -> dict:
         """Build summary stats using direct Cypher queries."""
