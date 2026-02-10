@@ -2,7 +2,7 @@ site_name: Eval Workbench
 site_description: Evaluation tooling and metrics for agent workflows
 repo_url: https://github.com/MGT-Insurance/eval-workbench
 repo_name: MGT-Insurance/eval-workbench
-copyright: "&copy; 2025 MGT Insurance"
+copyright: "&copy; 2026 MGT Insurance"
 
 nav:
   - Home:

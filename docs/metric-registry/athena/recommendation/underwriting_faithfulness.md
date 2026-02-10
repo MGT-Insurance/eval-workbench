@@ -44,32 +44,6 @@
     | **0.7** | :material-alert: Some claims not verifiable |
     | **< 0.7** | :material-close: Significant hallucination risk |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Detecting hallucinations</li>
-<li>Verifying factual accuracy</li>
-<li>Source data is available</li>
-<li>High-stakes recommendations</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No source data available</li>
-<li>Evaluating opinions/judgments</li>
-<li>Checking structural completeness</li>
-<li>Output is purely generative</li>
-</ul>
-</div>
-
-</div>
-
----
-
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 
@@ -163,12 +137,8 @@
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
     | `verification_mode` | `str` | `llm` | `llm`, `heuristic`, or `heuristic_then_llm` |
-    | `max_claims` | `int` | `50` | Maximum claims to verify |
-    | `max_concurrent` | `int` | `10` | Concurrency limit for LLM verification |
-
-    !!! info "Performance Tuning"
-        For large recommendations, use `heuristic_then_llm` mode with appropriate `max_concurrent` to balance accuracy and speed.
-
+    | `max_claims` | `int` | `10` | Maximum claims to verify |
+    | `max_concurrent` | `int` | `5` | Concurrency limit for LLM verification |
 ---
 
 ## Code Examples
@@ -243,51 +213,54 @@ result.signals              # Full diagnostic breakdown
 ```python
 UnderwritingFaithfulnessResult(
 {
-    "overall_score": 0.85,
+    "overall_score": 0.75,
     "total_claims": 4,
     "supported_claims": 3,
     "hallucinations": 1,
     "claim_details": [
         {
             "claim": "Revenue is $2.1M",
-            "status": "supported",
-            "evidence": "financials.revenue: 2100000",
-            "confidence": 0.95
+            "status": "✅ Supported",
+            "reason": "Exact numeric match in source data.",
+            "decision_source": "llm"
         },
         {
             "claim": "Building was constructed in 2019",
-            "status": "supported",
-            "evidence": "property.year_built: 2019",
-            "confidence": 0.98
+            "status": "✅ Supported",
+            "reason": "Year built matches property.year_built.",
+            "decision_source": "llm"
         },
         {
             "claim": "No claims in 5 years",
-            "status": "supported",
-            "evidence": "claims.five_year_count: 0",
-            "confidence": 0.92
+            "status": "✅ Supported",
+            "reason": "claims.five_year_count: 0 confirms zero claims.",
+            "decision_source": "llm"
         },
         {
             "claim": "Premium is $1,200",
-            "status": "unsupported",
-            "evidence": null,
-            "confidence": 0.1
+            "status": "❌ Hallucinated/Unsupported",
+            "reason": "No premium data found in source.",
+            "decision_source": "llm"
         }
     ],
-    "unverified_claims": ["Premium is $1,200"]
+    "unverified_claims": []
 }
 )
 ```
+
+!!! info "Unverified vs Hallucinated"
+    `unverified_claims` lists claims that exceeded `max_claims` and were not checked. `claim_details` contains verdicts for all checked claims.
 
 ### Signal Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `overall_score` | `float` | Proportion of supported claims |
-| `total_claims` | `int` | Total atomic claims extracted |
+| `total_claims` | `int` | Total atomic claims extracted (capped by `max_claims`) |
 | `supported_claims` | `int` | Claims verified against source |
 | `hallucinations` | `int` | Claims not found in source |
-| `claim_details` | `List` | Per-claim verification details |
-| `unverified_claims` | `List[str]` | List of unsupported claims |
+| `claim_details` | `List[dict]` | Per-claim details (`claim`, `status`, `reason`, `decision_source`) |
+| `unverified_claims` | `List[str]` | Claims that exceeded `max_claims` and were not checked |
 
 </details>
 
@@ -295,90 +268,81 @@ UnderwritingFaithfulnessResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: All Claims Verified (Score: 1.0)</strong></summary>
+=== "Pass (1.0)"
 
-!!! success "Fully Faithful Recommendation"
+    !!! success "Fully Faithful Recommendation"
 
-    **Recommendation:**
-    > "Approve. Revenue is $1.5M. Building age is 8 years. Zero claims."
+        **Recommendation:**
+        > "Approve. Revenue is $1.5M. Building age is 8 years. Zero claims."
 
-    **Source Data:**
-    ```json
-    {
-        "financials": {"revenue": 1500000},
-        "property": {"building_age": 8},
-        "claims": {"count": 0}
-    }
-    ```
+        **Source Data:**
+        ```json
+        {
+            "financials": {"revenue": 1500000},
+            "property": {"building_age": 8},
+            "claims": {"count": 0}
+        }
+        ```
 
-    **Analysis:**
+        **Analysis:**
 
-    | Claim | Evidence | Status |
-    |-------|----------|--------|
-    | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
-    | Building age 8 years | `property.building_age: 8` | ✅ Supported |
-    | Zero claims | `claims.count: 0` | ✅ Supported |
+        | Claim | Evidence | Status |
+        |-------|----------|--------|
+        | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
+        | Building age 8 years | `property.building_age: 8` | ✅ Supported |
+        | Zero claims | `claims.count: 0` | ✅ Supported |
 
-    **Final Score:** `3 / 3 = 1.0` :material-check-all:
+        **Final Score:** `3 / 3 = 1.0` :material-check-all:
 
-</details>
+=== "Partial (0.67)"
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Hallucination Detected (Score: 0.67)</strong></summary>
+    !!! warning "Unsupported Claim Found"
 
-!!! warning "Unsupported Claim Found"
+        **Recommendation:**
+        > "Revenue is $1.5M. Building age is 8 years. **Premium is $1,200.**"
 
-    **Recommendation:**
-    > "Revenue is $1.5M. Building age is 8 years. **Premium is $1,200.**"
+        **Source Data:**
+        ```json
+        {
+            "financials": {"revenue": 1500000},
+            "property": {"building_age": 8}
+        }
+        ```
 
-    **Source Data:**
-    ```json
-    {
-        "financials": {"revenue": 1500000},
-        "property": {"building_age": 8}
-    }
-    ```
+        **Analysis:**
 
-    **Analysis:**
+        | Claim | Evidence | Status |
+        |-------|----------|--------|
+        | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
+        | Building age 8 years | `property.building_age: 8` | ✅ Supported |
+        | Premium $1,200 | Not found | ❌ Hallucination |
 
-    | Claim | Evidence | Status |
-    |-------|----------|--------|
-    | Revenue $1.5M | `financials.revenue: 1500000` | ✅ Supported |
-    | Building age 8 years | `property.building_age: 8` | ✅ Supported |
-    | Premium $1,200 | Not found | ❌ Hallucination |
+        **Final Score:** `2 / 3 = 0.67` :material-alert:
 
-    **Final Score:** `2 / 3 = 0.67` :material-alert:
+=== "Fail (0.0)"
 
-</details>
+    !!! failure "Multiple Unsupported Claims"
 
-<details markdown="1">
-<summary><strong>❌ Scenario 3: Significant Hallucinations (Score: 0.25)</strong></summary>
+        **Recommendation:**
+        > "Revenue is $5M. Building is brand new. Located in a low-risk zone. Premium is competitive."
 
-!!! failure "Multiple Unsupported Claims"
+        **Source Data:**
+        ```json
+        {
+            "financials": {"revenue": 1000000}
+        }
+        ```
 
-    **Recommendation:**
-    > "Revenue is $5M. Building is brand new. Located in a low-risk zone. Premium is competitive."
+        **Analysis:**
 
-    **Source Data:**
-    ```json
-    {
-        "financials": {"revenue": 1000000}
-    }
-    ```
+        | Claim | Evidence | Status |
+        |-------|----------|--------|
+        | Revenue $5M | Contradicts source ($1M) | ❌ False |
+        | Building brand new | Not found | ❌ Hallucination |
+        | Low-risk zone | Not found | ❌ Hallucination |
+        | Competitive premium | Not found | ❌ Hallucination |
 
-    **Analysis:**
-
-    | Claim | Evidence | Status |
-    |-------|----------|--------|
-    | Revenue $5M | Contradicts source ($1M) | ❌ False |
-    | Building brand new | Not found | ❌ Hallucination |
-    | Low-risk zone | Not found | ❌ Hallucination |
-    | Competitive premium | Not found | ❌ Hallucination |
-
-    **Final Score:** `0 / 4 = 0.0` :material-close:
-
-</details>
+        **Final Score:** `0 / 4 = 0.0` :material-close:
 
 ---
 

@@ -46,29 +46,6 @@
     | **stalemate** | Inactive for extended period |
     | **pending** | Still in progress |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Tracking resolution rates</li>
-<li>Identifying stale threads</li>
-<li>Measuring time to resolution</li>
-<li>Building outcome KPIs</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Only need recommendation (use Recommendation)</li>
-<li>Thread just started</li>
-<li>Measuring sentiment</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Configuration

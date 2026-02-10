@@ -43,30 +43,6 @@
     | **0.5** | :material-alert: Implicit or unclear acceptance |
     | **0.0** | :material-close: Recommendation rejected or overridden |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Tracking recommendation adoption</li>
-<li>Measuring AI influence</li>
-<li>Understanding user behavior</li>
-<li>Building acceptance rate KPIs</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No recommendation present</li>
-<li>Thread is AI-only</li>
-<li>Measuring quality (use Decision Quality)</li>
-<li>Override analysis needed (use Override)</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Code Examples

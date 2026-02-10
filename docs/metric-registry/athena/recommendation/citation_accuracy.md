@@ -44,30 +44,6 @@
     | **0.5** | :material-alert: Half the citations are invalid |
     | **< 0.5** | :material-close: Significant citation errors |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>AI output contains numbered citations</li>
-<li>You have reference data to validate against</li>
-<li>Traceability of claims is important</li>
-<li>Verifying underwriting recommendations</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Citations use bracket-path format (use Citation Fidelity)</li>
-<li>No reference data available</li>
-<li>Output doesn't contain citations</li>
-<li>Free-form text without structured references</li>
-</ul>
-</div>
-
-</div>
-
 !!! tip "See Also: Citation Fidelity"
     **Citation Accuracy** validates numeric citations like `[1]` against reference lists.
     **[Citation Fidelity](./citation_fidelity.md)** validates bracket-path citations like `[quote.field]` against JSON data.
@@ -162,7 +138,7 @@
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
     | `validation_mode` | `str` | `ref_only` | `ref_only` or `ref_plus_input` |
-    | `output_key` | `str` | `None` | Key in `additional_output` to analyze (fallback to `actual_output`) |
+    | `output_key` | `str` | `brief_recommendation` | Key in `additional_output` to analyze (fallback to `actual_output`) |
 
     !!! info "Validation Modes"
         - **ref_only**: Only check that citations match reference entries
@@ -233,16 +209,22 @@ CitationAccuracyResult(
     "valid_citations": 2,
     "verdicts": [
         {
-            "citation": "[1]",
-            "reference_match": "[1] - quote.roof_age",
-            "status": "valid",
-            "reason": "Reference entry found"
+            "citation_text": "[1]",
+            "citation_number": 1,
+            "source": "[1] - quote.roof_age",
+            "is_scorable": true,
+            "is_valid": true,
+            "reason": "Reference exists.",
+            "missing_fields": null
         },
         {
-            "citation": "[2]",
-            "reference_match": "[2] - quote.revenue",
-            "status": "valid",
-            "reason": "Reference entry found"
+            "citation_text": "[2]",
+            "citation_number": 2,
+            "source": "[2] - quote.revenue",
+            "is_scorable": true,
+            "is_valid": true,
+            "reason": "Reference exists.",
+            "missing_fields": null
         }
     ]
 }
@@ -257,7 +239,7 @@ CitationAccuracyResult(
 | `total_citations` | `int` | Total citations found in output |
 | `scorable_citations` | `int` | Citations that could be validated |
 | `valid_citations` | `int` | Citations that passed validation |
-| `verdicts` | `List` | Per-citation validation details |
+| `verdicts` | `List[CitationAccuracyVerdict]` | Per-citation details (`citation_text`, `citation_number`, `source`, `is_scorable`, `is_valid`, `reason`, `missing_fields`) |
 
 </details>
 
@@ -265,53 +247,47 @@ CitationAccuracyResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: All Valid (Score: 1.0)</strong></summary>
+=== "Pass (1.0)"
 
-!!! success "All Citations Match References"
+    !!! success "All Citations Match References"
 
-    **Output:**
-    > "The property qualifies for approval based on the building age [1] and claims history [2]."
+        **Output:**
+        > "The property qualifies for approval based on the building age [1] and claims history [2]."
 
-    **Reference Data:**
-    ```python
-    ["[1] - property.building_age", "[2] - property.claims_count"]
-    ```
+        **Reference Data:**
+        ```python
+        ["[1] - property.building_age", "[2] - property.claims_count"]
+        ```
 
-    **Analysis:**
+        **Analysis:**
 
-    | Citation | Reference Match | Status |
-    |----------|-----------------|--------|
-    | `[1]` | `[1] - property.building_age` | ✅ Valid |
-    | `[2]` | `[2] - property.claims_count` | ✅ Valid |
+        | Citation | Reference Match | Status |
+        |----------|-----------------|--------|
+        | `[1]` | `[1] - property.building_age` | ✅ Valid |
+        | `[2]` | `[2] - property.claims_count` | ✅ Valid |
 
-    **Final Score:** `2 / 2 = 1.0` :material-check-all:
+        **Final Score:** `2 / 2 = 1.0` :material-check-all:
 
-</details>
+=== "Partial (0.5)"
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Missing Reference (Score: 0.5)</strong></summary>
+    !!! warning "Some Citations Invalid"
 
-!!! warning "Some Citations Invalid"
+        **Output:**
+        > "Coverage approved per [1]. Additional review needed per [3]."
 
-    **Output:**
-    > "Coverage approved per [1]. Additional review needed per [3]."
+        **Reference Data:**
+        ```python
+        ["[1] - quote.coverage", "[2] - quote.premium"]
+        ```
 
-    **Reference Data:**
-    ```python
-    ["[1] - quote.coverage", "[2] - quote.premium"]
-    ```
+        **Analysis:**
 
-    **Analysis:**
+        | Citation | Reference Match | Status |
+        |----------|-----------------|--------|
+        | `[1]` | `[1] - quote.coverage` | ✅ Valid |
+        | `[3]` | Not found | ❌ Invalid |
 
-    | Citation | Reference Match | Status |
-    |----------|-----------------|--------|
-    | `[1]` | `[1] - quote.coverage` | ✅ Valid |
-    | `[3]` | Not found | ❌ Invalid |
-
-    **Final Score:** `1 / 2 = 0.5` :material-alert:
-
-</details>
+        **Final Score:** `1 / 2 = 0.5` :material-alert:
 
 ---
 

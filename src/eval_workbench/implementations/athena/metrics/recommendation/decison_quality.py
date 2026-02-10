@@ -261,6 +261,7 @@ class CoverageJudge(BaseMetric[CoverageCheckInput, CoverageJudgeOutput]):
     key='decision_quality',
     description='Evaluates if the AI made the right decision for the right reasons.',
     required_fields=['actual_output', 'expected_output'],
+    default_threshold=0.8,
     score_range=(0, 1),
     tags=['athena'],
 )

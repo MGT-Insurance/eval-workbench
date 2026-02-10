@@ -45,32 +45,6 @@
     | **1.0** | :material-check-all: Outcome is not `Refer` (skipped) **or** `Refer` with a trigger found |
     | **0.0** | :material-close: Outcome is `Refer` but **no** trigger could be detected (`unknown_trigger`) |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Enforcing underwriting guidelines</li>
-<li>Tracking referral reasons</li>
-<li>Auditing decision consistency</li>
-<li>Validating rule compliance</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No structured input data</li>
-<li>Rules don't apply</li>
-<li>Evaluating reasoning quality</li>
-<li>Non-underwriting decisions</li>
-</ul>
-</div>
-
-</div>
-
----
-
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
 
@@ -276,28 +250,28 @@ result.signals              # Full diagnostic breakdown
 ```
 
 <details markdown="1">
-<summary><strong>📊 UnderwritingRulesResult Structure</strong></summary>
+<summary><strong>📊 TriggerReport Structure</strong></summary>
 
 ```python
-UnderwritingRulesResult(
+TriggerReport(
 {
-    "score": 1.0,
     "is_referral": true,
-    "outcome_label": "Referral",
-    "primary_trigger": "bppValue",
-    "detected_events": [
+    "active_triggers": [
         {
-            "trigger": "bppValue",
-            "severity": "hard",
-            "confidence": 0.95,
-            "detection_method": "structured",
-            "details": "BPP limit $300,000 exceeds $250,000 threshold"
+            "trigger_name": "bppValue",
+            "detection_method": "regex",
+            "context": "bop_bpp_limit=300000",
+            "confidence": 1.0
         }
     ],
-    "structured_values": {
-        "bpp_limit": 300000,
-        "gross_sales": 1500000
-    }
+    "primary_referral_reason": "bppValue",
+    "summary_text": "bppValue",
+    "outcome_label": "Refer",
+    "trigger_count": 1,
+    "llm_fallback_used": false,
+    "min_confidence": 1.0,
+    "has_hard_trigger": true,
+    "unknown_reasoning": null
 }
 )
 ```
@@ -306,12 +280,16 @@ UnderwritingRulesResult(
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `score` | `float` | 1.0 if consistent, 0.0 if not |
 | `is_referral` | `bool` | Whether outcome is referral/decline |
+| `active_triggers` | `List[TriggerEvent]` | Detected triggers (`trigger_name`, `detection_method`, `context`, `confidence`) |
+| `primary_referral_reason` | `TriggerName` | Most significant trigger (by priority) |
+| `summary_text` | `str` | Comma-separated trigger names |
 | `outcome_label` | `str` | Normalized outcome label |
-| `primary_trigger` | `str` | Most significant trigger |
-| `detected_events` | `List` | All detected triggers with details |
-| `structured_values` | `dict` | Extracted field values |
+| `trigger_count` | `int` | Number of triggers detected |
+| `llm_fallback_used` | `bool` | Whether LLM classifier was invoked |
+| `min_confidence` | `float` | Minimum confidence across all triggers |
+| `has_hard_trigger` | `bool` | Whether any hard-severity trigger was detected |
+| `unknown_reasoning` | `str \| None` | LLM explanation when no trigger matched |
 
 </details>
 
@@ -319,83 +297,74 @@ UnderwritingRulesResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: Consistent Referral (Score: 1.0)</strong></summary>
+=== "Pass (1.0) - Referral"
 
-!!! success "Referral Matches Triggers"
+    !!! success "Referral Matches Triggers"
 
-    **Recommendation:**
-    > "Refer to underwriting - BPP coverage of $300,000 exceeds threshold."
+        **Recommendation:**
+        > "Refer to underwriting - BPP coverage of $300,000 exceeds threshold."
 
-    **Source Data:**
-    ```json
-    {"bop_bpp_limit": 300000}
-    ```
+        **Source Data:**
+        ```json
+        {"bop_bpp_limit": 300000}
+        ```
 
-    **Analysis:**
+        **Analysis:**
 
-    | Component | Finding |
-    |-----------|---------|
-    | Outcome | Referral |
-    | Trigger | bppValue (BPP > $250k) |
-    | Match | ✅ Referral with trigger |
+        | Component | Finding |
+        |-----------|---------|
+        | Outcome | Referral |
+        | Trigger | bppValue (BPP > $250k) |
+        | Match | ✅ Referral with trigger |
 
-    **Final Score:** `1.0` :material-check-all:
+        **Final Score:** `1.0` :material-check-all:
 
-</details>
+=== "Pass (1.0) - Approval"
 
-<details markdown="1">
-<summary><strong>✅ Scenario 2: Non-Refer Outcome (Score: 1.0)</strong></summary>
+    !!! success "Skipped (Not in Scope)"
 
-!!! success "Skipped (Not in Scope)"
+        **Recommendation:**
+        > "Approve - all criteria within guidelines."
 
-    **Recommendation:**
-    > "Approve - all criteria within guidelines."
+        **Source Data:**
+        ```json
+        {
+            "bop_bpp_limit": 150000,
+            "bop_number_of_claims": 0,
+            "bop_number_of_employees": 10
+        }
+        ```
 
-    **Source Data:**
-    ```json
-    {
-        "bop_bpp_limit": 150000,
-        "bop_number_of_claims": 0,
-        "bop_number_of_employees": 10
-    }
-    ```
+        **Analysis:**
 
-    **Analysis:**
+        | Component | Finding |
+        |-----------|---------|
+        | Outcome | Approved (not `Refer`) |
+        | Metric behavior | Returns early; does not run trigger detection |
 
-    | Component | Finding |
-    |-----------|---------|
-    | Outcome | Approved (not `Refer`) |
-    | Metric behavior | Returns early; does not run trigger detection |
+        **Final Score:** `1.0` :material-check-all:
 
-    **Final Score:** `1.0` :material-check-all:
+=== "Fail (0.0)"
 
-</details>
+    !!! failure "Unknown Trigger"
 
-<details markdown="1">
-<summary><strong>❌ Scenario 3: Refer with No Detected Trigger (Score: 0.0)</strong></summary>
+        **Recommendation:**
+        > "Refer to underwriting for review."
 
-!!! failure "Unknown Trigger"
+        **Source Data:**
+        ```json
+        {"bop_bpp_limit": 150000}
+        ```
 
-    **Recommendation:**
-    > "Refer to underwriting for review."
+        **Analysis:**
 
-    **Source Data:**
-    ```json
-    {"bop_bpp_limit": 150000}
-    ```
+        | Component | Finding |
+        |-----------|---------|
+        | Outcome | Refer |
+        | Triggers | None detected |
+        | Result | ❌ `unknown_trigger` |
 
-    **Analysis:**
-
-    | Component | Finding |
-    |-----------|---------|
-    | Outcome | Refer |
-    | Triggers | None detected |
-    | Result | ❌ `unknown_trigger` |
-
-    **Final Score:** `0.0` :material-close:
-
-</details>
+        **Final Score:** `0.0` :material-close:
 
 ---
 

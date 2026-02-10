@@ -21,8 +21,8 @@
 <div class="grid-item" style="text-align: center;">
 <span style="font-size: 2rem;">⚡</span><br>
 <strong>Default Threshold</strong><br>
-<code style="font-size: 1.5rem; color: var(--md-primary);">—</code><br>
-<small style="color: var(--md-text-muted);">Uses score_range only</small>
+<code style="font-size: 1.5rem; color: var(--md-primary);">0.8</code><br>
+<small style="color: var(--md-text-muted);">High Bar</small>
 </div>
 
 <div class="grid-item" style="text-align: center;">
@@ -43,32 +43,6 @@
     | **0.7+** | :material-check: Correct decision, reasoning mostly aligned |
     | **0.5** | :material-alert: Decision match but reasoning gaps |
     | **0.0** | :material-close: Wrong decision (hard fail enabled) |
-
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Comparing AI to human decisions</li>
-<li>Both decision and reasoning matter</li>
-<li>Evaluating underwriting recommendations</li>
-<li>Training data has human annotations</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>No ground truth decision available</li>
-<li>Only measuring completeness</li>
-<li>Decisions are always exploratory</li>
-<li>No reasoning comparison needed</li>
-</ul>
-</div>
-
-</div>
-
----
 
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
@@ -166,10 +140,13 @@
 
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
-    | `outcome_weight` | `float` | `0.6` | Weight for decision match component |
-    | `reasoning_weight` | `float` | `0.4` | Weight for reasoning coverage |
+    | `outcome_weight` | `float` | `1.0` | Weight for decision match component |
+    | `reasoning_weight` | `float` | `0.0` | Weight for reasoning coverage |
     | `hard_fail_on_outcome_mismatch` | `bool` | `True` | Force score to 0.0 if decisions differ |
-    | `recommendation_column_name` | `str` | `None` | Additional output field to analyze |
+    | `recommendation_column_name` | `str` | `brief_recommendation` | Additional output field to analyze |
+
+    !!! info "Default Behavior"
+        By default, `outcome_weight=1.0` and `reasoning_weight=0.0`, meaning the score is purely based on decision match (1.0 or 0.0). Set `reasoning_weight > 0` to include reasoning coverage analysis.
 
     !!! warning "Hard Fail Mode"
         When `hard_fail_on_outcome_mismatch=True` (default), any decision mismatch results in a score of 0.0, regardless of reasoning quality. Disable this for softer evaluation.
@@ -238,14 +215,19 @@ result.signals              # Full diagnostic breakdown
 ```python
 DecisionQualityResult(
 {
-    "overall_score": 0.85,
+    "overall_score": 1.0,
     "outcome_match": true,
     "outcome_score": 1.0,
     "human_decision_detected": "decline",
     "ai_decision_detected": "decline",
     "reasoning_score": 0.625,
-    "matched_concepts": ["building age", "condition"],
-    "missing_concepts": ["roof age"]
+    "matched_concepts": [
+        {"concept": "building age"},
+        {"concept": "condition"}
+    ],
+    "missing_concepts": [
+        {"concept": "roof age", "impact": "High"}
+    ]
 }
 )
 ```
@@ -259,9 +241,9 @@ DecisionQualityResult(
 | `outcome_score` | `float` | Decision match score (0 or 1) |
 | `human_decision_detected` | `str` | Extracted human decision |
 | `ai_decision_detected` | `str` | Extracted AI decision |
-| `reasoning_score` | `float` | Reasoning coverage score |
-| `matched_concepts` | `List[str]` | Risk factors mentioned by AI |
-| `missing_concepts` | `List[str]` | Risk factors AI missed |
+| `reasoning_score` | `float \| None` | Impact-weighted reasoning coverage score (None when no risk factors extracted) |
+| `matched_concepts` | `List[ReasoningMatch]` | Risk factors mentioned by AI (each has `concept`) |
+| `missing_concepts` | `List[ReasoningGap]` | Risk factors AI missed (each has `concept` and `impact`) |
 
 </details>
 
@@ -269,71 +251,67 @@ DecisionQualityResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: Perfect Match (Score: 1.0)</strong></summary>
+=== "Pass (1.0)"
 
-!!! success "Decision + Reasoning Aligned"
+    !!! success "Decision Match (Default Weights)"
 
-    **Human Decision:**
-    > "Decline - prior claims history and high BPP value are concerns."
+        **Human Decision:**
+        > "Decline - prior claims history and high BPP value are concerns."
 
-    **AI Recommendation:**
-    > "Recommend Decline. The applicant has prior claims on record and the BPP coverage requested exceeds typical thresholds."
+        **AI Recommendation:**
+        > "Recommend Decline. The applicant has prior claims on record and the BPP coverage requested exceeds typical thresholds."
 
-    **Analysis:**
+        **Analysis:**
 
-    | Component | Score | Details |
-    |-----------|-------|---------|
-    | Decision Match | 1.0 | Both: Decline |
-    | Reasoning Coverage | 1.0 | All factors mentioned |
+        | Component | Score | Details |
+        |-----------|-------|---------|
+        | Decision Match | 1.0 | Both: Decline |
+        | Reasoning Coverage | 1.0 | All factors mentioned |
 
-    **Final Score:** `(0.6 × 1.0) + (0.4 × 1.0) = 1.0` :material-check-all:
+        **Final Score:** `(1.0 × 1.0) + (0.0 × 1.0) = 1.0` :material-check-all:
 
-</details>
+        !!! tip "With custom weights `outcome_weight=0.6, reasoning_weight=0.4`"
+            Score would be `(0.6 × 1.0) + (0.4 × 1.0) = 1.0`
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Decision Match, Incomplete Reasoning (Score: 0.7)</strong></summary>
+=== "Partial (0.73)"
 
-!!! warning "Correct Decision, Missing Factors"
+    !!! warning "Correct Decision, Missing Factors (Custom Weights)"
 
-    **Human Decision:**
-    > "Approve - good claims history, reasonable BPP, building in good condition."
+        With `outcome_weight=0.6, reasoning_weight=0.4`:
 
-    **AI Recommendation:**
-    > "Recommend Approve based on clean claims history."
+        **Human Decision:**
+        > "Approve - good claims history, reasonable BPP, building in good condition."
 
-    **Analysis:**
+        **AI Recommendation:**
+        > "Recommend Approve based on clean claims history."
 
-    | Component | Score | Details |
-    |-----------|-------|---------|
-    | Decision Match | 1.0 | Both: Approve |
-    | Reasoning Coverage | 0.33 | Only 1 of 3 factors mentioned |
+        **Analysis:**
 
-    **Final Score:** `(0.6 × 1.0) + (0.4 × 0.33) = 0.73` :material-alert:
+        | Component | Score | Details |
+        |-----------|-------|---------|
+        | Decision Match | 1.0 | Both: Approve |
+        | Reasoning Coverage | 0.33 | Only 1 of 3 factors mentioned |
 
-</details>
+        **Final Score:** `(0.6 × 1.0) + (0.4 × 0.33) = 0.73` :material-alert:
 
-<details markdown="1">
-<summary><strong>❌ Scenario 3: Decision Mismatch (Score: 0.0)</strong></summary>
+=== "Fail (0.0)"
 
-!!! failure "Wrong Decision (Hard Fail)"
+    !!! failure "Wrong Decision (Hard Fail)"
 
-    **Human Decision:**
-    > "Decline - too many risk factors."
+        **Human Decision:**
+        > "Decline - too many risk factors."
 
-    **AI Recommendation:**
-    > "Recommend Approve based on revenue metrics."
+        **AI Recommendation:**
+        > "Recommend Approve based on revenue metrics."
 
-    **Analysis:**
+        **Analysis:**
 
-    | Component | Score | Details |
-    |-----------|-------|---------|
-    | Decision Match | 0.0 | Human: Decline, AI: Approve |
-    | Hard Fail | Triggered | Score forced to 0.0 |
+        | Component | Score | Details |
+        |-----------|-------|---------|
+        | Decision Match | 0.0 | Human: Decline, AI: Approve |
+        | Hard Fail | Triggered | Score forced to 0.0 |
 
-    **Final Score:** `0.0` :material-close:
-
-</details>
+        **Final Score:** `0.0` :material-close:
 
 ---
 

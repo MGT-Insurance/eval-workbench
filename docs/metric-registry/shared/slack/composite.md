@@ -50,29 +50,6 @@
     | Sentiment | Score | User sentiment analysis |
     | Resolution | Classification | Thread resolution status |
 
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Running multiple Slack metrics</li>
-<li>Building comprehensive dashboards</li>
-<li>Batch processing conversations</li>
-<li>Optimizing LLM call costs</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Only need one specific metric</li>
-<li>Custom metric configuration needed</li>
-<li>Non-Slack conversations</li>
-</ul>
-</div>
-
-</div>
-
 ---
 
 ## Configuration

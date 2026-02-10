@@ -21,8 +21,8 @@
 <div class="grid-item" style="text-align: center;">
 <span style="font-size: 2rem;">⚡</span><br>
 <strong>Default Threshold</strong><br>
-<code style="font-size: 1.5rem; color: var(--md-primary);">—</code><br>
-<small style="color: var(--md-text-muted);">No default threshold</small>
+<code style="font-size: 1.5rem; color: var(--md-primary);">0.8</code><br>
+<small style="color: var(--md-text-muted);">High Bar</small>
 </div>
 
 <div class="grid-item" style="text-align: center;">
@@ -43,32 +43,6 @@
     | **0.7+** | :material-check: Decision clear, some components weaker |
     | **0.5** | :material-alert: Missing or weak supporting components |
     | **0.0** | :material-close: No clear decision (hard gate) |
-
-<div class="grid-container">
-
-<div class="grid-item" style="border-left: 4px solid #10b981;">
-<strong style="color: #10b981;">✅ Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Evaluating recommendation structure</li>
-<li>Ensuring actionable outputs</li>
-<li>Training agents on proper format</li>
-<li>Quality assurance for underwriting</li>
-</ul>
-</div>
-
-<div class="grid-item" style="border-left: 4px solid #ef4444;">
-<strong style="color: #ef4444;">❌ Don't Use When</strong>
-<ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem;">
-<li>Checking factual accuracy</li>
-<li>Comparing to ground truth</li>
-<li>Evaluating informal responses</li>
-<li>Non-recommendation content</li>
-</ul>
-</div>
-
-</div>
-
----
 
 <details markdown="1">
 <summary><strong style="font-size: 1.1rem;">How It Works</strong></summary>
@@ -166,15 +140,16 @@
     | Parameter | Type | Default | Description |
     |-----------|------|---------|-------------|
     | `weights` | `dict` | See below | Per-criterion weights |
+    | `main_check_field` | `str` | `brief_recommendation` | Field in additional_output to analyze |
 
     **Default Weights:**
 
     | Criterion | Default Weight |
     |-----------|----------------|
     | Decision | 0.4 |
-    | Rationale | 0.25 |
+    | Rationale | 0.2 |
     | Evidence | 0.2 |
-    | NextStep | 0.15 |
+    | NextStep | 0.2 |
 
     !!! warning "Hard Gate"
         If the Decision criterion scores 0.0 (no clear decision found), the overall score is forced to 0.0 regardless of other criteria.
@@ -206,7 +181,7 @@
 
     result = await metric.execute(item)
     print(result.pretty())
-    # Score: 0.95 (all components present and strong)
+    # Score: 1.0 (all components present and strong)
     ```
 
 === ":material-cog-outline: Custom Weights"
@@ -247,39 +222,46 @@ result.signals              # Full diagnostic breakdown
 ```python
 UnderwritingCompletenessResult(
 {
-    "overall_score": 0.92,
-    "criteria": {
-        "Decision": {
+    "overall_score": 0.8,
+    "criteria": [
+        {
+            "name": "Decision",
             "score": 1.0,
-            "reasoning": "Clear 'Approve' recommendation stated",
-            "evidence": "Recommendation: Approve"
+            "reasoning": "Explicitly states 'Approve'.",
+            "evidence_found": "Recommendation: Approve"
         },
-        "Rationale": {
-            "score": 0.9,
-            "reasoning": "Strong explanation with multiple factors",
-            "evidence": "low-risk profile, building age, claims history"
+        {
+            "name": "Rationale",
+            "score": 1.0,
+            "reasoning": "Cites specific factor 'building age'.",
+            "evidence_found": "building age: 5 years"
         },
-        "Evidence": {
-            "score": 0.85,
-            "reasoning": "Specific data points cited",
-            "evidence": "5 years, 0 claims, $1.2M"
+        {
+            "name": "Evidence",
+            "score": 1.0,
+            "reasoning": "Specific financial data point.",
+            "evidence_found": "$1.2M"
         },
-        "NextStep": {
-            "score": 0.8,
-            "reasoning": "Clear action specified",
-            "evidence": "Proceed to bind coverage"
+        {
+            "name": "NextStep",
+            "score": 0.0,
+            "reasoning": "Statement of fact only.",
+            "evidence_found": null
         }
-    }
+    ]
 }
 )
 ```
+
+!!! info "Binary Scoring"
+    Each criterion judge returns either **1.0** (pass) or **0.0** (fail). Scores are not continuous.
 
 ### Signal Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `overall_score` | `float` | Weighted combination of criteria |
-| `criteria` | `dict` | Per-criterion score, reasoning, evidence |
+| `criteria` | `List[CompletenessCriterion]` | Per-criterion results (`name`, `score`, `reasoning`, `evidence_found`) |
 
 </details>
 
@@ -287,66 +269,57 @@ UnderwritingCompletenessResult(
 
 ## Example Scenarios
 
-<details markdown="1">
-<summary><strong>✅ Scenario 1: Complete Recommendation (Score: 0.95)</strong></summary>
+=== "Pass (1.0)"
 
-!!! success "All Components Present"
+    !!! success "All Components Present"
 
-    **Recommendation:**
-    > "**Approve** this application. The business has excellent financials with $2.1M annual revenue, no prior claims in 5 years, and the building is well-maintained (constructed 2019). Proceed to bind the policy immediately."
+        **Recommendation:**
+        > "**Approve** this application. The business has excellent financials with $2.1M annual revenue, no prior claims in 5 years, and the building is well-maintained (constructed 2019). Proceed to bind the policy immediately."
 
-    **Analysis:**
+        **Analysis:**
 
-    | Criterion | Score | Finding |
-    |-----------|-------|---------|
-    | Decision | 1.0 | Clear "Approve" |
-    | Rationale | 0.95 | Multiple factors explained |
-    | Evidence | 0.90 | Specific data cited |
-    | NextStep | 0.85 | Clear action |
+        | Criterion | Score | Finding |
+        |-----------|-------|---------|
+        | Decision | 1.0 | Clear "Approve" |
+        | Rationale | 1.0 | Cites specific factor |
+        | Evidence | 1.0 | Specific data cited |
+        | NextStep | 1.0 | Clear action |
 
-    **Final Score:** `0.95` :material-check-all:
+        **Final Score:** `(0.4 × 1.0) + (0.2 × 1.0) + (0.2 × 1.0) + (0.2 × 1.0) = 1.0` :material-check-all:
 
-</details>
+=== "Partial (0.6)"
 
-<details markdown="1">
-<summary><strong>⚠️ Scenario 2: Weak Components (Score: 0.65)</strong></summary>
+    !!! warning "Missing Elements"
 
-!!! warning "Missing Elements"
+        **Recommendation:**
+        > "Approve. Good risk."
 
-    **Recommendation:**
-    > "Approve. Good risk."
+        **Analysis:**
 
-    **Analysis:**
+        | Criterion | Score | Finding |
+        |-----------|-------|---------|
+        | Decision | 1.0 | Clear "Approve" |
+        | Rationale | 0.0 | Too generic |
+        | Evidence | 0.0 | No specific data |
+        | NextStep | 0.0 | No next steps |
 
-    | Criterion | Score | Finding |
-    |-----------|-------|---------|
-    | Decision | 1.0 | Clear "Approve" |
-    | Rationale | 0.4 | Vague "good risk" |
-    | Evidence | 0.2 | No specific data |
-    | NextStep | 0.0 | No next steps |
+        **Final Score:** `(0.4 × 1.0) + (0.2 × 0.0) + (0.2 × 0.0) + (0.2 × 0.0) = 0.4` :material-alert:
 
-    **Final Score:** `0.65` :material-alert:
+=== "Fail (0.0)"
 
-</details>
+    !!! failure "Hard Gate Triggered"
 
-<details markdown="1">
-<summary><strong>❌ Scenario 3: No Decision (Score: 0.0)</strong></summary>
+        **Recommendation:**
+        > "The building is 10 years old with $500k revenue. There have been 2 claims in the past 3 years."
 
-!!! failure "Hard Gate Triggered"
+        **Analysis:**
 
-    **Recommendation:**
-    > "The building is 10 years old with $500k revenue. There have been 2 claims in the past 3 years."
+        | Criterion | Score | Finding |
+        |-----------|-------|---------|
+        | Decision | 0.0 | No decision stated |
+        | Hard Gate | Triggered | Score forced to 0.0 |
 
-    **Analysis:**
-
-    | Criterion | Score | Finding |
-    |-----------|-------|---------|
-    | Decision | 0.0 | No decision stated |
-    | Hard Gate | Triggered | Score forced to 0.0 |
-
-    **Final Score:** `0.0` :material-close:
-
-</details>
+        **Final Score:** `0.0` :material-close:
 
 ---
 
