@@ -1,6 +1,8 @@
 site_name: Eval Workbench
 site_description: Evaluation tooling and metrics for agent workflows
 repo_url: https://github.com/MGT-Insurance/eval-workbench
+repo_name: MGT-Insurance/eval-workbench
+copyright: "&copy; 2025 MGT Insurance"
 
 nav:
   - Home:
@@ -56,9 +58,11 @@ theme:
   custom_dir: docs/overrides
   logo: assets/mountains-light.svg
   favicon: assets/mountains-light.svg
+  icon:
+    repo: fontawesome/brands/github
   font:
     text: Inter
-    code: Fira Code
+    code: JetBrains Mono
   features:
     - navigation.tabs
     - navigation.tabs.sticky
@@ -67,10 +71,13 @@ theme:
     - navigation.instant
     - navigation.tracking
     - navigation.top
+    - navigation.expand
     - content.code.copy
+    - content.code.annotate
     - content.tabs.link
     - search.suggest
     - search.highlight
+    - toc.follow
   language: en
   palette:
     - scheme: slate
@@ -89,7 +96,10 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
-extra: {}
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/MGT-Insurance/eval-workbench
 
 plugins:
   - search
@@ -123,7 +133,16 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
-  - codehilite
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - def_list
+  - footnotes
   - attr_list
   - md_in_html
   - toc:

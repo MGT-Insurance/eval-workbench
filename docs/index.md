@@ -1,124 +1,101 @@
-# Eval Workbench – MGT AI Evaluation
+---
+hide:
+  - toc
+---
 
-This repository contains specific implementations built on top of the
-[Axion](https://github.com/ax-foundry/axion) or any other Evaluation Module.
-This architecture separates the core evaluation framework from individual
-evaluation implementations, enabling better tracking, ability to create custom
-sharable tooling, easier sharing, and a clear separation of concerns.
+# Eval Workbench
+
+**Evaluation tooling and metrics for MGT agent workflows.**
+
+Built on top of [Axion](https://github.com/ax-foundry/axion) and other evaluation modules, Eval Workbench separates the core evaluation framework from individual implementations — enabling better tracking, custom sharable tooling, and a clear separation of concerns.
+
+[Get started](getting-started/index.md){ .md-button .md-button--primary }
+[View on GitHub](https://github.com/MGT-Insurance/eval-workbench){ .md-button }
 
 ---
 
-### architecture
-Get the full repo-level architecture overview, system diagram, and runtime flows:
-[Architecture overview](deep-dives/architecture.md)
+## Features
+
+<div class="feature-grid" markdown>
+
+<div class="feature-card" markdown>
+
+:material-chart-tree: **Metric Registry**
+
+Evaluation metrics organized by scope — shared Slack metrics, Athena recommendation metrics, and more.
+
+</div>
+
+<div class="feature-card" markdown>
+
+:material-connection: **Langfuse Integration**
+
+Prompt management, trace collection, and webhook-driven cache invalidation with Slack notifications.
+
+</div>
+
+<div class="feature-card" markdown>
+
+:material-monitor-dashboard: **Monitoring**
+
+Production monitoring and alerting with YAML-driven configuration for evaluation pipelines.
+
+</div>
+
+<div class="feature-card" markdown>
+
+:material-slack: **Slack Analytics**
+
+Conversation analysis, KPI tracking, and multi-agent evaluation across Slack-based workflows.
+
+</div>
+
+<div class="feature-card" markdown>
+
+:material-brain: **Knowledge Graph Memory**
+
+Decision memory system for persisting and recalling evaluation context across sessions.
+
+</div>
+
+<div class="feature-card" markdown>
+
+:material-layers-outline: **Architecture**
+
+Deep dives into system design, database schema, and runtime flows.
+
+</div>
+
+</div>
 
 ---
 
-### environment variables
-Environment variables are loaded with Pydantic Settings in two layers, with later
-files overriding earlier ones:
+## Tech Stack
 
-- 1) Repo root `.env` provides global defaults.
-- 2) `implementations/<name>/.env` provides per-implementation overrides.
-
-Use `.env.example` files as the canonical templates for what each layer supports.
-When you add a new setting, define it on a settings class that inherits
-`shared.settings.RepoSettingsBase` and sets `model_config` via
-`build_settings_config(from_path=Path(__file__))`, then document the value in the
-relevant `.env.example`.
+| Component | Technology |
+|-----------|-----------|
+| Evaluation framework | [Axion](https://github.com/ax-foundry/axion) |
+| Prompt management | [Langfuse](https://langfuse.com) |
+| Configuration | [Pydantic](https://docs.pydantic.dev) Settings |
+| Database | Neon / PostgreSQL |
+| Task orchestration | Python async |
+| Documentation | MkDocs Material |
 
 ---
 
-### langfuse settings
-Prompt management uses these Langfuse settings:
-```
-LANGFUSE_PUBLIC_KEY=""
-LANGFUSE_SECRET_KEY=""
-LANGFUSE_HOST=""
-LANGFUSE_DEFAULT_LABEL="production"
-LANGFUSE_DEFAULT_CACHE_TTL_SECONDS=60
-```
+## Quick Start
 
----
+Install the repo in editable mode so all imports resolve:
 
-### database settings
-The Neon/Postgres helper reads these variables (all optional unless your app
-needs a DB connection):
-```
-DATABASE_URL=""
-DB_POOL_MIN_SIZE=0
-DB_POOL_MAX_SIZE=20
-DB_CONNECT_TIMEOUT_SECONDS=10
-DB_STATEMENT_TIMEOUT_MS=60000
-DB_USE_STARTUP_STATEMENT_TIMEOUT=false
-DB_APPLICATION_NAME=""
-DB_UPLOAD_CHUNK_SIZE=1000
-```
-
----
-
-### notebook imports
-For notebooks under any `src/implementations/<name>/notebooks/`, install this
-repo in editable mode so `shared` and `implementations.<name>` imports work
-without `sys.path` hacks:
-```
+```bash
 pip install -e .
 ```
 
----
+Set up pre-commit hooks:
 
-### prompt patterns
-Prompt extraction uses an explicit strategy passed to `Trace` or
-`TraceCollection`. For Athena:
-```
-from eval_workbench.implementations.athena.langfuse.prompt_patterns import (
-    ChatPromptPatterns,
-    WorkflowPromptPatterns,
-)
-from eval_workbench.shared.langfuse.trace import TraceCollection
-
-chat_traces = TraceCollection(data, prompt_patterns=ChatPromptPatterns)
-recommendation_traces = TraceCollection(data, prompt_patterns=WorkflowPromptPatterns)
-```
-
----
-
-### langfuse webhooks
-Use a webhook to invalidate prompt cache on updates:
-```
-export LANGFUSE_PUBLIC_KEY="..."
-export LANGFUSE_SECRET_KEY="..."
-export LANGFUSE_WEBHOOK_SECRET="whsec_..."
-export LANGFUSE_WEBHOOK_NOTIFY_URL="https://your-app/notify"
-export LANGFUSE_SLACK_CHANNEL_ID="C0123456789"
-export LANGFUSE_SLACK_REQUEST_TIMEOUT_SECONDS="10"
-export LANGFUSE_SLACK_RETRY_MAX_ATTEMPTS="3"
-export LANGFUSE_SLACK_RETRY_BACKOFF_SECONDS="0.5"
-export LANGFUSE_SLACK_RETRY_MAX_BACKOFF_SECONDS="4.0"
-export SLACK_ATHENA_TOKEN="xoxb-..."
-export SLACK_AIMEE_TOKEN="xoxb-..."
-export SLACK_CANARY_TOKEN="xoxb-..."
-export SLACK_PROMETHEUS_TOKEN="xoxb-..."
-export SLACK_QUILL_TOKEN="xoxb-..."
-
-uvicorn shared.langfuse.webhook:app --host 0.0.0.0 --port 5001
-```
-
-Configure Langfuse to POST to `https://your-host/webhooks/langfuse` for
-`prompt.created`, `prompt.updated`, and `prompt.deleted` events.
-
-Test: update a prompt in Langfuse and confirm a message posts to the Slack
-channel. Slack posting happens in a background task and includes retry/backoff
-with rate-limit handling.
-
----
-
-### pre-commit
-Formatting is managed via pre-commit hooks.
-```
-# Run on all files
-pre-commit run --all-files
-
-# Install to run after every commit
+```bash
 pre-commit install
+pre-commit run --all-files
 ```
+
+Then head to [Getting Started](getting-started/index.md) for environment setup and configuration details.
