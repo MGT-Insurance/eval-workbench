@@ -120,6 +120,11 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
         elif isinstance(meta, dict):
             trace_metadata = meta
 
+    # Augment metadata with location-extraction result (best-effort)
+    location_extraction = _extract_location_extraction_first_location(trace)
+    if location_extraction is not None:
+        trace_metadata['location_extraction'] = location_extraction
+
     return DatasetItem(
         id=quote_locator,
         query=f'Provide a risk assessment for {quote_locator}',
@@ -162,11 +167,70 @@ def _safe_get(obj: Any, path: str, default: Any = None) -> Any:
                         return default
                     current = matched
             else:
-                return default
+                # Allow bracket access for SmartAccess wrappers (e.g. step names with hyphens)
+                try:
+                    current = current[part]
+                except Exception:
+                    return default
         except Exception:
             return default
 
     return current if current is not None else default
+
+
+def _extract_location_extraction_first_location(trace: Trace) -> dict[str, Any] | None:
+    """
+    Best-effort extraction of:
+      trace['location-extraction'].GENERATION.output.locations[0].to_dict()
+
+    Stored into DatasetItem.dataset_metadata as `location_extraction`.
+    """
+    try:
+        step = trace['location-extraction']
+    except Exception:
+        try:
+            step = trace['location_extraction']
+        except Exception:
+            return None
+
+    # Prefer the explicit GENERATION observation, but allow the alias too.
+    gen = _safe_get(step, 'GENERATION', None) or _safe_get(step, 'generation', None)
+    if gen is None:
+        return None
+
+    locations = _safe_get(gen, 'output.locations', None)
+    if not isinstance(locations, list) or not locations:
+        return None
+
+    first = locations[0]
+    out = _to_dict_like(first)
+    return out if isinstance(out, dict) and out else None
+
+
+def _to_dict_like(value: Any) -> Any:
+    """Convert common model-ish objects into plain dicts/lists for JSON metadata."""
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, dict):
+        return {k: _to_dict_like(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_to_dict_like(v) for v in value]
+    if hasattr(value, 'to_dict'):
+        try:
+            return _to_dict_like(value.to_dict())
+        except Exception:
+            pass
+    if hasattr(value, 'model_dump'):
+        try:
+            return _to_dict_like(value.model_dump())
+        except Exception:
+            pass
+    if hasattr(value, '__dict__'):
+        try:
+            return _to_dict_like(vars(value))
+        except Exception:
+            pass
+    return str(value)
 
 
 def _is_invalid_value(value: Any) -> bool:

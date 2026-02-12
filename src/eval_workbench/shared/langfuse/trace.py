@@ -197,9 +197,19 @@ class PromptPatternsBase:
 
     @classmethod
     def get_for(cls, step_name: str) -> Dict[str, str]:
-        method_name = f'_patterns_{step_name.lower()}'
-        if hasattr(cls, method_name):
-            return getattr(cls, method_name)()
+        # Step names may include separators (e.g. "location-extraction") that are
+        # not valid in Python method names. We try a few normalized variants.
+        raw = step_name.lower()
+        candidates = [
+            raw,
+            raw.replace('-', '_'),
+            re.sub(r'[^a-z0-9_]+', '_', raw).strip('_'),
+            re.sub(r'[^a-z0-9]+', '', raw),
+        ]
+        for candidate in candidates:
+            method_name = f'_patterns_{candidate}'
+            if hasattr(cls, method_name):
+                return getattr(cls, method_name)()
         return {}
 
 
