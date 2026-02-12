@@ -38,11 +38,11 @@ class WorkflowPromptPatterns(PromptPatternsBase):
           Extract all addresses according to the schema, classifying each by type and citing the source.
         """
         h_quote = 'Quote JSON'
-        h_after_quote = (
-            'Extract all addresses according to the schema, classifying each by type and citing the source.'
-        )
+        h_after_quote = 'Extract all addresses according to the schema, classifying each by type and citing the source.'
         return {
-            'quote': create_extraction_pattern(h_quote, f'{re.escape(h_after_quote)}|$'),
+            'quote': create_extraction_pattern(
+                h_quote, f'{re.escape(h_after_quote)}|$'
+            ),
         }
 
 

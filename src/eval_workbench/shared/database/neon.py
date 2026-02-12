@@ -48,6 +48,8 @@ class NeonSettings(RepoSettingsBase):
         default=None,
         description='Optional Postgres application_name.',
     )
+
+
 @lru_cache(maxsize=1)
 def get_neon_settings() -> NeonSettings:
     return NeonSettings()
@@ -294,9 +296,7 @@ class NeonConnection:
                 schema_sql = sql.SQL(', ').join(column_defs)
             else:
                 assert schema is not None
-                schema_sql = sql.SQL(
-                    _validate_trusted_sql_fragment(schema, 'schema')
-                )
+                schema_sql = sql.SQL(_validate_trusted_sql_fragment(schema, 'schema'))
 
             query = sql.SQL('CREATE TABLE IF NOT EXISTS {} ({})').format(
                 sql.Identifier(table_name),
@@ -501,9 +501,7 @@ class AsyncNeonConnection:
                 schema_sql = sql.SQL(', ').join(column_defs)
             else:
                 assert schema is not None
-                schema_sql = sql.SQL(
-                    _validate_trusted_sql_fragment(schema, 'schema')
-                )
+                schema_sql = sql.SQL(_validate_trusted_sql_fragment(schema, 'schema'))
 
             query = sql.SQL('CREATE TABLE IF NOT EXISTS {} ({})').format(
                 sql.Identifier(table_name),
@@ -552,4 +550,3 @@ class AsyncNeonConnection:
             return True
         except Exception:
             return False
-

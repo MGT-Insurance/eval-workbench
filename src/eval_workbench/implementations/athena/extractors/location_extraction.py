@@ -135,4 +135,3 @@ def _safe_get(obj: Any, path: str, default: Any = None) -> Any:
         except Exception:
             return default
     return current if current is not None else default
-
