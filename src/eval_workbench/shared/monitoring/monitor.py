@@ -37,6 +37,7 @@ from eval_workbench.shared.monitoring.sources import (
     LangfuseDataSource,
     NeonDataSource,
     SlackDataSource,
+    SlackNeonJoinDataSource,
 )
 
 metric_registry.finalize_initial_state()
@@ -165,6 +166,8 @@ class OnlineMonitor:
             source = cls._build_langfuse_source(source_cfg)
         elif source_type == 'slack':
             source = cls._build_slack_source(source_cfg)
+        elif source_type == 'slack_neon_join':
+            source = cls._build_slack_neon_join_source(source_cfg)
         elif source_type == 'neon':
             source = cls._build_neon_source(source_cfg)
         else:
@@ -256,10 +259,19 @@ class OnlineMonitor:
             scrape_threads=source_cfg.get('scrape_threads', True),
             filter_sender=source_cfg.get('filter_sender'),
             bot_name=source_cfg.get('bot_name', 'Athena'),
+            bot_names=source_cfg.get('bot_names'),
             workspace_domain=source_cfg.get('workspace_domain', 'mgtinsurance'),
             drop_if_first_is_user=source_cfg.get('drop_if_first_is_user', False),
             drop_if_all_ai=source_cfg.get('drop_if_all_ai', False),
             max_concurrent=source_cfg.get('max_concurrent', 2),
+            exclude_senders=source_cfg.get('exclude_senders'),
+            drop_message_regexes=source_cfg.get('drop_message_regexes'),
+            strip_citation_block=source_cfg.get('strip_citation_block', False),
+            oldest_ts=source_cfg.get('oldest_ts'),
+            latest_ts=source_cfg.get('latest_ts'),
+            window_days=source_cfg.get('window_days'),
+            window_hours=source_cfg.get('window_hours'),
+            window_minutes=source_cfg.get('window_minutes'),
         )
 
     @classmethod
@@ -281,6 +293,57 @@ class OnlineMonitor:
             connection_string=source_cfg.get('connection_string'),
             params=source_cfg.get('params'),
             limit=source_cfg.get('limit'),
+            chunk_size=source_cfg.get('chunk_size', 1000),
+            timeout_seconds=source_cfg.get('timeout_seconds'),
+        )
+
+    @classmethod
+    def _build_slack_neon_join_source(cls, source_cfg: dict) -> SlackNeonJoinDataSource:
+        """Build SlackNeonJoinDataSource from config."""
+        channel_ids = source_cfg.get('channel_ids', [])
+        if not channel_ids:
+            raise ConfigurationError("Slack-neon join source requires 'channel_ids'")
+
+        neon_query = source_cfg.get('neon_query')
+        if not neon_query:
+            raise ConfigurationError("Slack-neon join source requires 'neon_query'")
+
+        slack_join_columns = source_cfg.get('slack_join_columns')
+        neon_join_columns = source_cfg.get('neon_join_columns')
+        if not slack_join_columns or not neon_join_columns:
+            raise ConfigurationError(
+                "Slack-neon join source requires 'slack_join_columns' and 'neon_join_columns'"
+            )
+
+        return SlackNeonJoinDataSource(
+            name=source_cfg.get('name', 'default'),
+            channel_ids=channel_ids,
+            neon_query=neon_query,
+            slack_join_columns=slack_join_columns,
+            neon_join_columns=neon_join_columns,
+            dataset_id_column=source_cfg.get('dataset_id_column'),
+            neon_time_column=source_cfg.get('neon_time_column', 'created_at'),
+            buffer_minutes=source_cfg.get('buffer_minutes', 0),
+            neon_connection_string=source_cfg.get('connection_string'),
+            neon_chunk_size=source_cfg.get('chunk_size', 1000),
+            neon_timeout_seconds=source_cfg.get('timeout_seconds'),
+            limit=source_cfg.get('limit', 10),
+            scrape_threads=source_cfg.get('scrape_threads', True),
+            filter_sender=source_cfg.get('filter_sender'),
+            bot_name=source_cfg.get('bot_name', 'Athena'),
+            bot_names=source_cfg.get('bot_names'),
+            workspace_domain=source_cfg.get('workspace_domain', 'mgtinsurance'),
+            drop_if_first_is_user=source_cfg.get('drop_if_first_is_user', False),
+            drop_if_all_ai=source_cfg.get('drop_if_all_ai', False),
+            max_concurrent=source_cfg.get('max_concurrent', 2),
+            exclude_senders=source_cfg.get('exclude_senders'),
+            drop_message_regexes=source_cfg.get('drop_message_regexes'),
+            strip_citation_block=source_cfg.get('strip_citation_block', False),
+            oldest_ts=source_cfg.get('oldest_ts'),
+            latest_ts=source_cfg.get('latest_ts'),
+            window_days=source_cfg.get('window_days'),
+            window_hours=source_cfg.get('window_hours'),
+            window_minutes=source_cfg.get('window_minutes'),
         )
 
     @classmethod

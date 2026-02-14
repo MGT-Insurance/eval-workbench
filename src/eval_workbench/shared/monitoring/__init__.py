@@ -18,6 +18,7 @@ from eval_workbench.shared.monitoring.sources import (
     DataSource,
     LangfuseDataSource,
     SlackDataSource,
+    SlackNeonJoinDataSource,
 )
 
 __all__ = [
@@ -25,6 +26,7 @@ __all__ = [
     'ConfigurationError',
     'DataSource',
     'LangfuseDataSource',
+    'SlackNeonJoinDataSource',
     'SlackDataSource',
     'ScoredItemsStore',
     'CSVScoredItemsStore',

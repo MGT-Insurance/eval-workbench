@@ -84,7 +84,7 @@ SELECT
     d.additional_input,
     d.acceptance_criteria,
     d.dataset_metadata,
-    d.created_at,
+    d.created_at AS dataset_created_at,
     d.conversation,
     d.tools_called,
     d.expected_tools,
@@ -128,10 +128,22 @@ FROM evaluation_results r
 JOIN evaluation_dataset d ON r.dataset_id = d.dataset_id;
 """.strip()
 
+EVALUATION_INDEXES_SQL = """
+CREATE INDEX IF NOT EXISTS idx_eval_results_dataset_id
+    ON evaluation_results(dataset_id);
+CREATE INDEX IF NOT EXISTS idx_eval_results_run_id
+    ON evaluation_results(run_id);
+CREATE INDEX IF NOT EXISTS idx_eval_results_timestamp
+    ON evaluation_results(timestamp);
+CREATE INDEX IF NOT EXISTS idx_eval_dataset_created_at
+    ON evaluation_dataset(created_at);
+""".strip()
+
 
 def create_evaluation_tables_and_view(db: NeonConnection) -> None:
     db.create_table('evaluation_dataset', schema=EVALUATION_DATASET_SCHEMA)
     db.create_table('evaluation_results', schema=EVALUATION_RESULTS_SCHEMA)
+    db.execute_commit(EVALUATION_INDEXES_SQL)
     db.execute_commit(EVALUATION_VIEW_SQL)
 
 
