@@ -91,6 +91,13 @@ source:
   # # Maximum conversations to fetch
   # limit: 50
   #
+  # # Time window - use ONE relative window option unless providing oldest_ts/latest_ts
+  # # oldest_ts: 1738790400.0   # Optional epoch seconds lower bound (inclusive)
+  # # latest_ts: 1738876800.0   # Optional epoch seconds upper bound (inclusive)
+  # # window_days: 1            # Relative lookback from "now" (used if oldest_ts unset)
+  # # window_hours: 6
+  # # window_minutes: 30
+  #
   # # Whether to fetch thread replies
   # scrape_threads: true
   #
@@ -109,6 +116,24 @@ source:
   #
   # # Filter by sender (optional)
   # # filter_sender: "U1234567890"
+  #
+  # # Optional content cleanup
+  # # strip_citation_block: true
+  #
+  # # --- SLACK + NEON JOIN SOURCE (alternative) ---
+  # # type: slack_neon_join
+  # # name: "athena_joined"
+  # # channel_ids:
+  # #   - "C09JE5SSP43"
+  # #   - "C09MAP9HR9D"
+  # # limit: 100
+  # # window_minutes: 300
+  # # buffer_minutes: 30
+  # # neon_query: "SELECT slack_thread_ts, slack_channel_id, quote_locator, created_at FROM athena_cases"
+  # # slack_join_columns: ["channel_id", "thread_ts"]
+  # # neon_join_columns: ["slack_channel_id", "slack_thread_ts"]
+  # # dataset_id_column: "quote_locator"
+  # # neon_time_column: "created_at"
 
 # =============================================================================
 # SAMPLING CONFIGURATION (optional)

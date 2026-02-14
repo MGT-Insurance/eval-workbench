@@ -26,10 +26,13 @@ Example:
     dataset = await source.fetch_items()
 """
 
+import json
 import logging
+import re
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
+import pandas as pd
 from axion.dataset import Dataset, DatasetItem
 from axion.tracing import LangfuseTraceLoader
 
@@ -197,6 +200,11 @@ class SlackDataSource(DataSource):
         exclude_senders: Optional list of sender names to omit from conversations
         drop_message_regexes: Optional list of regex patterns to drop messages
         strip_citation_block: Remove trailing citation blocks like "[1] ..." lines
+        oldest_ts: Optional inclusive lower timestamp bound for channel history pulls
+        latest_ts: Optional inclusive upper timestamp bound for channel history pulls
+        window_days: Relative lookback window in days (if oldest_ts is unset)
+        window_hours: Relative lookback window in hours (if oldest_ts is unset)
+        window_minutes: Relative lookback window in minutes (if oldest_ts is unset)
     """
 
     def __init__(
@@ -215,6 +223,11 @@ class SlackDataSource(DataSource):
         exclude_senders: list[str] | None = None,
         drop_message_regexes: list[str] | None = None,
         strip_citation_block: bool = False,
+        oldest_ts: float | None = None,
+        latest_ts: float | None = None,
+        window_days: float | None = None,
+        window_hours: float | None = None,
+        window_minutes: float | None = None,
     ):
         self._name = name
         self._channel_ids = channel_ids
@@ -230,6 +243,11 @@ class SlackDataSource(DataSource):
         self._exclude_senders = exclude_senders
         self._drop_message_regexes = drop_message_regexes
         self._strip_citation_block = strip_citation_block
+        self._oldest_ts = oldest_ts
+        self._latest_ts = latest_ts
+        self._window_days = window_days
+        self._window_hours = window_hours
+        self._window_minutes = window_minutes
 
     @property
     def source_key(self) -> str:
@@ -259,11 +277,229 @@ class SlackDataSource(DataSource):
             exclude_senders=self._exclude_senders,
             drop_message_regexes=self._drop_message_regexes,
             strip_citation_block=self._strip_citation_block,
+            oldest_ts=self._oldest_ts,
+            latest_ts=self._latest_ts,
+            window_days=self._window_days,
+            window_hours=self._window_hours,
+            window_minutes=self._window_minutes,
         )
 
         items = await exporter.execute()
         logger.info(f'Fetched {len(items)} items from Slack')
         return Dataset.create(name=self._name, items=items)
+
+
+class SlackNeonJoinDataSource(DataSource):
+    """Fetch Slack items, join with Neon rows, and return merged Dataset."""
+
+    _SAFE_SQL_IDENTIFIER = re.compile(r'^[A-Za-z_][A-Za-z0-9_\.]*$')
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        channel_ids: list[str],
+        neon_query: str,
+        slack_join_columns: list[str],
+        neon_join_columns: list[str],
+        dataset_id_column: str | None = None,
+        neon_time_column: str = 'created_at',
+        buffer_minutes: float = 0.0,
+        neon_connection_string: str | None = None,
+        neon_chunk_size: int = 1000,
+        neon_timeout_seconds: float | None = None,
+        limit: int = 10,
+        scrape_threads: bool = True,
+        filter_sender: str | None = None,
+        bot_name: str = 'Athena',
+        bot_names: list[str] | None = None,
+        workspace_domain: str = 'mgtinsurance',
+        drop_if_first_is_user: bool = False,
+        drop_if_all_ai: bool = False,
+        max_concurrent: int = 2,
+        exclude_senders: list[str] | None = None,
+        drop_message_regexes: list[str] | None = None,
+        strip_citation_block: bool = False,
+        oldest_ts: float | None = None,
+        latest_ts: float | None = None,
+        window_days: float | None = None,
+        window_hours: float | None = None,
+        window_minutes: float | None = None,
+    ):
+        if not slack_join_columns or not neon_join_columns:
+            raise ValueError('slack_join_columns and neon_join_columns are required')
+        if len(slack_join_columns) != len(neon_join_columns):
+            raise ValueError(
+                'slack_join_columns and neon_join_columns must have equal lengths'
+            )
+        if buffer_minutes < 0:
+            raise ValueError('buffer_minutes must be >= 0')
+        if not self._SAFE_SQL_IDENTIFIER.match(neon_time_column):
+            raise ValueError(f'Invalid neon_time_column: {neon_time_column}')
+
+        self._name = name
+        self._channel_ids = channel_ids
+        self._neon_query = neon_query
+        self._slack_join_columns = slack_join_columns
+        self._neon_join_columns = neon_join_columns
+        self._dataset_id_column = dataset_id_column
+        self._neon_time_column = neon_time_column
+        self._buffer_minutes = buffer_minutes
+        self._neon_connection_string = neon_connection_string
+        self._neon_chunk_size = neon_chunk_size
+        self._neon_timeout_seconds = neon_timeout_seconds
+
+        self._slack_exporter_kwargs = {
+            'channel_ids': channel_ids,
+            'limit': limit,
+            'scrape_threads': scrape_threads,
+            'filter_sender': filter_sender,
+            'bot_name': bot_name,
+            'bot_names': bot_names,
+            'workspace_domain': workspace_domain,
+            'drop_if_first_is_user': drop_if_first_is_user,
+            'drop_if_all_ai': drop_if_all_ai,
+            'max_concurrent': max_concurrent,
+            'exclude_senders': exclude_senders,
+            'drop_message_regexes': drop_message_regexes,
+            'strip_citation_block': strip_citation_block,
+            'oldest_ts': oldest_ts,
+            'latest_ts': latest_ts,
+            'window_days': window_days,
+            'window_hours': window_hours,
+            'window_minutes': window_minutes,
+        }
+
+    @property
+    def source_key(self) -> str:
+        return f'slack_neon_join:{self._name}'
+
+    @staticmethod
+    def _with_time_bounds(
+        query: str,
+        time_column: str,
+        oldest_ts: float | None,
+        latest_ts: float | None,
+    ) -> tuple[str, tuple[Any, ...] | None]:
+        """Append parameterized time predicates to SQL query."""
+        if oldest_ts is None and latest_ts is None:
+            return query, None
+
+        base_query = query.strip().rstrip(';')
+        clauses: list[str] = []
+        params: list[Any] = []
+        if oldest_ts is not None:
+            clauses.append(f'{time_column} >= to_timestamp(%s)')
+            params.append(oldest_ts)
+        if latest_ts is not None:
+            clauses.append(f'{time_column} <= to_timestamp(%s)')
+            params.append(latest_ts)
+
+        connector = (
+            ' AND ' if re.search(r'\bWHERE\b', base_query, re.IGNORECASE) else ' WHERE '
+        )
+        return f'{base_query}{connector}{" AND ".join(clauses)}', tuple(params)
+
+    @staticmethod
+    def _parse_metadata(value: Any) -> dict[str, Any]:
+        if isinstance(value, dict):
+            return value
+        if isinstance(value, str) and value.strip():
+            try:
+                parsed = json.loads(value)
+                return parsed if isinstance(parsed, dict) else {}
+            except Exception:
+                return {}
+        return {}
+
+    def _expand_dataset_metadata(self, df: pd.DataFrame) -> pd.DataFrame:
+        if 'dataset_metadata' not in df.columns:
+            return df
+        parsed_metadata = df['dataset_metadata'].apply(self._parse_metadata)
+        metadata_df = parsed_metadata.apply(pd.Series)
+        if metadata_df.empty:
+            return df
+        return pd.concat([df, metadata_df], axis=1)
+
+    @staticmethod
+    def _serialize_metadata(value: Any) -> str:
+        if isinstance(value, str):
+            return value
+        if isinstance(value, dict):
+            return json.dumps(value)
+        return json.dumps({})
+
+    @staticmethod
+    def _require_columns(df: pd.DataFrame, columns: list[str], label: str) -> None:
+        missing = [col for col in columns if col not in df.columns]
+        if missing:
+            raise ValueError(f'Missing {label} columns: {missing}')
+
+    async def fetch_items(self) -> Dataset:
+        from eval_workbench.shared.database.neon import AsyncNeonConnection
+        from eval_workbench.shared.slack.exporter import SlackExporter
+
+        exporter = SlackExporter(**self._slack_exporter_kwargs)
+        slack_items = await exporter.execute()
+        if not slack_items:
+            return Dataset.create(name=self._name, items=[])
+
+        slack_dataset = Dataset.create(name=self._name, items=slack_items)
+        slack_df = self._expand_dataset_metadata(slack_dataset.to_dataframe())
+
+        self._require_columns(slack_df, self._slack_join_columns, 'slack join')
+
+        slack_oldest = exporter.default_oldest_ts
+        slack_latest = exporter.default_latest_ts
+        buffer_seconds = self._buffer_minutes * 60.0
+        neon_oldest = (
+            slack_oldest - buffer_seconds if slack_oldest is not None else None
+        )
+        neon_latest = (
+            slack_latest + buffer_seconds if slack_latest is not None else None
+        )
+        neon_query, neon_params = self._with_time_bounds(
+            query=self._neon_query,
+            time_column=self._neon_time_column,
+            oldest_ts=neon_oldest,
+            latest_ts=neon_latest,
+        )
+
+        async with AsyncNeonConnection(self._neon_connection_string) as db:
+            neon_df = await db.fetch_dataframe_chunked(
+                neon_query,
+                neon_params,
+                chunk_size=self._neon_chunk_size,
+                timeout_seconds=self._neon_timeout_seconds,
+            )
+
+        if neon_df.empty:
+            return Dataset.create(name=self._name, items=[])
+        self._require_columns(neon_df, self._neon_join_columns, 'neon join')
+
+        merged = slack_df.merge(
+            neon_df,
+            left_on=self._slack_join_columns,
+            right_on=self._neon_join_columns,
+            how='inner',
+        )
+
+        if merged.empty:
+            return Dataset.create(name=self._name, items=[])
+
+        if self._dataset_id_column:
+            if self._dataset_id_column not in merged.columns:
+                raise ValueError(
+                    f'Missing dataset_id_column in merged rows: {self._dataset_id_column}'
+                )
+            merged['dataset_id'] = merged[self._dataset_id_column].astype(str)
+
+        if 'dataset_metadata' in merged.columns:
+            merged['dataset_metadata'] = merged['dataset_metadata'].apply(
+                self._serialize_metadata
+            )
+
+        return Dataset.read_dataframe(merged, ignore_extra_keys=True)
 
 
 class NeonDataSource(DataSource):
@@ -276,6 +512,8 @@ class NeonDataSource(DataSource):
         connection_string: Optional database URL (falls back to DATABASE_URL env var)
         params: Optional query parameters (tuple or dict)
         limit: Optional limit to append if query lacks LIMIT clause
+        chunk_size: Rows per batch when streaming results from Neon
+        timeout_seconds: Optional per-query statement timeout override
     """
 
     def __init__(
@@ -287,6 +525,8 @@ class NeonDataSource(DataSource):
         params: tuple | dict | None = None,
         limit: int | None = None,
         has_field: str | None = None,
+        chunk_size: int = 1000,
+        timeout_seconds: float | None = None,
     ):
         self._name = name
         self._query = query
@@ -295,6 +535,8 @@ class NeonDataSource(DataSource):
         self._params = params
         self._limit = limit
         self._has_field = has_field
+        self._chunk_size = chunk_size
+        self._timeout_seconds = timeout_seconds
 
     @property
     def source_key(self) -> str:
@@ -309,23 +551,27 @@ class NeonDataSource(DataSource):
 
         logger.info(f'Executing query for neon source {self._name}')
 
+        rows_fetched = 0
         async with AsyncNeonConnection(self._connection_string) as db:
-            rows = await db.fetch_all(query, self._params)
+            items = []
+            async for rows in db.fetch_chunks(
+                query,
+                self._params,
+                chunk_size=self._chunk_size,
+                timeout_seconds=self._timeout_seconds,
+            ):
+                rows_fetched += len(rows)
+                for row in rows:
+                    try:
+                        if self._has_field and len(row.get(self._has_field, [])) == 0:
+                            continue
+                        item = self._extractor(row)
+                        if not item.id:
+                            item.id = str(row.get('id', ''))
+                        items.append(item)
+                    except Exception as e:
+                        row_id = row.get('id', 'unknown')
+                        logger.warning(f'Failed to extract row {row_id}: {e}')
 
-        logger.info(f'Fetched {len(rows)} rows from database')
-
-        items = []
-        for row in rows:
-            try:
-                if self._has_field and len(row.get(self._has_field, [])) == 0:
-                    continue
-                item = self._extractor(row)
-                if not item.id:
-                    item.id = str(row.get('id', ''))
-                items.append(item)
-            except Exception as e:
-                row_id = row.get('id', 'unknown')
-                logger.warning(f'Failed to extract row {row_id}: {e}')
-
-        logger.info(f'Extracted {len(items)} items from {len(rows)} rows')
+        logger.info(f'Extracted {len(items)} items from {rows_fetched} rows')
         return Dataset.create(name=self._name, items=items)

@@ -1,9 +1,11 @@
 import asyncio
+import json
 import logging
 from contextlib import asynccontextmanager, contextmanager
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Tuple, Union
+from uuid import uuid4
 
 import pandas as pd
 import psycopg
@@ -59,19 +61,87 @@ def reset_neon_settings_cache() -> None:
     get_neon_settings.cache_clear()
 
 
-def _build_connection_kwargs(settings: NeonSettings) -> dict:
-    kwargs: dict = {
-        'row_factory': dict_row,
-        'connect_timeout': settings.db_connect_timeout_seconds,
-    }
-    if settings.db_application_name:
-        kwargs['application_name'] = settings.db_application_name
-    if (
-        settings.db_statement_timeout_ms > 0
-        and settings.db_use_startup_statement_timeout
+_DISALLOWED_SQL_CONTROL_TOKENS = (';', '--', '/*', '*/')
+
+
+class BaseNeonConnection:
+    def __init__(
+        self,
+        connection_string: Optional[str] = None,
+        timeout: Optional[float] = None,
+        *,
+        missing_database_url_message: str,
+    ) -> None:
+        self._settings = get_neon_settings()
+        self.dsn = connection_string or self._settings.database_url
+        if not self.dsn:
+            raise ValueError(missing_database_url_message)
+        if self._settings.db_pool_min_size > self._settings.db_pool_max_size:
+            raise ValueError('DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.')
+        if timeout is not None and timeout < 0:
+            raise ValueError('timeout must be >= 0.')
+        self.timeout = timeout
+
+    def _resolve_statement_timeout_ms(
+        self, timeout_seconds: Optional[float] = None
+    ) -> Optional[int]:
+        if timeout_seconds is not None:
+            if timeout_seconds < 0:
+                raise ValueError('timeout_seconds must be >= 0.')
+            return int(timeout_seconds * 1000)
+        if self.timeout is not None:
+            return int(self.timeout * 1000)
+        if self._settings.db_use_startup_statement_timeout:
+            return None
+        if self._settings.db_statement_timeout_ms > 0:
+            return self._settings.db_statement_timeout_ms
+        return None
+
+    @staticmethod
+    def _build_connection_kwargs(settings: NeonSettings) -> dict:
+        kwargs: dict = {
+            'row_factory': dict_row,
+            'connect_timeout': settings.db_connect_timeout_seconds,
+        }
+        if settings.db_application_name:
+            kwargs['application_name'] = settings.db_application_name
+        if (
+            settings.db_statement_timeout_ms > 0
+            and settings.db_use_startup_statement_timeout
+        ):
+            kwargs['options'] = (
+                f'-c statement_timeout={settings.db_statement_timeout_ms}'
+            )
+        return kwargs
+
+    @staticmethod
+    def _validate_trusted_sql_fragment(fragment: str, field_name: str) -> str:
+        if any(token in fragment for token in _DISALLOWED_SQL_CONTROL_TOKENS):
+            raise ValueError(
+                f'Unsafe SQL fragment in {field_name!r}: control tokens are not allowed.'
+            )
+        return fragment
+
+    def _build_schema_sql(
+        self,
+        schema: Optional[str],
+        columns: Optional[List[Tuple[str, str]]],
     ):
-        kwargs['options'] = f'-c statement_timeout={settings.db_statement_timeout_ms}'
-    return kwargs
+        if (schema is None) == (columns is None):
+            raise ValueError('Provide exactly one of schema or columns.')
+
+        if columns is not None:
+            column_defs = [
+                sql.SQL('{} {}').format(
+                    sql.Identifier(name),
+                    sql.SQL(self._validate_trusted_sql_fragment(col_type, 'col_type')),
+                )
+                for name, col_type in columns
+            ]
+            return sql.SQL(', ').join(column_defs)
+
+        assert schema is not None
+        return sql.SQL(self._validate_trusted_sql_fragment(schema, 'schema'))
 
 
 def _apply_statement_timeout_sync(
@@ -100,17 +170,6 @@ def _set_statement_timeout_sync(
         )
 
 
-_DISALLOWED_SQL_CONTROL_TOKENS = (';', '--', '/*', '*/')
-
-
-def _validate_trusted_sql_fragment(fragment: str, field_name: str) -> str:
-    if any(token in fragment for token in _DISALLOWED_SQL_CONTROL_TOKENS):
-        raise ValueError(
-            f'Unsafe SQL fragment in {field_name!r}: control tokens are not allowed.'
-        )
-    return fragment
-
-
 async def _apply_statement_timeout_async(
     conn: psycopg.AsyncConnection, settings: NeonSettings
 ) -> None:
@@ -137,7 +196,7 @@ async def _set_statement_timeout_async(
         )
 
 
-class NeonConnection:
+class NeonConnection(BaseNeonConnection):
     """
     Synchronous database manager for Neon (PostgreSQL).
     Best for scripts, data analysis, or standard web apps (Flask/Django).
@@ -155,24 +214,20 @@ class NeonConnection:
             timeout: Optional default statement timeout for all
                 operations from this connection instance. Uses seconds. 0 disables timeout.
         """
-        self._settings = get_neon_settings()
-        self.dsn = connection_string or self._settings.database_url
-        if not self.dsn:
-            raise ValueError(
+        super().__init__(
+            connection_string=connection_string,
+            timeout=timeout,
+            missing_database_url_message=(
                 'DATABASE_URL not found in environment variables or arguments.'
-            )
-        if self._settings.db_pool_min_size > self._settings.db_pool_max_size:
-            raise ValueError('DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.')
-        if timeout is not None and timeout < 0:
-            raise ValueError('timeout must be >= 0.')
-        self.timeout = timeout
+            ),
+        )
 
         # Initialize Connection Pool
         self.pool = ConnectionPool(
             conninfo=self.dsn,
             min_size=self._settings.db_pool_min_size,
             max_size=self._settings.db_pool_max_size,
-            kwargs=_build_connection_kwargs(self._settings),
+            kwargs=self._build_connection_kwargs(self._settings),
         )
         logger.info('Sync Database connection pool initialized.')
 
@@ -189,33 +244,32 @@ class NeonConnection:
         self.close()
 
     @contextmanager
-    def get_connection(self):
+    def get_connection(self, timeout_seconds: Optional[float] = None):
         conn = self.pool.getconn()
         try:
-            if self.timeout is not None:
-                _set_statement_timeout_sync(conn, int(self.timeout * 1000))
-            else:
-                _apply_statement_timeout_sync(conn, self._settings)
+            statement_timeout_ms = self._resolve_statement_timeout_ms(timeout_seconds)
+            if statement_timeout_ms is not None:
+                _set_statement_timeout_sync(conn, statement_timeout_ms)
             yield conn
         finally:
             self.pool.putconn(conn)
 
     @contextmanager
-    def _connection(self):
+    def _connection(self, timeout_seconds: Optional[float] = None):
         with self.pool.connection() as conn:
-            if self.timeout is not None:
-                _set_statement_timeout_sync(conn, int(self.timeout * 1000))
-            else:
-                _apply_statement_timeout_sync(conn, self._settings)
+            statement_timeout_ms = self._resolve_statement_timeout_ms(timeout_seconds)
+            if statement_timeout_ms is not None:
+                _set_statement_timeout_sync(conn, statement_timeout_ms)
             yield conn
 
     def fetch_all(
         self,
         query: str,
         params: Optional[Union[tuple, dict]] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> List[Dict[str, Any]]:
         try:
-            with self._connection() as conn:
+            with self._connection(timeout_seconds=timeout_seconds) as conn:
                 with conn.cursor() as cur:
                     cur.execute(query, params)
                     return cur.fetchall()
@@ -227,9 +281,10 @@ class NeonConnection:
         self,
         query: str,
         params: Optional[Union[tuple, dict]] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
-            with self._connection() as conn:
+            with self._connection(timeout_seconds=timeout_seconds) as conn:
                 with conn.cursor() as cur:
                     cur.execute(query, params)
                     return cur.fetchone()
@@ -256,12 +311,116 @@ class NeonConnection:
         self,
         query: str,
         params: Optional[Union[tuple, dict]] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> pd.DataFrame:
         try:
-            data = self.fetch_all(query, params)
+            data = self.fetch_all(query, params, timeout_seconds=timeout_seconds)
             return pd.DataFrame(data)
         except Exception as e:
             logger.error(f'Failed to fetch DataFrame: {e}')
+            raise
+
+    def fetch_chunks(
+        self,
+        query: str,
+        params: Optional[Union[tuple, dict]] = None,
+        *,
+        chunk_size: int = 1000,
+        timeout_seconds: Optional[float] = None,
+    ) -> Iterator[List[Dict[str, Any]]]:
+        if chunk_size <= 0:
+            raise ValueError('chunk_size must be > 0.')
+        try:
+            with self._connection(timeout_seconds=timeout_seconds) as conn:
+                cursor_name = f'neon_chunk_{uuid4().hex}'
+                with conn.cursor(name=cursor_name) as cur:
+                    cur.itersize = chunk_size
+                    cur.execute(query, params)
+                    while True:
+                        rows = cur.fetchmany(chunk_size)
+                        if not rows:
+                            break
+                        yield rows
+        except psycopg.Error as e:
+            logger.error(f'Database chunked query failed: {e}')
+            raise
+
+    def fetch_dataframe_chunks(
+        self,
+        query: str,
+        params: Optional[Union[tuple, dict]] = None,
+        *,
+        chunk_size: int = 1000,
+        timeout_seconds: Optional[float] = None,
+    ) -> Iterator[pd.DataFrame]:
+        try:
+            for rows in self.fetch_chunks(
+                query,
+                params,
+                chunk_size=chunk_size,
+                timeout_seconds=timeout_seconds,
+            ):
+                yield pd.DataFrame(rows)
+        except Exception as e:
+            logger.error(f'Failed to fetch DataFrame chunks: {e}')
+            raise
+
+    def fetch_dataframe_chunked(
+        self,
+        query: str,
+        params: Optional[Union[tuple, dict]] = None,
+        *,
+        chunk_size: int = 1000,
+        timeout_seconds: Optional[float] = None,
+    ) -> pd.DataFrame:
+        """
+        Fetch query results using chunked retrieval, then return one DataFrame.
+
+        This is a convenience wrapper around fetch_dataframe_chunks() for callers
+        that prefer a single DataFrame result without manual concat boilerplate.
+        """
+        chunks = list(
+            self.fetch_dataframe_chunks(
+                query,
+                params,
+                chunk_size=chunk_size,
+                timeout_seconds=timeout_seconds,
+            )
+        )
+        return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
+
+    def export_query_to_csv(
+        self,
+        query: str,
+        output_path: Union[str, Path],
+        params: Optional[Union[tuple, dict]] = None,
+        include_header: bool = True,
+    ) -> Path:
+        """
+        Export a query result to CSV using PostgreSQL COPY for speed.
+
+        This is significantly faster and more memory-efficient than fetching all rows
+        into Python and then serializing.
+        """
+        try:
+            path = Path(output_path).expanduser()
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+            header_value = 'TRUE' if include_header else 'FALSE'
+            copy_query = (
+                f'COPY ({query}) TO STDOUT WITH (FORMAT CSV, HEADER {header_value})'
+            )
+
+            with self._connection() as conn:
+                with conn.cursor() as cur:
+                    with cur.copy(copy_query, params) as copy:
+                        with path.open('wb') as f:
+                            for chunk in copy:
+                                f.write(chunk)
+            logger.info(f'Exported query results to CSV: {path}')
+            return path
+        except psycopg.Error as e:
+            logger.error(f'Failed to export query to CSV: {e}')
             raise
 
     def create_table(
@@ -281,22 +440,8 @@ class NeonConnection:
             trusted, developer-authored input. A light guard blocks obvious SQL control
             tokens but this method is not intended for untrusted end-user input.
         """
-        if (schema is None) == (columns is None):
-            raise ValueError('Provide exactly one of schema or columns.')
-
         try:
-            if columns is not None:
-                column_defs = [
-                    sql.SQL('{} {}').format(
-                        sql.Identifier(name),
-                        sql.SQL(_validate_trusted_sql_fragment(col_type, 'col_type')),
-                    )
-                    for name, col_type in columns
-                ]
-                schema_sql = sql.SQL(', ').join(column_defs)
-            else:
-                assert schema is not None
-                schema_sql = sql.SQL(_validate_trusted_sql_fragment(schema, 'schema'))
+            schema_sql = self._build_schema_sql(schema=schema, columns=columns)
 
             query = sql.SQL('CREATE TABLE IF NOT EXISTS {} ({})').format(
                 sql.Identifier(table_name),
@@ -319,6 +464,15 @@ class NeonConnection:
             # Ensure missing values become actual Python `None` (SQL NULL),
             # even for numeric columns where pandas would otherwise keep NaN.
             df_clean = df.astype(object).where(pd.notna(df), None)
+            # COPY cannot adapt nested Python containers directly.
+            # Normalize them to JSON strings before writing rows.
+            df_clean = df_clean.map(
+                lambda value: json.dumps(value)
+                if isinstance(value, (dict, list, tuple))
+                else value
+            )
+            # Keep SQL NULLs as Python None after elementwise transforms.
+            df_clean = df_clean.astype(object).where(pd.notna(df_clean), None)
             columns = list(df_clean.columns)
             copy_query = sql.SQL('COPY {} ({}) FROM STDIN').format(
                 sql.Identifier(table_name),
@@ -345,7 +499,7 @@ class NeonConnection:
             return False
 
 
-class AsyncNeonConnection:
+class AsyncNeonConnection(BaseNeonConnection):
     """
     Async database manager for Neon (PostgreSQL).
     Best for AI Agents, FastAPI, Sanic, or high-concurrency workloads.
@@ -364,15 +518,11 @@ class AsyncNeonConnection:
             timeout: Optional default statement timeout for all
                 operations from this connection instance. Uses seconds. 0 disables timeout.
         """
-        self._settings = get_neon_settings()
-        self.dsn = connection_string or self._settings.database_url
-        if not self.dsn:
-            raise ValueError('DATABASE_URL not found.')
-        if self._settings.db_pool_min_size > self._settings.db_pool_max_size:
-            raise ValueError('DB_POOL_MIN_SIZE cannot exceed DB_POOL_MAX_SIZE.')
-        if timeout is not None and timeout < 0:
-            raise ValueError('timeout must be >= 0.')
-        self.timeout = timeout
+        super().__init__(
+            connection_string=connection_string,
+            timeout=timeout,
+            missing_database_url_message='DATABASE_URL not found.',
+        )
         self._pool_opened = False
 
         # Initialize Async Connection Pool
@@ -380,7 +530,7 @@ class AsyncNeonConnection:
             conninfo=self.dsn,
             min_size=self._settings.db_pool_min_size,
             max_size=self._settings.db_pool_max_size,
-            kwargs=_build_connection_kwargs(self._settings),
+            kwargs=self._build_connection_kwargs(self._settings),
             open=False,
         )
         logger.info('Async Database connection pool initialized.')
@@ -402,25 +552,25 @@ class AsyncNeonConnection:
         await self.close()
 
     @asynccontextmanager
-    async def _connection(self):
+    async def _connection(self, timeout_seconds: Optional[float] = None):
         if self.pool and not self._pool_opened:
             await self.pool.open()
             self._pool_opened = True
         async with self.pool.connection() as conn:
-            if self.timeout is not None:
-                await _set_statement_timeout_async(conn, int(self.timeout * 1000))
-            else:
-                await _apply_statement_timeout_async(conn, self._settings)
+            statement_timeout_ms = self._resolve_statement_timeout_ms(timeout_seconds)
+            if statement_timeout_ms is not None:
+                await _set_statement_timeout_async(conn, statement_timeout_ms)
             yield conn
 
     async def fetch_all(
         self,
         query: str,
         params: Optional[Union[tuple, dict]] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> List[Dict[str, Any]]:
         """Async fetch all."""
         try:
-            async with self._connection() as conn:
+            async with self._connection(timeout_seconds=timeout_seconds) as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(query, params)
                     return await cur.fetchall()
@@ -432,10 +582,11 @@ class AsyncNeonConnection:
         self,
         query: str,
         params: Optional[Union[tuple, dict]] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> Optional[Dict[str, Any]]:
         """Async fetch one."""
         try:
-            async with self._connection() as conn:
+            async with self._connection(timeout_seconds=timeout_seconds) as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(query, params)
                     return await cur.fetchone()
@@ -462,15 +613,82 @@ class AsyncNeonConnection:
         self,
         query: str,
         params: Optional[Union[tuple, dict]] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> pd.DataFrame:
         """Async execute query and return pandas DataFrame."""
         try:
-            data = await self.fetch_all(query, params)
+            data = await self.fetch_all(query, params, timeout_seconds=timeout_seconds)
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, pd.DataFrame, data)
         except Exception as e:
             logger.error(f'Failed to fetch DataFrame asynchronously: {e}')
             raise
+
+    async def fetch_chunks(
+        self,
+        query: str,
+        params: Optional[Union[tuple, dict]] = None,
+        *,
+        chunk_size: int = 1000,
+        timeout_seconds: Optional[float] = None,
+    ) -> AsyncIterator[List[Dict[str, Any]]]:
+        """Async fetch rows in chunked batches using a server-side cursor."""
+        if chunk_size <= 0:
+            raise ValueError('chunk_size must be > 0.')
+        try:
+            async with self._connection(timeout_seconds=timeout_seconds) as conn:
+                cursor_name = f'neon_chunk_{uuid4().hex}'
+                async with conn.cursor(name=cursor_name) as cur:
+                    cur.itersize = chunk_size
+                    await cur.execute(query, params)
+                    while True:
+                        rows = await cur.fetchmany(chunk_size)
+                        if not rows:
+                            break
+                        yield rows
+        except psycopg.Error as e:
+            logger.error(f'Async DB chunked query failed: {e}')
+            raise
+
+    async def fetch_dataframe_chunks(
+        self,
+        query: str,
+        params: Optional[Union[tuple, dict]] = None,
+        *,
+        chunk_size: int = 1000,
+        timeout_seconds: Optional[float] = None,
+    ) -> AsyncIterator[pd.DataFrame]:
+        """Async fetch query results as DataFrame chunks."""
+        try:
+            async for rows in self.fetch_chunks(
+                query,
+                params,
+                chunk_size=chunk_size,
+                timeout_seconds=timeout_seconds,
+            ):
+                yield pd.DataFrame(rows)
+        except Exception as e:
+            logger.error(f'Failed to fetch DataFrame chunks asynchronously: {e}')
+            raise
+
+    async def fetch_dataframe_chunked(
+        self,
+        query: str,
+        params: Optional[Union[tuple, dict]] = None,
+        *,
+        chunk_size: int = 1000,
+        timeout_seconds: Optional[float] = None,
+    ) -> pd.DataFrame:
+        """Async convenience wrapper returning one DataFrame via chunked reads."""
+        chunks: list[pd.DataFrame] = []
+        async for chunk in self.fetch_dataframe_chunks(
+            query,
+            params,
+            chunk_size=chunk_size,
+            timeout_seconds=timeout_seconds,
+        ):
+            chunks.append(chunk)
+        return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
 
     async def create_table(
         self,
@@ -486,22 +704,8 @@ class AsyncNeonConnection:
             trusted, developer-authored input. A light guard blocks obvious SQL control
             tokens but this method is not intended for untrusted end-user input.
         """
-        if (schema is None) == (columns is None):
-            raise ValueError('Provide exactly one of schema or columns.')
-
         try:
-            if columns is not None:
-                column_defs = [
-                    sql.SQL('{} {}').format(
-                        sql.Identifier(name),
-                        sql.SQL(_validate_trusted_sql_fragment(col_type, 'col_type')),
-                    )
-                    for name, col_type in columns
-                ]
-                schema_sql = sql.SQL(', ').join(column_defs)
-            else:
-                assert schema is not None
-                schema_sql = sql.SQL(_validate_trusted_sql_fragment(schema, 'schema'))
+            schema_sql = self._build_schema_sql(schema=schema, columns=columns)
 
             query = sql.SQL('CREATE TABLE IF NOT EXISTS {} ({})').format(
                 sql.Identifier(table_name),

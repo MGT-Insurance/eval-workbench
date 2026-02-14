@@ -37,7 +37,7 @@ class ZepGraphStore(BaseGraphStore):
         self._client = None
 
     @property
-    def client(self):
+    def client(self) -> Any:
         """Lazy-import and initialize the Zep client."""
         if self._client is None:
             try:

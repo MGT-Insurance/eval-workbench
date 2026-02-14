@@ -373,7 +373,7 @@ class SubscriptionStorage(ABC):
 
 
 class InMemorySubscriptionStorage(SubscriptionStorage):
-    def __init__(self):
+    def __init__(self) -> None:
         self._subs: List[SlackSubscription] = []
 
     async def create_subscription(self, sub: SlackSubscription) -> SlackSubscription:
@@ -795,7 +795,12 @@ class SlackService:
             return {'success': False, 'error': str(e)}
 
     async def get_channel_history(
-        self, channel: str, limit: int = 100, agent_id: Optional[str] = None
+        self,
+        channel: str,
+        limit: int = 100,
+        agent_id: Optional[str] = None,
+        oldest_ts: Optional[float] = None,
+        latest_ts: Optional[float] = None,
     ) -> SlackResponse:
         """Fetches channel history (messages) with optional pagination."""
         token = SlackConfig.get_token(agent_id)
@@ -811,6 +816,10 @@ class SlackService:
             while True:
                 batch_size = min(200, limit - fetched_count)
                 params = {'channel': channel, 'limit': str(batch_size)}
+                if oldest_ts is not None:
+                    params['oldest'] = str(oldest_ts)
+                if latest_ts is not None:
+                    params['latest'] = str(latest_ts)
                 if next_cursor:
                     params['cursor'] = next_cursor
 
