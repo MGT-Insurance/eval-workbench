@@ -223,6 +223,8 @@ class SlackDataSource(DataSource):
         exclude_senders: list[str] | None = None,
         drop_message_regexes: list[str] | None = None,
         strip_citation_block: bool = False,
+        member_id_to_display_name: dict[str, str] | None = None,
+        human_mention_token: str = '@human',
         oldest_ts: float | None = None,
         latest_ts: float | None = None,
         window_days: float | None = None,
@@ -243,6 +245,8 @@ class SlackDataSource(DataSource):
         self._exclude_senders = exclude_senders
         self._drop_message_regexes = drop_message_regexes
         self._strip_citation_block = strip_citation_block
+        self._member_id_to_display_name = member_id_to_display_name
+        self._human_mention_token = human_mention_token
         self._oldest_ts = oldest_ts
         self._latest_ts = latest_ts
         self._window_days = window_days
@@ -277,6 +281,8 @@ class SlackDataSource(DataSource):
             exclude_senders=self._exclude_senders,
             drop_message_regexes=self._drop_message_regexes,
             strip_citation_block=self._strip_citation_block,
+            member_id_to_display_name=self._member_id_to_display_name,
+            human_mention_token=self._human_mention_token,
             oldest_ts=self._oldest_ts,
             latest_ts=self._latest_ts,
             window_days=self._window_days,
@@ -321,6 +327,8 @@ class SlackNeonJoinDataSource(DataSource):
         exclude_senders: list[str] | None = None,
         drop_message_regexes: list[str] | None = None,
         strip_citation_block: bool = False,
+        member_id_to_display_name: dict[str, str] | None = None,
+        human_mention_token: str = '@human',
         oldest_ts: float | None = None,
         latest_ts: float | None = None,
         window_days: float | None = None,
@@ -365,6 +373,8 @@ class SlackNeonJoinDataSource(DataSource):
             'exclude_senders': exclude_senders,
             'drop_message_regexes': drop_message_regexes,
             'strip_citation_block': strip_citation_block,
+            'member_id_to_display_name': member_id_to_display_name,
+            'human_mention_token': human_mention_token,
             'oldest_ts': oldest_ts,
             'latest_ts': latest_ts,
             'window_days': window_days,
@@ -515,9 +525,9 @@ class SlackNeonJoinDataSource(DataSource):
                     f'{missing}. Present columns: {merged.columns.tolist()}'
                 )
             merged['id'] = (
-                'slack:'
+                'slack-'
                 + merged['channel_id'].astype(str)
-                + ':'
+                + '-'
                 + merged['thread_ts'].astype(str)
             )
 

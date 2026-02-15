@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Dict, List, Literal, Optional
 
 from axion._core.schema import RichBaseModel
@@ -9,7 +10,10 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
 from pydantic import Field
 
-from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
+from eval_workbench.shared.metrics.slack.config import (
+    AnalyzerConfig,
+    resolve_analyzer_config,
+)
 from eval_workbench.shared.metrics.slack.utils import build_transcript
 
 
@@ -112,7 +116,7 @@ class SlackFeedbackAttributionAnalyzer(
     - System Tooling Failure: Backend errors (Socotra, Swallow, SFX, Race Conditions)
     """
 
-    instruction = """You are a Lead Underwriting Auditor diagnosing failures in an AI Assistant (Athena).
+    instruction = """You are a Lead Underwriting Auditor diagnosing failures in an AI Assistant ({bot_name}).
 
 ## YOUR TASK
 The user (Underwriter) had friction with the AI. Identify the ROOT CAUSE of the failure based on the transcript.
@@ -334,9 +338,10 @@ Identify the most likely failed step and provide direct quote evidence.
         """
         kwargs.setdefault('temperature', 0.2)
         super().__init__(**kwargs)
-        self.analyzer_config = config or AnalyzerConfig()
+        self.analyzer_config = resolve_analyzer_config(config)
         self.analysis_context = analysis_context or {}
         self.sentiment_threshold = sentiment_threshold
+        self._instruction_lock = asyncio.Lock()
 
     @trace(
         name='SlackFeedbackAttributionAnalyzer',
@@ -389,8 +394,19 @@ Identify the most likely failed step and provide direct quote evidence.
         )
 
         try:
-            # Call LLMHandler.execute() directly
-            output = await LLMHandler.execute(self, input_data)
+            # LLMHandler does not auto-format instruction placeholders.
+            # Temporarily render dynamic prompt variables for this call only.
+            formatted_instruction = self.instruction.format(
+                bot_name=self.analyzer_config.bot_name
+            )
+            async with self._instruction_lock:
+                original_instruction = self.instruction
+                self.instruction = formatted_instruction
+                try:
+                    # Call LLMHandler.execute() directly
+                    output = await LLMHandler.execute(self, input_data)
+                finally:
+                    self.instruction = original_instruction
             output.has_negative_feedback = True
 
             return MetricEvaluationResult(

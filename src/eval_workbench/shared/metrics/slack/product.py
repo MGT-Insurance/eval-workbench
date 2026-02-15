@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Dict, List, Literal, Optional
 
 from axion._core.schema import RichBaseModel
@@ -9,7 +10,10 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
 from pydantic import Field
 
-from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
+from eval_workbench.shared.metrics.slack.config import (
+    AnalyzerConfig,
+    resolve_analyzer_config,
+)
 from eval_workbench.shared.metrics.slack.utils import (
     build_transcript,
     get_human_messages,
@@ -125,7 +129,7 @@ class SlackProductAnalyzer(BaseMetric[ProductSignalsInput, ProductSignalsOutput]
     instruction = """You are an Insurance Platform Product Manager extracting insights from Underwriter conversations.
 
 ## YOUR TASK
-Analyze the conversation to identify improvements for the **AI Assistant (Athena)** and the **Underwriting Platform (SFX/Socotra)**.
+Analyze the conversation to identify improvements for the **AI Assistant ({bot_name})** and the **Underwriting Platform (SFX/Socotra)**.
 
 ---
 
@@ -280,8 +284,9 @@ Extract clear, actionable learnings. If a user explicitly asks for a ticket/fix,
         """
         kwargs.setdefault('temperature', 0.3)
         super().__init__(**kwargs)
-        self.analyzer_config = config or AnalyzerConfig()
+        self.analyzer_config = resolve_analyzer_config(config)
         self.analysis_context = analysis_context or {}
+        self._instruction_lock = asyncio.Lock()
 
     @trace(name='SlackProductAnalyzer', capture_args=True, capture_response=True)
     async def execute(self, item: DatasetItem, **kwargs) -> MetricEvaluationResult:
@@ -317,9 +322,20 @@ Extract clear, actionable learnings. If a user explicitly asks for a ticket/fix,
         )
 
         try:
-            # Call LLMHandler.execute() directly (not BaseMetric.execute() which expects DatasetItem)
-            # This handles LLM call, retries, tracing, and cost tracking
-            output = await LLMHandler.execute(self, input_data)
+            # LLMHandler does not auto-format instruction placeholders.
+            # Temporarily render dynamic prompt variables for this call only.
+            formatted_instruction = self.instruction.format(
+                bot_name=self.analyzer_config.bot_name
+            )
+            async with self._instruction_lock:
+                original_instruction = self.instruction
+                self.instruction = formatted_instruction
+                try:
+                    # Call LLMHandler.execute() directly (not BaseMetric.execute() which expects DatasetItem)
+                    # This handles LLM call, retries, tracing, and cost tracking
+                    output = await LLMHandler.execute(self, input_data)
+                finally:
+                    self.instruction = original_instruction
 
             return MetricEvaluationResult(
                 score=None,

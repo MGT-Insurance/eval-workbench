@@ -1,8 +1,11 @@
-# Database Integration (Neon/PostgreSQL)
+# Database Integration
 
-The shared database module provides synchronous and asynchronous interfaces for
-PostgreSQL/Neon with connection pooling, DataFrame I/O, and concurrent task
-execution.
+<div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F2440 100%); padding: 24px; border-radius: 12px; color: white; margin: 20px 0;">
+
+<p style="margin: 0; font-size: 16px; line-height: 1.6;">
+<strong>Neon/PostgreSQL with connection pooling, DataFrame I/O, and concurrent task execution.</strong> The shared database module provides synchronous and asynchronous interfaces for all persistence needs.
+</p>
+</div>
 
 ## Architecture
 
@@ -17,7 +20,7 @@ execution.
             │                                   │
             ▼                                   ▼
 ┌───────────────────────┐         ┌───────────────────────────┐
-│  NeonConnection       │         │  AsyncNeonConnection │
+│  NeonConnection       │         │  AsyncNeonConnection      │
 │  (Synchronous)        │         │  (Asynchronous)           │
 │                       │         │                           │
 │  • fetch_all()        │         │  • await fetch_all()      │
@@ -89,11 +92,14 @@ reset_neon_settings_cache()
 
 ---
 
-## NeonConnection (Synchronous)
+## Connection Managers
 
-Synchronous database manager for scripts, data analysis, and standard web apps.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-### Initialization
+<h3><strong>NeonConnection</strong></h3>
+<strong>Synchronous — scripts, data analysis, web apps</strong>
 
 ```python
 from eval_workbench.shared.database.neon import NeonConnection
@@ -102,10 +108,12 @@ from eval_workbench.shared.database.neon import NeonConnection
 db = NeonConnection()
 
 # Using explicit connection string
-db = NeonConnection(connection_string="postgresql://user:pass@host/db")
+db = NeonConnection(
+    connection_string="postgresql://user:pass@host/db"
+)
 ```
 
-### Context Manager (Recommended)
+Context manager (recommended):
 
 ```python
 with NeonConnection() as db:
@@ -113,24 +121,53 @@ with NeonConnection() as db:
     # Pool automatically closed on exit
 ```
 
-### Query Methods
+</td>
+<td width="50%" valign="top">
 
-#### fetch_all() - Retrieve All Rows
+<h3><strong>AsyncNeonConnection</strong></h3>
+<strong>Asynchronous — FastAPI, high-concurrency, AI agents</strong>
 
 ```python
-def fetch_all(
-    self,
-    query: str,
-    params: Optional[Union[tuple, dict]] = None
-) -> List[Dict[str, Any]]
+from eval_workbench.shared.database.neon import AsyncNeonConnection
+
+db = AsyncNeonConnection()  # Pool opens lazily
 ```
 
-**Example:**
+Async context manager:
+
+```python
+async with AsyncNeonConnection() as db:
+    users = await db.fetch_all("SELECT * FROM users")
+    # Pool automatically closed on exit
+```
+
+Concurrent queries:
+
+```python
+async with AsyncNeonConnection() as db:
+    users, orders, products = await asyncio.gather(
+        db.fetch_all("SELECT * FROM users"),
+        db.fetch_all("SELECT * FROM orders"),
+        db.fetch_all("SELECT * FROM products"),
+    )
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+## Query Methods
+
+All methods are available on both `NeonConnection` (sync) and `AsyncNeonConnection` (async with `await`).
+
+### fetch_all / fetch_one
+
 ```python
 # Positional parameters
 results = db.fetch_all(
-    "SELECT * FROM users WHERE age > %s",
-    (18,)
+    "SELECT * FROM users WHERE age > %s", (18,)
 )
 
 # Named parameters
@@ -138,112 +175,36 @@ results = db.fetch_all(
     "SELECT * FROM users WHERE email = %(email)s",
     {"email": "user@example.com"}
 )
-```
 
-#### fetch_one() - Retrieve Single Row
-
-```python
-def fetch_one(
-    self,
-    query: str,
-    params: Optional[Union[tuple, dict]] = None
-) -> Optional[Dict[str, Any]]
-```
-
-**Example:**
-```python
+# Single row
 user = db.fetch_one("SELECT * FROM users WHERE id = %s", (1,))
 if user:
-    print(user['name'])  # Access as dictionary
+    print(user['name'])
 ```
 
-#### execute_commit() - Execute and Commit
+### execute_commit
 
-```python
-def execute_commit(
-    self,
-    query: str,
-    params: Optional[Union[tuple, dict]] = None
-) -> None
-```
-
-**Example:**
 ```python
 db.execute_commit(
     "INSERT INTO users (name, email) VALUES (%s, %s)",
     ("Alice", "alice@example.com")
 )
-
-db.execute_commit(
-    "UPDATE users SET status = %s WHERE id = %s",
-    ("active", 42)
-)
 ```
 
-### DataFrame Utilities
-
-#### fetch_dataframe() - Query to DataFrame
+### DataFrame I/O
 
 ```python
-def fetch_dataframe(
-    self,
-    query: str,
-    params: Optional[Union[tuple, dict]] = None
-) -> pd.DataFrame
-```
-
-**Example:**
-```python
+# Query to DataFrame
 df = db.fetch_dataframe(
-    "SELECT id, name, score FROM results WHERE score > %s",
-    (75,)
+    "SELECT id, name, score FROM results WHERE score > %s", (75,)
 )
-print(df.describe())
-```
 
-#### upload_dataframe() - Insert DataFrame
-
-```python
-def upload_dataframe(
-    self,
-    df: pd.DataFrame,
-    table_name: str
-) -> None
-```
-
-**Behavior:**
-- Converts NaN/None to NULL
-- Batches inserts by `db_upload_chunk_size` (default: 1000 rows)
-- Logs row count on success
-
-**Example:**
-```python
-import pandas as pd
-
-df = pd.DataFrame({
-    'id': [1, 2, 3],
-    'value': [100.5, 200.3, None],
-    'name': ['Alice', 'Bob', 'Charlie']
-})
-
+# Upload DataFrame (batched by db_upload_chunk_size)
 db.upload_dataframe(df, 'measurements')
-# Logs: "Successfully uploaded 3 rows to 'measurements'."
 ```
 
 ### Table Management
 
-#### create_table() - Safe Table Creation
-
-```python
-def create_table(
-    self,
-    table_name: str,
-    schema: Optional[str] = None,
-    columns: Optional[List[Tuple[str, str]]] = None
-) -> None
-```
-
-**Using columns list (recommended):**
 ```python
 db.create_table(
     table_name='users',
@@ -256,346 +217,217 @@ db.create_table(
 )
 ```
 
-**Using raw schema:**
-```python
-db.create_table(
-    table_name='users',
-    schema='id SERIAL PRIMARY KEY, name VARCHAR(255), email VARCHAR(255) UNIQUE'
-)
-```
-
-**SQL Type Validation:**
-- Only allows: letters, digits, underscore, space, parentheses, comma, period
-- Prevents SQL injection attacks
+!!! note "SQL Type Validation"
+    Only allows: letters, digits, underscore, space, parentheses, comma, period. Prevents SQL injection attacks.
 
 ### Health Check
 
 ```python
-def check_health(self) -> bool:
-    """Test database connectivity. Returns True if successful."""
-
 if db.check_health():
     print("Database is healthy")
-```
-
-### Cleanup
-
-```python
-db.close()  # Close the connection pool
-```
-
----
-
-## AsyncNeonConnection (Asynchronous)
-
-Async database manager for FastAPI, high-concurrency workloads, and AI agents.
-Identical API but fully async.
-
-### Initialization
-
-```python
-from eval_workbench.shared.database.neon import AsyncNeonConnection
-
-db = AsyncNeonConnection()  # Pool opens lazily
-```
-
-### Async Context Manager
-
-```python
-async with AsyncNeonConnection() as db:
-    users = await db.fetch_all("SELECT * FROM users")
-    # Pool automatically closed on exit
-```
-
-### Async Methods
-
-All methods parallel the sync API but are async:
-
-```python
-async def fetch_all(self, query, params=None) -> List[Dict]: ...
-async def fetch_one(self, query, params=None) -> Optional[Dict]: ...
-async def execute_commit(self, query, params=None) -> None: ...
-async def fetch_dataframe(self, query, params=None) -> pd.DataFrame: ...
-async def upload_dataframe(self, df, table_name) -> None: ...
-async def create_table(self, table_name, schema=None, columns=None) -> None: ...
-async def check_health(self) -> bool: ...
-async def close(self) -> None: ...
-```
-
-### Concurrent Queries
-
-```python
-async with AsyncNeonConnection() as db:
-    # Execute multiple queries concurrently
-    users, orders, products = await asyncio.gather(
-        db.fetch_all("SELECT * FROM users"),
-        db.fetch_all("SELECT * FROM orders"),
-        db.fetch_all("SELECT * FROM products"),
-    )
 ```
 
 ---
 
 ## QueueExecutor
 
-Worker pool pattern using `asyncio.Queue` for concurrent task execution.
+<div style="background: rgba(30, 58, 95, 0.1); border-left: 3px solid #1E3A5F; padding: 16px; margin: 20px 0;">
 
-### Initialization
+Worker pool pattern using `asyncio.Queue` for concurrent task execution. Supports both sync and async functions with configurable backpressure.
+</div>
 
 ```python
 from eval_workbench.shared.database.neon import QueueExecutor
 
-executor = QueueExecutor(
-    num_workers=5,      # Number of worker coroutines
-    maxsize=0,          # Queue size limit (0 = unlimited)
-    executor=None,      # Optional thread pool for sync functions
-)
-```
-
-### Context Manager Usage
-
-```python
 async def process_item(item_id: int):
     await asyncio.sleep(1)
     return f"Processed {item_id}"
 
 async def main():
     async with QueueExecutor(num_workers=10) as executor:
-        # Submit tasks
         futures = [
             executor.submit(process_item, i)
             for i in range(100)
         ]
-
-        # Gather results
         results = await asyncio.gather(*futures)
         return results
-
-results = asyncio.run(main())
 ```
 
-### Methods
-
-#### start() - Activate Workers
-
 ```python
-async def start(self):
-    """Start worker coroutines. Must call before submitting tasks."""
-```
-
-#### stop() - Graceful Shutdown
-
-```python
-async def stop(self, timeout: Optional[float] = None):
-    """Stop worker pool gracefully with optional timeout."""
-```
-
-#### submit() - Queue Task
-
-```python
-def submit(
-    self,
-    func: Callable[..., Any],
-    *args: Any,
-    **kwargs: Any
-) -> asyncio.Future:
-    """
-    Submit function to be executed by worker pool.
-    Supports both sync and async functions.
-    """
-```
-
-### Backpressure Control
-
-```python
-# With queue size limit - blocks when full
+# With backpressure control — blocks when queue is full
 async with QueueExecutor(num_workers=5, maxsize=100) as executor:
-    # If queue has 100 tasks and workers are slow,
-    # submit() will await until queue has space
     future = executor.submit(slow_function)
+```
+
+---
+
+## Usage Patterns
+
+<div class="rule-grid">
+  <div class="rule-card">
+    <span class="rule-card__number">1</span>
+    <p class="rule-card__title">Simple Queries</p>
+    <p class="rule-card__desc">Direct <code>fetch_one</code> / <code>fetch_all</code> calls with <code>NeonConnection()</code>. Best for scripts and one-off data exploration.</p>
+  </div>
+  <div class="rule-card">
+    <span class="rule-card__number">2</span>
+    <p class="rule-card__title">DataFrame Workflow</p>
+    <p class="rule-card__desc">Query to DataFrame, transform in pandas, upload back. Great for ETL pipelines and evaluation result processing.</p>
+  </div>
+  <div class="rule-card">
+    <span class="rule-card__number">3</span>
+    <p class="rule-card__title">Async + FastAPI</p>
+    <p class="rule-card__desc"><code>AsyncNeonConnection</code> with lifecycle events. Pool opens at startup, closes on shutdown. Concurrent queries with <code>asyncio.gather</code>.</p>
+  </div>
+  <div class="rule-card">
+    <span class="rule-card__number">4</span>
+    <p class="rule-card__title">Batch Processing</p>
+    <p class="rule-card__desc"><code>QueueExecutor</code> for parallel processing with backpressure. Combined with <code>upload_dataframe</code> for large-scale data operations.</p>
+  </div>
+</div>
+
+---
+
+## EvaluationUploader
+
+<div markdown style="background: rgba(30, 58, 95, 0.1); border-left: 3px solid #1E3A5F; padding: 16px; margin: 20px 0;">
+
+**Source:** `src/eval_workbench/shared/database/evaluation_upload.py`
+
+High-level upload interface for evaluation data. Handles column subsetting, JSONB normalization, conflict resolution, and batched inserts.
+
+</div>
+
+### Column Definitions
+
+**`EVALUATION_DATASET_COLUMNS`** (29 columns) — `dataset_id`, `query`, `expected_output`, `actual_output`, `additional_input`, `acceptance_criteria`, `dataset_metadata`, `user_tags`, `conversation`, `tools_called`, `expected_tools`, `judgment`, `critique`, `trace`, `additional_output`, `source_type`, `environment`, `source_name`, `source_component`, `created_at`, `retrieved_content`, `document_text`, `actual_reference`, `expected_reference`, `latency`, `trace_id`, `observation_id`, `has_errors`
+
+**`EVALUATION_RESULTS_COLUMNS`** (23 columns) — `run_id`, `dataset_id`, `metric_name`, `metric_score`, `passed`, `explanation`, `metric_type`, `metric_category`, `threshold`, `signals`, `metric_id`, `parent`, `weight`, `evaluation_name`, `eval_mode`, `cost_estimate`, `model_name`, `llm_provider`, `version`, `timestamp`, `source`, `metric_metadata`, `evaluation_metadata`
+
+### JSONB Normalization
+
+Columns marked as JSONB are automatically handled:
+
+- `dict` and `list` values are serialized to JSON strings
+- JSON string values are validated for correctness
+- `NaN`, `Inf`, and `NaT` values are sanitized to `None`
+- Non-string dict keys raise `EvaluationUploadError`
+
+### Conflict Resolution
+
+| Mode | Behavior |
+|------|----------|
+| `error` | Raise on conflict (default) |
+| `do_nothing` | Skip conflicting rows (`ON CONFLICT DO NOTHING`) |
+| `upsert` | Update existing rows (`ON CONFLICT DO UPDATE`) |
+
+### EvaluationUploader Class
+
+```python
+from eval_workbench.shared.database.evaluation_upload import EvaluationUploader
+from eval_workbench.shared.database.neon import NeonConnection
+
+with NeonConnection() as db:
+    uploader = EvaluationUploader(
+        db=db,
+        on_conflict="do_nothing",   # error | do_nothing | upsert
+        chunk_size=1000,
+        include_missing_columns=False,
+        dataset_id_source="dataset_id",  # dataset_id | id | metric_id
+    )
+
+    # Upload dataset items
+    uploaded_df = uploader.upload_dataset(dataset_df)
+
+    # Upload evaluation results
+    uploaded_df = uploader.upload_results(results_df)
+
+    # Generic upload (specify table)
+    uploaded_df = uploader.upload(df, table="evaluation_dataset")
+```
+
+### Standalone Functions
+
+```python
+from eval_workbench.shared.database.evaluation_upload import (
+    subset_evaluation_dataset_df_for_upload,
+    subset_evaluation_results_df_for_upload,
+    upload_evaluation_dataset_df,
+    upload_evaluation_results_df,
+)
+
+# Subset DataFrame to only valid columns (no upload)
+clean_df = subset_evaluation_dataset_df_for_upload(df, include_missing_columns=True)
+
+# Full upload pipeline
+with NeonConnection() as db:
+    upload_evaluation_dataset_df(db, dataset_df, on_conflict="do_nothing")
+    upload_evaluation_results_df(db, results_df, on_conflict="upsert")
 ```
 
 ---
 
 ## Error Handling
 
-All database methods follow consistent error handling:
-
 ```python
 try:
     result = db.fetch_all(query, params)
 except psycopg.Error as e:
-    # Database-specific errors
     logger.error(f"Database query failed: {e}")
     raise
 ```
 
-**Error Types:**
-- `psycopg.Error`: Base exception for all psycopg errors
-- `psycopg.DatabaseError`: Database-specific errors
-- `psycopg.IntegrityError`: Constraint violations
-- `psycopg.OperationalError`: Connection/operational issues
-- `ValueError`: Invalid configuration or parameters
-
----
-
-## Code Examples
-
-### Pattern 1: Simple Synchronous Queries
-
-```python
-from eval_workbench.shared.database.neon import NeonConnection
-
-db = NeonConnection()
-
-user = db.fetch_one("SELECT * FROM users WHERE id = %s", (1,))
-users = db.fetch_all("SELECT * FROM users WHERE active = true")
-
-db.close()
-```
-
-### Pattern 2: DataFrame Workflow
-
-```python
-with NeonConnection() as db:
-    # Query to DataFrame
-    df = db.fetch_dataframe("SELECT * FROM sales WHERE year = %s", (2024,))
-
-    # Transform
-    df['adjusted'] = df['value'] * 1.1
-
-    # Upload back
-    db.upload_dataframe(df, 'sales_adjusted')
-```
-
-### Pattern 3: Async with FastAPI
-
-```python
-from fastapi import FastAPI
-from eval_workbench.shared.database.neon import AsyncNeonConnection
-
-app = FastAPI()
-db = AsyncNeonConnection()
-
-@app.on_event("startup")
-async def startup():
-    await db.pool.open()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await db.close()
-
-@app.get("/users")
-async def get_users():
-    return await db.fetch_all("SELECT * FROM users")
-```
-
-### Pattern 4: Batch Operations
-
-```python
-with NeonConnection() as db:
-    # Create table
-    db.create_table('results', columns=[
-        ('id', 'SERIAL PRIMARY KEY'),
-        ('value', 'FLOAT'),
-        ('name', 'VARCHAR(255)'),
-    ])
-
-    # Upload large DataFrame in batches
-    import pandas as pd
-    large_df = pd.read_csv('data.csv')  # 1M rows
-    db.upload_dataframe(large_df, 'results')
-    # Internally batches as: [0:1000], [1000:2000], ...
-```
-
-### Pattern 5: Parallel Processing with QueueExecutor
-
-```python
-from eval_workbench.shared.database.neon import QueueExecutor
-
-async def fetch_and_process(user_id: int):
-    # Could be CPU-intensive or I/O work
-    return user_id * 2
-
-async def main():
-    async with QueueExecutor(num_workers=10) as executor:
-        futures = [
-            executor.submit(fetch_and_process, i)
-            for i in range(1000)
-        ]
-        results = await asyncio.gather(*futures)
-        return results
-
-results = asyncio.run(main())
-```
-
-### Pattern 6: Integration with Langfuse Joiner
-
-```python
-from eval_workbench.shared.database.neon import NeonConnection
-from eval_workbench.implementations.athena.langfuse.join import AthenaNeonLangfuseJoiner
-
-db = NeonConnection()
-joiner = AthenaNeonLangfuseJoiner(neon_db=db, trace_loader=loader)
-
-# Fetch cases using the database manager
-cases = joiner.fetch_cases(
-    limit=100,
-    where="status = 'completed'",
-)
-
-db.close()
-```
+| Exception | Description |
+|-----------|-------------|
+| `psycopg.Error` | Base exception for all psycopg errors |
+| `psycopg.DatabaseError` | Database-specific errors |
+| `psycopg.IntegrityError` | Constraint violations |
+| `psycopg.OperationalError` | Connection/operational issues |
+| `ValueError` | Invalid configuration or parameters |
 
 ---
 
 ## Connection Pool Management
 
-### Synchronous Pool
+=== "Synchronous"
 
-```python
-self.pool = ConnectionPool(
-    conninfo=self.dsn,
-    min_size=0,          # Pre-allocated connections
-    max_size=20,         # Maximum concurrent connections
-    kwargs={
-        "row_factory": dict_row,
-        "connect_timeout": 10,
-    },
-)
-```
+    ```python
+    self.pool = ConnectionPool(
+        conninfo=self.dsn,
+        min_size=0,          # Pre-allocated connections
+        max_size=20,         # Maximum concurrent connections
+        kwargs={
+            "row_factory": dict_row,
+            "connect_timeout": 10,
+        },
+    )
+    ```
 
-### Asynchronous Pool
+=== "Asynchronous"
 
-```python
-self.pool = AsyncConnectionPool(
-    conninfo=self.dsn,
-    min_size=0,
-    max_size=20,
-    open=False,          # Lazy initialization
-)
-```
+    ```python
+    self.pool = AsyncConnectionPool(
+        conninfo=self.dsn,
+        min_size=0,
+        max_size=20,
+        open=False,          # Lazy initialization
+    )
+    ```
 
-### Statement Timeout
-
-Applied per-connection when not using startup options:
-
-```python
-# If db_statement_timeout_ms > 0 and not using startup options:
-SET statement_timeout = 60000;  # 60 seconds
-```
+!!! info "Statement Timeout"
+    Applied per-connection when not using startup options: `SET statement_timeout = 60000;` (60 seconds).
 
 ---
 
 ## Dependencies
 
-```
-psycopg[binary]>=3.0         # PostgreSQL adapter
-psycopg-pool>=3.0            # Connection pooling
-pandas>=1.0                  # DataFrame support
-pydantic>=2.0                # Settings validation
-pydantic-settings>=2.0       # Environment loading
-```
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `psycopg[binary]` | >=3.0 | PostgreSQL adapter |
+| `psycopg-pool` | >=3.0 | Connection pooling |
+| `pandas` | >=1.0 | DataFrame support |
+| `pydantic` | >=2.0 | Settings validation |
+| `pydantic-settings` | >=2.0 | Environment loading |
 
 ---
 

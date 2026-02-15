@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Dict, List, Literal, Optional
 
 from axion._core.schema import AIMessage, HumanMessage, RichBaseModel
@@ -9,7 +10,11 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
 from pydantic import Field
 
-from eval_workbench.shared.metrics.slack.config import AnalyzerConfig, TruncationConfig
+from eval_workbench.shared.metrics.slack.config import (
+    AnalyzerConfig,
+    TruncationConfig,
+    resolve_analyzer_config,
+)
 from eval_workbench.shared.metrics.slack.truncation import (
     format_truncated_transcript,
     truncate_conversation,
@@ -333,9 +338,10 @@ class SlackObjectiveAnalyzer(BaseMetric):
         # Force low temperature for deterministic outputs
         kwargs['temperature'] = 0.0
         super().__init__(**kwargs)
-        self.analyzer_config = config or AnalyzerConfig()
+        self.analyzer_config = resolve_analyzer_config(config)
         self.truncation_config = truncation_config or TruncationConfig()
         self._llm_analyzer: _ObjectiveLLMAnalyzer | None = None
+        self._instruction_lock = asyncio.Lock()
 
     @property
     def llm_analyzer(self) -> _ObjectiveLLMAnalyzer:
@@ -417,10 +423,27 @@ class SlackObjectiveAnalyzer(BaseMetric):
         )
 
         try:
-            # Call LLMHandler.execute() directly (not BaseMetric.execute() which expects DatasetItem)
-            llm_result: ObjectiveAnalysisOutput = await LLMHandler.execute(
-                self.llm_analyzer, llm_input
+            truncation_notice = (
+                f'IMPORTANT: Conversation was truncated. {truncation_summary}'
+                if truncation_summary
+                else ''
             )
+            # LLMHandler does not auto-format instruction placeholders.
+            # Temporarily render dynamic prompt variables for this call only.
+            formatted_instruction = self.llm_analyzer.instruction.format(
+                bot_name=self.analyzer_config.bot_name,
+                truncation_notice=truncation_notice,
+            )
+            async with self._instruction_lock:
+                original_instruction = self.llm_analyzer.instruction
+                self.llm_analyzer.instruction = formatted_instruction
+                try:
+                    # Call LLMHandler.execute() directly (not BaseMetric.execute() which expects DatasetItem)
+                    llm_result: ObjectiveAnalysisOutput = await LLMHandler.execute(
+                        self.llm_analyzer, llm_input
+                    )
+                finally:
+                    self.llm_analyzer.instruction = original_instruction
 
             # Copy cost from internal analyzer to self for sub-metric distribution
             self.cost_estimate = getattr(self.llm_analyzer, 'cost_estimate', None)

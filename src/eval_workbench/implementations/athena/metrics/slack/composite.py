@@ -8,7 +8,10 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
 from pydantic import Field
 
-from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
+from eval_workbench.shared.metrics.slack.config import (
+    AnalyzerConfig,
+    resolve_analyzer_config,
+)
 from eval_workbench.shared.metrics.slack.feedback import (
     SlackFeedbackAttributionAnalyzer,
 )
@@ -54,7 +57,7 @@ class UnderwritingCompositeEvaluator(BaseMetric):
 
     def __init__(self, config: Optional[AnalyzerConfig] = None, **kwargs):
         super().__init__(**kwargs)
-        self.config = config or AnalyzerConfig()
+        self.config = resolve_analyzer_config(config)
 
         # Initialize sub-analyzers
         self.objective = SlackObjectiveAnalyzer(config=self.config, **kwargs)

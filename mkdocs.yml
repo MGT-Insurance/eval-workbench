@@ -17,25 +17,20 @@ nav:
     - Monitoring Config (YAML): guides/monitoring-config.md
     - Slack: guides/slack.md
     - Knowledge Graph Memory: guides/memory.md
+    - Configuration: guides/configuration.md
+    - Scripts Reference: guides/scripts.md
   - Metric Registry:
     - metric-registry/index.md
     - Shared:
       - metric-registry/shared/index.md
       - Slack:
         - metric-registry/shared/slack/index.md
-        - Acceptance: metric-registry/shared/slack/acceptance.md
-        - Composite: metric-registry/shared/slack/composite.md
-        - Engagement: metric-registry/shared/slack/engagement.md
-        - Escalation: metric-registry/shared/slack/escalation.md
-        - Frustration: metric-registry/shared/slack/frustration.md
-        - Intervention: metric-registry/shared/slack/intervention.md
-        - Interaction: metric-registry/shared/slack/interaction.md
-        - Override: metric-registry/shared/slack/override.md
-        - Override Satisfaction: metric-registry/shared/slack/override_satisfaction.md
-        - Recommendation: metric-registry/shared/slack/recommendation.md
-        - Resolution: metric-registry/shared/slack/resolution.md
-        - Sentiment: metric-registry/shared/slack/sentiment.md
-        - Slack Compliance: metric-registry/shared/slack/slack_compliance.md
+        - Heuristic Analyzer: metric-registry/shared/slack/heuristic.md
+        - Objective Analyzer: metric-registry/shared/slack/objective.md
+        - Subjective Analyzer: metric-registry/shared/slack/subjective.md
+        - Product Analyzer: metric-registry/shared/slack/product.md
+        - Feedback Attribution: metric-registry/shared/slack/feedback.md
+        - Composite Orchestrator: metric-registry/shared/slack/composite.md
     - Athena:
       - metric-registry/athena/index.md
       - Recommendation:
@@ -64,34 +59,35 @@ theme:
     text: Inter
     code: JetBrains Mono
   features:
-    - navigation.tabs
-    - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.indexes
     - navigation.instant
     - navigation.tracking
-    - navigation.top
+    - navigation.tabs
+    - navigation.sections
     - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
     - content.code.copy
     - content.code.annotate
     - content.tabs.link
-    - search.suggest
-    - search.highlight
     - toc.follow
   language: en
   palette:
-    - scheme: slate
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: custom
       accent: custom
       toggle:
-        icon: material/weather-night
-        name: Switch to light mode
-    - scheme: default
-      primary: custom
-      accent: custom
-      toggle:
-        icon: material/weather-sunny
+        icon: material/brightness-7
         name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 extra_css:
   - stylesheets/extra.css
