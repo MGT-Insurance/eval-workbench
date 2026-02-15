@@ -14,7 +14,6 @@ source:
   name: "athena"
   window_minutes: 10000
   component: "recommendation"
-  connection_string: "postgresql://neondb_owner:npg_om1SMfhRw0ZU@ep-damp-fog-ahx4fv12-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
   eval_mode: "online"
   environment: "${ENVIRONMENT:-production}"
   channel_ids:
@@ -91,7 +90,6 @@ publishing:
 
   # Database upload configuration (used when push_to_db: true)
   database:
-    connection_string: "postgresql://mattevanoff@localhost:5432/eval"  # Override DATABASE_URL env var
     on_conflict: do_nothing  # do_nothing | upsert | error
     chunk_size: 1000         # Rows per batch upload
 
