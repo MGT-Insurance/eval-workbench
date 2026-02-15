@@ -17,7 +17,9 @@ from pandas.api import types as ptypes
 from eval_workbench.implementations.athena.metrics import (
     recommendation as _recommendation_metrics,  # noqa: F401
 )
-from eval_workbench.implementations.athena.metrics import slack as _slack_metrics  # noqa: F401
+from eval_workbench.implementations.athena.metrics import (
+    slack as _slack_metrics,  # noqa: F401
+)
 from eval_workbench.shared import config
 from eval_workbench.shared.config import ConfigurationError
 from eval_workbench.shared.database.evaluation_upload import EvaluationUploader

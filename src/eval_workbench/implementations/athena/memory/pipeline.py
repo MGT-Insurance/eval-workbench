@@ -208,11 +208,16 @@ class AthenaRulePipeline(BasePipeline):
             for item in raw_data:
                 raw_text = str(item)
                 raw_text_hash = compute_text_hash(raw_text) if raw_text else None
-                if dedup and raw_text_hash and has_extractions_for_raw_text_hash(
-                    self.db, agent_name='athena', raw_text_hash=raw_text_hash
+                if (
+                    dedup
+                    and raw_text_hash
+                    and has_extractions_for_raw_text_hash(
+                        self.db, agent_name='athena', raw_text_hash=raw_text_hash
+                    )
                 ):
                     logger.info(
-                        'Skipping extraction (dedup hit) raw_text_hash=%s', raw_text_hash
+                        'Skipping extraction (dedup hit) raw_text_hash=%s',
+                        raw_text_hash,
                     )
                     continue
 

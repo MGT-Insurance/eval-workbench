@@ -16,10 +16,14 @@ from eval_workbench.shared.metrics.slack.feedback import (
     SlackFeedbackAttributionAnalyzer,
 )
 from eval_workbench.shared.metrics.slack.objective import SlackObjectiveAnalyzer
-from eval_workbench.shared.metrics.slack.product import SlackProductAnalyzer
-from eval_workbench.shared.metrics.slack.product import ProductSignalsOutput
-from eval_workbench.shared.metrics.slack.subjective import SlackSubjectiveAnalyzer
-from eval_workbench.shared.metrics.slack.subjective import SubjectiveAnalysisOutput
+from eval_workbench.shared.metrics.slack.product import (
+    ProductSignalsOutput,
+    SlackProductAnalyzer,
+)
+from eval_workbench.shared.metrics.slack.subjective import (
+    SlackSubjectiveAnalyzer,
+    SubjectiveAnalysisOutput,
+)
 from eval_workbench.shared.metrics.slack.utils import get_human_messages
 
 
@@ -96,7 +100,10 @@ class UnderwritingCompositeEvaluator(BaseMetric):
                 score=None,
                 explanation='No human messages - skipping subjective analysis.',
                 signals=subj_signals,
-                metadata={'subjective_result': subj_signals.model_dump(), 'skipped': True},
+                metadata={
+                    'subjective_result': subj_signals.model_dump(),
+                    'skipped': True,
+                },
             )
 
             prod_signals = ProductSignalsOutput(
