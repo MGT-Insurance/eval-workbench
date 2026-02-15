@@ -515,7 +515,11 @@ class SlackNeonJoinDataSource(DataSource):
                 raise ValueError(
                     f'Missing dataset_id_column in merged rows: {self._dataset_id_column}'
                 )
-            merged['id'] = merged[self._dataset_id_column].astype(str)
+            dataset_id_values = merged[self._dataset_id_column].astype(str)
+            # Ensure Dataset.read_dataframe sees the joined dataset identifier,
+            # while keeping `id` in sync for consumers that key off it.
+            merged['dataset_id'] = dataset_id_values
+            merged['id'] = dataset_id_values
         elif self._use_slack_thread_dataset_id:
             required = ['channel_id', 'thread_ts']
             missing = [col for col in required if col not in merged.columns]
