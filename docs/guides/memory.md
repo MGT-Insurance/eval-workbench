@@ -1,30 +1,44 @@
 # Knowledge Graph Memory
 
-Persistent knowledge graph memory for AI agents. Currently used by Athena (underwriting)
-to store risk factors, rules, decision logic, and their relationships — then retrieve them
-semantically at runtime.
+<div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F2440 100%); padding: 24px; border-radius: 12px; color: white; margin: 20px 0;">
 
-Built on [Zep Cloud](https://www.getzep.com/) Graphiti for graph storage and semantic search.
-
----
+<p style="margin: 0; font-size: 16px; line-height: 1.6;">
+<strong>Persistent knowledge graph memory for AI agents.</strong> Currently used by Athena (underwriting) to store risk factors, rules, decision logic, and their relationships — then retrieve them semantically at runtime. Built on <a href="https://www.getzep.com/" style="color: #7BB8E0;">Zep Cloud</a> Graphiti for graph storage and semantic search.
+</p>
+</div>
 
 ## How It Works (End-to-End)
 
 The memory system has four stages. Raw knowledge goes in one end; structured, searchable
 graph edges come out the other.
 
-```
- ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
- │  1. Raw Text     │────▶│  2. Extraction   │────▶│  3. Ingestion   │────▶│  4. Retrieval    │
- │                  │     │                  │     │                  │     │                  │
- │ Manuals, SME     │     │ LLM parses text  │     │ Edges stored in  │     │ Semantic search  │
- │ notes, training  │     │ into structured  │     │ Zep knowledge    │     │ returns relevant │
- │ feedback, prod   │     │ rule dicts       │     │ graph per agent  │     │ rules + paths    │
- │ learnings        │     │                  │     │                  │     │                  │
- └─────────────────┘     └─────────────────┘     └─────────────────┘     └─────────────────┘
-                           RuleExtractor            ZepGraphStore          AthenaGraphAnalytics
-                           (OpenAI)                 (Zep Cloud)            (search / trace)
-```
+<div class="rule-grid">
+
+<div class="rule-card">
+<span class="rule-card__number">1</span>
+<p class="rule-card__title">Raw Text</p>
+<p class="rule-card__desc">Manuals, SME notes, training feedback, production learnings — unstructured text containing underwriting knowledge.</p>
+</div>
+
+<div class="rule-card">
+<span class="rule-card__number">2</span>
+<p class="rule-card__title">Extraction</p>
+<p class="rule-card__desc"><code>RuleExtractor</code> (OpenAI) — LLM parses text into structured rule dicts with risk factors, thresholds, and actions.</p>
+</div>
+
+<div class="rule-card">
+<span class="rule-card__number">3</span>
+<p class="rule-card__title">Ingestion</p>
+<p class="rule-card__desc"><code>ZepGraphStore</code> (Zep Cloud) — Edges stored in knowledge graph per agent with entity deduplication.</p>
+</div>
+
+<div class="rule-card">
+<span class="rule-card__number">4</span>
+<p class="rule-card__title">Retrieval</p>
+<p class="rule-card__desc"><code>AthenaGraphAnalytics</code> — Semantic search returns relevant rules + graph paths for runtime decisions.</p>
+</div>
+
+</div>
 
 ---
 
@@ -353,6 +367,12 @@ analytics.visualize(title='Athena Underwriting Rules')
 
 ## Hard vs Soft Rules
 
+<div markdown style="background: rgba(30, 58, 95, 0.1); border-left: 3px solid #1E3A5F; padding: 16px; margin: 20px 0;">
+
+**Key concept:** Not all rules are equal. The memory system preserves the distinction between absolute limits and flexible guidelines, enabling nuanced AI recommendations.
+
+</div>
+
 Not all underwriting rules are binary. The system distinguishes between:
 
 **Hard rules** — absolute limits with no flexibility. The rule is the rule.
@@ -418,9 +438,11 @@ Set `source_type` accordingly so the graph captures the provenance.
 
 ## Ontology
 
-The ontology defines the vocabulary of the knowledge graph — what types of nodes and
-edges exist and what they mean. This is enforced by Pydantic frozen models and used
-to guide LLM extraction.
+<div markdown style="background: rgba(30, 58, 95, 0.1); border-left: 3px solid #1E3A5F; padding: 16px; margin: 20px 0;">
+
+**Key concept:** The ontology defines the vocabulary of the knowledge graph — what types of nodes and edges exist and what they mean. Each implementation defines its own ontology via Pydantic frozen models that guide LLM extraction.
+
+</div>
 
 ### Athena Ontology
 

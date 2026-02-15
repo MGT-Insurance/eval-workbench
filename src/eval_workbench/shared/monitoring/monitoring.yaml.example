@@ -120,6 +120,11 @@ source:
   # # Optional content cleanup
   # # strip_citation_block: true
   #
+  # # Optional mention normalization (helps separate human->AI from human->human)
+  # # member_id_to_display_name:
+  # #   U09JKDU4RE2: "Athena"
+  # # human_mention_token: "@human"
+  #
   # # --- SLACK + NEON JOIN SOURCE (alternative) ---
   # # type: slack_neon_join
   # # name: "athena_joined"
@@ -133,6 +138,10 @@ source:
   # # slack_join_columns: ["channel_id", "thread_ts"]
   # # neon_join_columns: ["slack_channel_id", "slack_thread_ts"]
   # # dataset_id_column: "quote_locator"
+  # # use_slack_thread_dataset_id: true  # sets id to "slack-{channel_id}-{thread_ts}" when dataset_id_column is unset
+  # # member_id_to_display_name:
+  # #   U09JKDU4RE2: "Athena"
+  # # human_mention_token: "@human"
   # # neon_time_column: "created_at"
 
 # =============================================================================

@@ -49,6 +49,8 @@ class SlackExporter:
         exclude_senders: Optional list of sender names to omit from conversations.
         drop_message_regexes: Optional list of regex patterns to drop messages.
         strip_citation_block: Remove trailing citation blocks like "[1] ..." lines.
+        member_id_to_display_name: Mapping of Slack member IDs to display names.
+        human_mention_token: Replacement token for non-mapped Slack member mentions.
         oldest_ts: Optional inclusive lower timestamp bound for channel history pulls.
         latest_ts: Optional inclusive upper timestamp bound for channel history pulls.
         window_days: Relative lookback window in days from "now" (if oldest_ts is unset).
@@ -89,6 +91,8 @@ class SlackExporter:
         exclude_senders: Optional[List[str]] = None,
         drop_message_regexes: Optional[List[str]] = None,
         strip_citation_block: bool = False,
+        member_id_to_display_name: Optional[Dict[str, str]] = None,
+        human_mention_token: str = '@human',
         oldest_ts: Optional[float] = None,
         latest_ts: Optional[float] = None,
         window_days: Optional[float] = None,
@@ -115,10 +119,16 @@ class SlackExporter:
         self.max_concurrent = max_concurrent
         self.exclude_senders = set(exclude_senders or [])
         self.strip_citation_block = strip_citation_block
+        self.member_id_to_display_name = {
+            str(member_id): str(display_name)
+            for member_id, display_name in (member_id_to_display_name or {}).items()
+        }
+        self.human_mention_token = human_mention_token
         self._drop_message_regexes = [
             re.compile(pattern) for pattern in (drop_message_regexes or [])
         ]
         self._citation_line_re = re.compile(r'^\s*\[\d+\]\s*')
+        self._slack_member_mention_re = re.compile(r'<@([A-Z0-9]+)(?:\|[^>]+)?>')
         self.default_oldest_ts, self.default_latest_ts = self._resolve_time_window(
             oldest_ts=oldest_ts,
             latest_ts=latest_ts,
@@ -257,7 +267,22 @@ class SlackExporter:
         cleaned = text or ''
         if self.strip_citation_block:
             cleaned = self._strip_citation_block(cleaned)
+        cleaned = self._normalize_member_mentions(cleaned)
         return cleaned.strip()
+
+    def _normalize_member_mentions(self, text: str) -> str:
+        """Normalize Slack member-id mentions for clearer human-vs-bot context."""
+        if not text:
+            return text
+
+        def _replace(match: re.Match[str]) -> str:
+            member_id = match.group(1)
+            display_name = self.member_id_to_display_name.get(member_id)
+            if display_name:
+                return f'@{display_name}'
+            return self.human_mention_token
+
+        return self._slack_member_mention_re.sub(_replace, text)
 
     def _first_turn_is_user(self, messages: List[Any]) -> bool:
         """Return True when the first turn is from a human."""

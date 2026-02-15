@@ -1,3 +1,5 @@
+from typing import Any
+
 from axion._core.schema import RichBaseModel
 from pydantic import Field
 
@@ -48,4 +50,15 @@ class TruncationConfig(RichBaseModel):
     )
 
 
-__all__ = ['AnalyzerConfig', 'TruncationConfig']
+def resolve_analyzer_config(config: Any) -> AnalyzerConfig:
+    """Coerce metric config input into AnalyzerConfig."""
+    if config is None:
+        return AnalyzerConfig()
+    if isinstance(config, AnalyzerConfig):
+        return config
+    if isinstance(config, dict):
+        return AnalyzerConfig(**config)
+    return AnalyzerConfig.model_validate(config)
+
+
+__all__ = ['AnalyzerConfig', 'TruncationConfig', 'resolve_analyzer_config']

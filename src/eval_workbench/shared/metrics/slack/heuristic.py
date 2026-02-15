@@ -9,7 +9,10 @@ from axion.metrics.base import BaseMetric, MetricEvaluationResult, metric
 from axion.metrics.schema import SubMetricResult
 from pydantic import Field
 
-from eval_workbench.shared.metrics.slack.config import AnalyzerConfig
+from eval_workbench.shared.metrics.slack.config import (
+    AnalyzerConfig,
+    resolve_analyzer_config,
+)
 from eval_workbench.shared.metrics.slack.utils import (
     ReactionSignals,
     StalemateSignals,
@@ -135,7 +138,7 @@ class SlackHeuristicAnalyzer(BaseMetric):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.analyzer_config = config or AnalyzerConfig()
+        self.analyzer_config = resolve_analyzer_config(config)
         self.include_reactions = include_reactions
         self.include_stalemate = include_stalemate
 

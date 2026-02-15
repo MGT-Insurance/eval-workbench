@@ -182,7 +182,16 @@ class RuleExtractor:
         List of structured rule dicts.
         """
         combined = '\n\n---\n\n'.join(texts)
-        print(f'combined: {combined}')
+        # Avoid printing raw extraction text (can be large/sensitive).
+        # Use debug logging with truncation for local troubleshooting.
+        if logger.isEnabledFor(logging.DEBUG):
+            snippet = combined[:500]
+            logger.debug(
+                'RuleExtractor combined input (len=%d): %r%s',
+                len(combined),
+                snippet,
+                '...' if len(combined) > len(snippet) else '',
+            )
 
         try:
             output = run_async_function(
