@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../intervention/">
+        <link rel="prev" href="../subjective/">
       
       
-        <link rel="next" href="../override/">
+        <link rel="next" href="../feedback/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Interaction - Eval Workbench</title>
+        <title>Product Analyzer - Eval Workbench</title>
       
     
     
@@ -73,7 +73,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#slack-interaction-analyzer" class="md-skip">
+        <a href="#product-analyzer" class="md-skip">
           Skip to content
         </a>
       
@@ -94,9 +94,7 @@
     
       
 
-  
-
-<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+<header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="Eval Workbench" class="md-header__button md-logo" aria-label="Eval Workbench" data-md-component="logo">
       
@@ -117,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Interaction
+              Product Analyzer
             
           </span>
         </div>
@@ -130,20 +128,20 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
-      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
       </label>
     
   
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
     
-      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
       </label>
     
   
@@ -212,8 +210,14 @@
     
   </nav>
   
+</header>
     
+    <div class="md-container" data-md-component="container">
       
+      
+        
+          
+            
 <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
   <div class="md-grid">
     <ul class="md-tabs__list">
@@ -333,13 +337,7 @@
     </ul>
   </div>
 </nav>
-    
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -533,6 +531,10 @@
       
         
           
+        
+      
+        
+      
         
       
         
@@ -771,6 +773,62 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/scripts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scripts Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -955,20 +1013,6 @@
       
         
       
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
     
     
     
@@ -1030,14 +1074,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../acceptance/" class="md-nav__link">
+      <a href="../heuristic/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Acceptance
+    Heuristic Analyzer
   
 
     
@@ -1058,14 +1102,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../composite/" class="md-nav__link">
+      <a href="../objective/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Composite
+    Objective Analyzer
   
 
     
@@ -1086,98 +1130,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../engagement/" class="md-nav__link">
+      <a href="../subjective/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Engagement
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../escalation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Escalation
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../frustration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Frustration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../intervention/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Intervention
+    Subjective Analyzer
   
 
     
@@ -1214,7 +1174,7 @@
   <span class="md-ellipsis">
     
   
-    Interaction
+    Product Analyzer
   
 
     
@@ -1232,7 +1192,7 @@
   <span class="md-ellipsis">
     
   
-    Interaction
+    Product Analyzer
   
 
     
@@ -1260,10 +1220,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#at-a-glance" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        At a Glance
+        Constructor
       
     </span>
   </a>
@@ -1271,33 +1231,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#code-examples" class="md-nav__link">
+  <a href="#signals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Code Examples
+        Signals
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#metric-diagnostics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Metric Diagnostics
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Metric Diagnostics">
+    <nav class="md-nav" aria-label="Signals">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#signal-fields" class="md-nav__link">
+  <a href="#productsignalsoutput" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Signal Fields
+        ProductSignalsOutput
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#learning-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learning Categories
       
     </span>
   </a>
@@ -1310,10 +1270,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-reference" class="md-nav__link">
+  <a href="#analysis-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Reference
+        Analysis Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sub-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kpis-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KPIs Supported
       
     </span>
   </a>
@@ -1336,14 +1329,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../override/" class="md-nav__link">
+      <a href="../feedback/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Override
+    Feedback Attribution
   
 
     
@@ -1364,126 +1357,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../override_satisfaction/" class="md-nav__link">
+      <a href="../composite/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Override Satisfaction
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../recommendation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Recommendation
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../resolution/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Resolution
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../sentiment/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Sentiment
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../slack_compliance/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Slack Compliance
+    Composite Orchestrator
   
 
     
@@ -2084,10 +1965,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#at-a-glance" class="md-nav__link">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        At a Glance
+        Constructor
       
     </span>
   </a>
@@ -2095,33 +1976,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#code-examples" class="md-nav__link">
+  <a href="#signals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Code Examples
+        Signals
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#metric-diagnostics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Metric Diagnostics
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Metric Diagnostics">
+    <nav class="md-nav" aria-label="Signals">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#signal-fields" class="md-nav__link">
+  <a href="#productsignalsoutput" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Signal Fields
+        ProductSignalsOutput
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#learning-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learning Categories
       
     </span>
   </a>
@@ -2134,10 +2015,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-reference" class="md-nav__link">
+  <a href="#analysis-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Reference
+        Analysis Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sub-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kpis-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KPIs Supported
       
     </span>
   </a>
@@ -2164,191 +2078,215 @@
   
 
 
-<h1 id="slack-interaction-analyzer">Slack Interaction Analyzer<a class="headerlink" href="#slack-interaction-analyzer" title="Permanent link">&para;</a></h1>
-<div style="border-left: 4px solid #8B9F4F; padding-left: 1rem; margin-bottom: 1.5rem;">
-<strong style="font-size: 1.1rem;">Extract interaction signals from Slack threads</strong><br>
-<span class="badge" style="margin-top: 0.5rem;">Rule-Based</span>
-<span class="badge" style="background: #667eea;">Analysis</span>
-<span class="badge" style="background: #3b82f6;">Slack</span>
+<h1 id="product-analyzer">Product Analyzer<a class="headerlink" href="#product-analyzer" title="Permanent link">&para;</a></h1>
+<div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F2440 100%); padding: 24px; border-radius: 12px; color: white; margin: 20px 0;">
+
+<p style="margin: 0; font-size: 16px; line-height: 1.6;">
+<strong>Actionable product insights extraction via LLM.</strong> Identifies UX issues, accuracy problems, workflow friction, feature requests, and rule configuration needs from Slack conversations.
+</p>
 </div>
 
-<h2 id="at-a-glance">At a Glance<a class="headerlink" href="#at-a-glance" title="Permanent link">&para;</a></h2>
-<div class="grid-container">
-
-<div class="grid-item" style="text-align: center;">
-<span style="font-size: 2rem;">📊</span><br>
-<strong>Score Range</strong><br>
-<code style="font-size: 1.1rem;">—</code><br>
-<small style="color: var(--md-text-muted);">Analysis only</small>
+<div class="at-a-glance">
+<div class="at-a-glance__header">
+<span class="at-a-glance__title">At a Glance</span>
+<span class="at-a-glance__badge at-a-glance__badge--llm">LLM · temp 0.3</span>
+</div>
+<div class="at-a-glance__body">
+<div class="at-a-glance__item">
+<span class="at-a-glance__label">Class</span>
+<span class="at-a-glance__value"><code>SlackProductAnalyzer</code></span>
+</div>
+<div class="at-a-glance__item">
+<span class="at-a-glance__label">Base</span>
+<span class="at-a-glance__value"><code>BaseMetric</code></span>
+</div>
+<div class="at-a-glance__item">
+<span class="at-a-glance__label">Source</span>
+<span class="at-a-glance__value"><code>shared/metrics/slack/product.py</code></span>
+</div>
+<div class="at-a-glance__item">
+<span class="at-a-glance__label">Temperature</span>
+<span class="at-a-glance__value">0.3</span>
+</div>
+<div class="at-a-glance__item at-a-glance__item--wide">
+<span class="at-a-glance__label">Signals</span>
+<span class="at-a-glance__value"><code>ProductSignalsOutput</code> — learnings, feature requests, priority</span>
+</div>
+</div>
 </div>
 
-<div class="grid-item" style="text-align: center;">
-<span style="font-size: 2rem;">⚡</span><br>
-<strong>Default Threshold</strong><br>
-<code style="font-size: 1.5rem; color: var(--md-primary);">—</code><br>
-<small style="color: var(--md-text-muted);">Not applicable</small>
-</div>
-
-<div class="grid-item" style="text-align: center;">
-<span style="font-size: 2rem;">📋</span><br>
-<strong>Required Inputs</strong><br>
-<code>conversation</code><br>
-<small style="color: var(--md-text-muted);">Optional: additional_input</small>
-</div>
-
-</div>
-
-<div class="admonition abstract">
-<p class="admonition-title">What It Measures</p>
-<p>Slack Interaction Analyzer extracts <strong>basic interaction signals</strong> from Slack threads for KPI aggregation. It counts messages by role, determines interactivity, and extracts thread metadata.</p>
+<hr />
+<h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.metrics.slack.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlackProductAnalyzer</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">analyzer</span> <span class="o">=</span> <span class="n">SlackProductAnalyzer</span><span class="p">(</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                <span class="c1"># Optional[AnalyzerConfig]</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">analysis_context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>      <span class="c1"># Optional[Dict[str, Any]] — from other analyses</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="signals">Signals<a class="headerlink" href="#signals" title="Permanent link">&para;</a></h2>
+<h3 id="productsignalsoutput">ProductSignalsOutput<a class="headerlink" href="#productsignalsoutput" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
 <th>Signal</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ai_message_count</code></td>
-<td>Number of AI messages</td>
-</tr>
-<tr>
-<td><code>human_message_count</code></td>
-<td>Number of human messages</td>
-</tr>
-<tr>
-<td><code>is_interactive</code></td>
-<td>Whether the thread has back-and-forth</td>
-</tr>
-<tr>
-<td><code>is_ai_initiated</code></td>
-<td>Whether AI started the thread</td>
-</tr>
-</tbody>
-</table>
-</div>
-<hr />
-<h2 id="code-examples">Code Examples<a class="headerlink" href="#code-examples" title="Permanent link">&para;</a></h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7z"/></svg></span> Basic Usage</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">axion.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetItem</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.metrics.slack.interaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlackInteractionAnalyzer</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">metric</span> <span class="o">=</span> <span class="n">SlackInteractionAnalyzer</span><span class="p">()</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">item</span> <span class="o">=</span> <span class="n">DatasetItem</span><span class="p">(</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">conversation</span><span class="o">=</span><span class="p">[</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello, how can I help?&quot;</span><span class="p">},</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;I need help with a quote.&quot;</span><span class="p">},</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Sure, here&#39;s the analysis.&quot;</span><span class="p">},</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="p">]</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">metric</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;AI Messages: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">ai_message_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Human Messages: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">human_message_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Interactive: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">is_interactive</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-</div>
-</div>
-</div>
-<hr />
-<h2 id="metric-diagnostics">Metric Diagnostics<a class="headerlink" href="#metric-diagnostics" title="Permanent link">&para;</a></h2>
-<details>
-<summary><strong>📊 SlackInteractionResult Structure</strong></summary>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">SlackInteractionResult</span><span class="p">(</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">{</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="s2">&quot;ai_message_count&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="s2">&quot;human_message_count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="s2">&quot;total_turn_count&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="s2">&quot;is_interactive&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="s2">&quot;is_ai_initiated&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="s2">&quot;has_human_response&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="s2">&quot;thread_123&quot;</span><span class="p">,</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="s2">&quot;channel_id&quot;</span><span class="p">:</span> <span class="s2">&quot;channel_456&quot;</span><span class="p">,</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="s2">&quot;sender&quot;</span><span class="p">:</span> <span class="s2">&quot;athena_bot&quot;</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">}</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="signal-fields">Signal Fields<a class="headerlink" href="#signal-fields" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Field</th>
 <th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>ai_message_count</code></td>
-<td><code>int</code></td>
-<td>AI message count</td>
+<td><code>learnings</code></td>
+<td>list[str]</td>
+<td>Actionable insights extracted from conversation</td>
 </tr>
 <tr>
-<td><code>human_message_count</code></td>
-<td><code>int</code></td>
-<td>Human message count</td>
+<td><code>learning_categories</code></td>
+<td>list[str]</td>
+<td>Categories: ux, accuracy, coverage, speed, workflow, rules, guardrails, other</td>
 </tr>
 <tr>
-<td><code>total_turn_count</code></td>
-<td><code>int</code></td>
-<td>Total messages</td>
+<td><code>feature_requests</code></td>
+<td>list[str]</td>
+<td>Explicit or implicit feature requests</td>
 </tr>
 <tr>
-<td><code>is_interactive</code></td>
-<td><code>bool</code></td>
-<td>Has human participation</td>
+<td><code>has_actionable_feedback</code></td>
+<td>bool</td>
+<td>Whether actionable feedback was found</td>
 </tr>
 <tr>
-<td><code>is_ai_initiated</code></td>
-<td><code>bool</code></td>
-<td>AI sent first message</td>
+<td><code>priority_level</code></td>
+<td>str</td>
+<td>high / medium / low / none</td>
 </tr>
 <tr>
-<td><code>has_human_response</code></td>
-<td><code>bool</code></td>
-<td>Human replied</td>
+<td><code>suggested_action</code></td>
+<td>str</td>
+<td>Recommended next step (optional)</td>
 </tr>
 <tr>
-<td><code>thread_id</code></td>
-<td><code>str</code></td>
-<td>Thread identifier</td>
-</tr>
-<tr>
-<td><code>channel_id</code></td>
-<td><code>str</code></td>
-<td>Channel identifier</td>
-</tr>
-<tr>
-<td><code>sender</code></td>
-<td><code>str</code></td>
-<td>Initiating sender</td>
+<td><code>reasoning_trace</code></td>
+<td>str</td>
+<td>LLM reasoning chain</td>
 </tr>
 </tbody>
 </table>
-</details>
+<h3 id="learning-categories">Learning Categories<a class="headerlink" href="#learning-categories" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ux</code></td>
+<td>User interface / experience issues</td>
+</tr>
+<tr>
+<td><code>accuracy</code></td>
+<td>Incorrect or imprecise outputs</td>
+</tr>
+<tr>
+<td><code>coverage</code></td>
+<td>Missing knowledge or capabilities</td>
+</tr>
+<tr>
+<td><code>speed</code></td>
+<td>Performance / response time concerns</td>
+</tr>
+<tr>
+<td><code>workflow</code></td>
+<td>Process or workflow friction</td>
+</tr>
+<tr>
+<td><code>rules</code></td>
+<td>Rule configuration needs</td>
+</tr>
+<tr>
+<td><code>guardrails</code></td>
+<td>Safety or boundary issues</td>
+</tr>
+<tr>
+<td><code>other</code></td>
+<td>Uncategorized feedback</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h2 id="quick-reference">Quick Reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
-<div class="admonition note">
-<p class="admonition-title">TL;DR</p>
-<p><strong>Slack Interaction Analyzer</strong> = Basic interaction counts and metadata</p>
+<h2 id="analysis-context">Analysis Context<a class="headerlink" href="#analysis-context" title="Permanent link">&para;</a></h2>
+<p>The product analyzer can receive context from other analyses to enrich its extraction:</p>
 <ul>
-<li><strong>Use it when:</strong> Need simple interaction metrics for dashboards</li>
-<li><strong>Output type:</strong> Analysis signals (no score)</li>
-<li><strong>Key signals:</strong> <code>ai_message_count</code>, <code>human_message_count</code>, <code>is_interactive</code></li>
+<li><code>has_intervention</code> — Whether human intervention occurred</li>
+<li><code>intervention_type</code> — Type of intervention</li>
+<li><code>is_frustrated</code> — Whether frustration was detected</li>
+<li><code>sentiment</code> — User sentiment label</li>
 </ul>
+<hr />
+<h2 id="sub-metrics">Sub-Metrics<a class="headerlink" href="#sub-metrics" title="Permanent link">&para;</a></h2>
+<div class="sub-metrics">
+<div class="sub-metric">
+<span class="sub-metric__icon sub-metric__icon--score">0–1</span>
+<span class="sub-metric__text">
+<span class="sub-metric__name">learnings_count</span>
+<span class="sub-metric__desc">Number of learnings extracted</span>
+</span>
 </div>
-<div class="grid cards">
+<div class="sub-metric">
+<span class="sub-metric__icon sub-metric__icon--score">0–1</span>
+<span class="sub-metric__text">
+<span class="sub-metric__name">feature_requests_count</span>
+<span class="sub-metric__desc">Feature requests identified</span>
+</span>
+</div>
+<div class="sub-metric">
+<span class="sub-metric__icon sub-metric__icon--classification">cls</span>
+<span class="sub-metric__text">
+<span class="sub-metric__name">has_actionable_feedback</span>
+<span class="sub-metric__desc">Actionable feedback exists</span>
+</span>
+</div>
+<div class="sub-metric">
+<span class="sub-metric__icon sub-metric__icon--classification">cls</span>
+<span class="sub-metric__text">
+<span class="sub-metric__name">priority_level</span>
+<span class="sub-metric__desc">Priority classification</span>
+</span>
+</div>
+</div>
+
+<hr />
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">eval_workbench.shared.metrics.slack.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlackProductAnalyzer</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">analyzer</span> <span class="o">=</span> <span class="n">SlackProductAnalyzer</span><span class="p">()</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">dataset_item</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">signals</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">signals</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Learnings: </span><span class="si">{</span><span class="n">signals</span><span class="o">.</span><span class="n">learnings</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Priority: </span><span class="si">{</span><span class="n">signals</span><span class="o">.</span><span class="n">priority_level</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Feature requests: </span><span class="si">{</span><span class="n">signals</span><span class="o">.</span><span class="n">feature_requests</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># With context from other analyses</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">analyzer</span> <span class="o">=</span> <span class="n">SlackProductAnalyzer</span><span class="p">(</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="n">analysis_context</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="s2">&quot;has_intervention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="s2">&quot;intervention_type&quot;</span><span class="p">:</span> <span class="s2">&quot;correction&quot;</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        <span class="s2">&quot;is_frustrated&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="s2">&quot;sentiment&quot;</span><span class="p">:</span> <span class="s2">&quot;neutral&quot;</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="p">}</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="kpis-supported">KPIs Supported<a class="headerlink" href="#kpis-supported" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.39-1.03.39-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.98 2.98 0 0 0 0-4.24 2.98 2.98 0 0 0-4.24 0l-3.53 3.53a2.98 2.98 0 0 0 0 4.24m2.82-4.24c.39-.39 1.03-.39 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a2.98 2.98 0 0 0 0 4.24 2.98 2.98 0 0 0 4.24 0l3.53-3.53a2.98 2.98 0 0 0 0-4.24.973.973 0 0 1 0-1.42"/></svg></span> <strong>Related Metrics</strong></p>
-<p><a href="../engagement/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Engagement</a> · Recommendation · Resolution</p>
-</li>
+<li>Product insight extraction for daily/weekly reports</li>
+<li>Feature request tracking and prioritization</li>
+<li>Friction point identification across conversations</li>
 </ul>
-</div>
 
 
 
@@ -2371,7 +2309,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 10, 2026 23:50:31 UTC">February 10, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 15, 2026 18:44:21 UTC">February 15, 2026</span>
   </span>
 
     
@@ -2381,7 +2319,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 1, 2026 17:43:00 UTC">February 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 15, 2026 18:44:21 UTC">February 15, 2026</span>
   </span>
 
     
@@ -2473,7 +2411,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.instant", "navigation.tracking", "navigation.top", "navigation.expand", "content.code.copy", "content.code.annotate", "content.tabs.link", "search.suggest", "search.highlight", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
 
