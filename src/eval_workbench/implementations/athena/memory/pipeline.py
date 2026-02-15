@@ -233,7 +233,7 @@ class AthenaRulePipeline(BasePipeline):
                     agent_name='athena',
                     raw_text=raw_text,
                 )
-                rule_ids = dict(zip(range(len(rules)), ids))
+                rule_ids_by_idx = dict(zip(range(len(rules)), ids))
 
                 for i in range(0, len(rules), batch_size):
                     batch = rules[i : i + batch_size]
@@ -243,14 +243,14 @@ class AthenaRulePipeline(BasePipeline):
                             payload = self._rule_to_ingest_payload(rule)
                             self.store.ingest(payload)
                             result.items_ingested += 1
-                            if idx in rule_ids:
-                                mark_ingested(self.db, rule_ids[idx])
+                            if idx in rule_ids_by_idx:
+                                mark_ingested(self.db, rule_ids_by_idx[idx])
                         except Exception as exc:
                             result.items_failed += 1
                             result.errors.append(f'{rule.get("rule_name", "?")}: {exc}')
                             logger.warning('Failed to ingest rule: %s', exc)
-                            if idx in rule_ids:
-                                mark_failed(self.db, rule_ids[idx], str(exc))
+                            if idx in rule_ids_by_idx:
+                                mark_failed(self.db, rule_ids_by_idx[idx], str(exc))
 
             return result
 
