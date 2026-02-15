@@ -7,8 +7,10 @@ from pathlib import Path
 from eval_workbench.implementations.athena.memory.extractors import RuleExtractor
 from eval_workbench.shared.memory.ontology import OntologyDefinition
 from eval_workbench.shared.memory.persistence import (
+    compute_text_hash,
     fetch_all_extractions,
     fetch_pending,
+    has_extractions_for_raw_text_hash,
     mark_failed,
     mark_ingested,
     save_extractions,
@@ -183,6 +185,7 @@ class AthenaRulePipeline(BasePipeline):
         raw_data: str | list | dict,
         *,
         batch_size: int = 5,
+        dedup: bool = True,
         **kwargs,
     ) -> PipelineResult:
         """Run the full extract-and-ingest pipeline.
@@ -196,6 +199,56 @@ class AthenaRulePipeline(BasePipeline):
         """
         result = PipelineResult()
 
+        # Special-case list inputs when persistence is enabled so we can:
+        # - store raw_text per entry (not the entire list string)
+        # - dedup by raw_text_hash to make re-runs idempotent
+        if self.db and isinstance(raw_data, list):
+            batch_id = str(uuid.uuid4())
+
+            for item in raw_data:
+                raw_text = str(item)
+                raw_text_hash = compute_text_hash(raw_text) if raw_text else None
+                if dedup and raw_text_hash and has_extractions_for_raw_text_hash(
+                    self.db, agent_name='athena', raw_text_hash=raw_text_hash
+                ):
+                    logger.info(
+                        'Skipping extraction (dedup hit) raw_text_hash=%s', raw_text_hash
+                    )
+                    continue
+
+                rules = self.extractor.extract_batch([raw_text])
+                result.items_processed += len(rules)
+                if not rules:
+                    continue
+
+                ids = save_extractions(
+                    self.db,
+                    rules,
+                    batch_id=batch_id,
+                    agent_name='athena',
+                    raw_text=raw_text,
+                )
+                rule_ids = dict(zip(range(len(rules)), ids))
+
+                for i in range(0, len(rules), batch_size):
+                    batch = rules[i : i + batch_size]
+                    for j, rule in enumerate(batch):
+                        idx = i + j
+                        try:
+                            payload = self._rule_to_ingest_payload(rule)
+                            self.store.ingest(payload)
+                            result.items_ingested += 1
+                            if idx in rule_ids:
+                                mark_ingested(self.db, rule_ids[idx])
+                        except Exception as exc:
+                            result.items_failed += 1
+                            result.errors.append(f'{rule.get("rule_name", "?")}: {exc}')
+                            logger.warning('Failed to ingest rule: %s', exc)
+                            if idx in rule_ids:
+                                mark_failed(self.db, rule_ids[idx], str(exc))
+
+            return result
+
         rules = self.extract(raw_data, **kwargs)
         result.items_processed = len(rules)
 
@@ -203,6 +256,19 @@ class AthenaRulePipeline(BasePipeline):
         rule_ids: dict[int, str] = {}
         if self.db:
             batch_id = str(uuid.uuid4())
+            raw_text_hash = compute_text_hash(str(raw_data)) if raw_data else None
+            if (
+                dedup
+                and raw_text_hash
+                and has_extractions_for_raw_text_hash(
+                    self.db, agent_name='athena', raw_text_hash=raw_text_hash
+                )
+            ):
+                logger.info(
+                    'Skipping extraction+ingestion (dedup hit) raw_text_hash=%s',
+                    raw_text_hash,
+                )
+                return result
             ids = save_extractions(
                 self.db,
                 rules,

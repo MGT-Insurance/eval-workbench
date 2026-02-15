@@ -303,6 +303,7 @@ class SlackNeonJoinDataSource(DataSource):
         slack_join_columns: list[str],
         neon_join_columns: list[str],
         dataset_id_column: str | None = None,
+        use_slack_thread_dataset_id: bool = False,
         neon_time_column: str = 'created_at',
         buffer_minutes: float = 0.0,
         neon_connection_string: str | None = None,
@@ -343,6 +344,7 @@ class SlackNeonJoinDataSource(DataSource):
         self._slack_join_columns = slack_join_columns
         self._neon_join_columns = neon_join_columns
         self._dataset_id_column = dataset_id_column
+        self._use_slack_thread_dataset_id = use_slack_thread_dataset_id
         self._neon_time_column = neon_time_column
         self._buffer_minutes = buffer_minutes
         self._neon_connection_string = neon_connection_string
@@ -477,7 +479,18 @@ class SlackNeonJoinDataSource(DataSource):
             return Dataset.create(name=self._name, items=[])
         self._require_columns(neon_df, self._neon_join_columns, 'neon join')
 
-        merged = slack_df.merge(
+        # Keep Slack join keys, but drop any overlapping payload columns so Neon values win.
+        # This avoids brittle one-off drops (e.g. trace_id) and prevents *_x/*_y suffix noise.
+        slack_join_set = set(self._slack_join_columns)
+        neon_columns = set(neon_df.columns.tolist())
+        slack_drop_columns = [
+            column
+            for column in slack_df.columns.tolist()
+            if column in neon_columns and column not in slack_join_set
+        ]
+        slack_df_for_join = slack_df.drop(columns=slack_drop_columns, errors='ignore')
+
+        merged = slack_df_for_join.merge(
             neon_df,
             left_on=self._slack_join_columns,
             right_on=self._neon_join_columns,
@@ -492,7 +505,21 @@ class SlackNeonJoinDataSource(DataSource):
                 raise ValueError(
                     f'Missing dataset_id_column in merged rows: {self._dataset_id_column}'
                 )
-            merged['dataset_id'] = merged[self._dataset_id_column].astype(str)
+            merged['id'] = merged[self._dataset_id_column].astype(str)
+        elif self._use_slack_thread_dataset_id:
+            required = ['channel_id', 'thread_ts']
+            missing = [col for col in required if col not in merged.columns]
+            if missing:
+                raise ValueError(
+                    'Missing required columns for Slack thread dataset id: '
+                    f'{missing}. Present columns: {merged.columns.tolist()}'
+                )
+            merged['id'] = (
+                'slack:'
+                + merged['channel_id'].astype(str)
+                + ':'
+                + merged['thread_ts'].astype(str)
+            )
 
         if 'dataset_metadata' in merged.columns:
             merged['dataset_metadata'] = merged['dataset_metadata'].apply(

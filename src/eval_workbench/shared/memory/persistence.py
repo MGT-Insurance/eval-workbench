@@ -91,6 +91,31 @@ def save_extractions(
     return ids
 
 
+def has_extractions_for_raw_text_hash(
+    db: NeonConnection,
+    *,
+    agent_name: str,
+    raw_text_hash: str,
+) -> bool:
+    """Return True if we've already stored extractions for this raw_text_hash.
+
+    Note: many extracted rules can share the same raw_text_hash (one per rule),
+    so this checks for existence of any row with the hash rather than enforcing
+    uniqueness at the table level.
+    """
+    row = db.fetch_one(
+        """
+        SELECT 1
+          FROM rule_extractions
+         WHERE agent_name = %s
+           AND raw_text_hash = %s
+         LIMIT 1
+        """,
+        (agent_name, raw_text_hash),
+    )
+    return row is not None
+
+
 def mark_ingested(db: NeonConnection, rule_id: str) -> None:
     """UPDATE ingestion_status='ingested', ingested_at=NOW()."""
     db.execute_commit(

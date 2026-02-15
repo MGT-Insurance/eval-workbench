@@ -60,6 +60,16 @@ class SubjectiveAnalysisInput(RichBaseModel):
 class SubjectiveAnalysisOutput(RichBaseModel):
     """Output for subjective analysis - sentiment and quality metrics."""
 
+    # Analysis applicability/state
+    is_applicable: bool = Field(
+        default=True,
+        description='Whether subjective analysis is applicable for this conversation',
+    )
+    analysis_status: Literal['analyzed', 'skipped_no_human'] = Field(
+        default='analyzed',
+        description='Execution status for subjective analysis',
+    )
+
     # Sentiment (classification only)
     sentiment: Literal['positive', 'neutral', 'frustrated', 'confused'] = Field(
         default='neutral',
@@ -439,11 +449,13 @@ Note specific turns and quotes that inform your assessments."""
             SubMetricResult(
                 name='sentiment_category',
                 score=None,
-                explanation=signals.sentiment,
+                explanation='none' if not signals.is_applicable else signals.sentiment,
                 metric_category=MetricCategory.CLASSIFICATION,
                 group='subjective',
                 metadata={
                     'sentiment': signals.sentiment,
+                    'is_applicable': signals.is_applicable,
+                    'analysis_status': signals.analysis_status,
                     'trajectory': signals.sentiment_trajectory,
                     'indicators': signals.sentiment_indicators,
                 },

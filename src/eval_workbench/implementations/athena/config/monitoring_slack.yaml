@@ -1,4 +1,4 @@
-# Monitoring configuration for Athena Slack monitoring
+# Monitoring configuration for Athena Slack composite monitoring
 version: "1.0"
 name: "athena_slack_monitor"
 environment: "${ENVIRONMENT:-production}"
@@ -9,48 +9,80 @@ scored_store:
 
 # Data source configuration
 source:
-  type: slack
-  name: "support_channels"
-  component: "slack"
+  type: slack_neon_join
+  db_source_type: "slack"
+  name: "athena"
+  window_minutes: 10000
+  component: "recommendation"
   eval_mode: "online"
   environment: "${ENVIRONMENT:-production}"
   channel_ids:
     - "C09MAP9HR9D" # specialty-referrals
     - "C09JE5SSP43" # referrals
-  limit: 50 # Max messages per channel
+  limit: 100 # Max messages per channel
   scrape_threads: true # Include thread replies
-  bot_name: "Athena" # Name used to identify AI vs human messages
+  bot_names: ["Athena"] # Names used to identify AI vs human messages
   workspace_domain: "mgtinsurance" # Slack workspace subdomain
-  drop_if_first_is_user: true # Drop if first turn is from user
-  drop_if_all_ai: true # Drop if all turns are AI
+  drop_if_first_is_user: true
+  drop_if_all_ai: true # Keep all-AI threads; composite now handles zero-human safely
   max_concurrent: 2 # Max concurrent channel scrapes
+  exclude_senders: ["Prometheus"]
+  drop_message_regexes:
+    - "^Street View"
+    - "google\\.com/maps"
+    - "intercom: Intercom Conversation"
+  strip_citation_block: true
+  use_slack_thread_dataset_id: true # id format: slack:{channel_id}:{thread_ts}
+
+  # Neon join configuration
+  neon_query: |
+    SELECT
+      slack_thread_ts,
+      slack_channel_id,
+      quote_locator,
+      langfuse_trace_id AS trace_id,
+      created_at
+    FROM athena_cases
+  slack_join_columns: ["channel_id", "thread_ts"]
+  neon_join_columns: ["slack_channel_id", "slack_thread_ts"]
+  neon_time_column: "created_at"
+  buffer_minutes: 30
 
 # Sampling strategy: controls which items get evaluated from fetched pool
 # Available strategies: all, random, most_recent, oldest
 sampling:
   strategy: most_recent
-  n: 3
-  seed: 42  # optional: for reproducible random sampling
+  n: 5
+  seed: 42
 
 # Metrics configuration
 metrics_config:
-  acceptance_detector:
-    class: 'acceptance_detector'
-  referral_reason:
-    class: 'referral_reason_analysis'
-  intervention_detector:
-    class: "intervention_detector"
+  UnderwritingComposite:
+    class: "underwriting_composite_evaluator"
+    llm_provider: "openai"
+    model_name: "gpt-5.2"
+
+# Evaluation runner configuration
+evaluation:
+  max_concurrent: 2
+  throttle_delay: 5
+  metadata:
+    eval_mode: "online"
+    schedule: "manual_or_scheduler"
+    source_window_minutes: 300
+    pipeline_version: "athena_slack_composite_v1"
+    run_initiator: "monitor"
 
 # Publishing configuration
 publishing:
-  push_to_db: true
+  push_to_db: false
   push_to_langfuse: false # Always should be False for Slack
   # Whether to trace evaluation runs in Langfuse (creates observation traces)
   trace_experiment: false
 
   # Database upload configuration (used when push_to_db: true)
   database:
-    # connection_string: "postgresql://..."  # Override DATABASE_URL env var
+    connection_string: "postgresql://mattevanoff@localhost:5432/eval"  # Override DATABASE_URL env var
     on_conflict: do_nothing  # do_nothing | upsert | error
     chunk_size: 1000         # Rows per batch upload
 

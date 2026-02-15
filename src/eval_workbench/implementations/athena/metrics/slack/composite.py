@@ -14,7 +14,10 @@ from eval_workbench.shared.metrics.slack.feedback import (
 )
 from eval_workbench.shared.metrics.slack.objective import SlackObjectiveAnalyzer
 from eval_workbench.shared.metrics.slack.product import SlackProductAnalyzer
+from eval_workbench.shared.metrics.slack.product import ProductSignalsOutput
 from eval_workbench.shared.metrics.slack.subjective import SlackSubjectiveAnalyzer
+from eval_workbench.shared.metrics.slack.subjective import SubjectiveAnalysisOutput
+from eval_workbench.shared.metrics.slack.utils import get_human_messages
 
 
 class UnderwritingCompositeResult(RichBaseModel):
@@ -74,6 +77,59 @@ class UnderwritingCompositeEvaluator(BaseMetric):
         # Did the human intervene? What was the outcome?
         obj_result = await self.objective.execute(item)
         obj_signals = obj_result.signals
+
+        human_messages = get_human_messages(item.conversation)
+        if len(human_messages) == 0:
+            subj_signals = SubjectiveAnalysisOutput(
+                is_applicable=False,
+                analysis_status='skipped_no_human',
+                sentiment='neutral',
+                frustration_cause='none',
+                acceptance_status='pending',
+                override_type='no_override',
+                reasoning_trace='No human messages - subjective analysis skipped.',
+            )
+            subj_result = MetricEvaluationResult(
+                score=None,
+                explanation='No human messages - skipping subjective analysis.',
+                signals=subj_signals,
+                metadata={'subjective_result': subj_signals.model_dump(), 'skipped': True},
+            )
+
+            prod_signals = ProductSignalsOutput(
+                learnings=[],
+                learning_categories=[],
+                feature_requests=[],
+                has_actionable_feedback=False,
+                priority_level='none',
+                suggested_action=None,
+                reasoning_trace='No human messages - product analysis skipped.',
+            )
+            prod_result = MetricEvaluationResult(
+                score=None,
+                explanation='No human messages - skipping product analysis.',
+                signals=prod_signals,
+                metadata={'product_result': prod_signals.model_dump(), 'skipped': True},
+            )
+
+            composite_signals = UnderwritingCompositeResult(
+                objective=obj_signals,
+                subjective=subj_signals,
+                feedback=None,
+                product=prod_signals,
+            )
+
+            return MetricEvaluationResult(
+                score=None,
+                explanation=f'Eval Complete. Status: {obj_signals.resolution.final_status} | Intervention: {obj_signals.intervention.intervention_type}',
+                signals=composite_signals,
+                metadata={
+                    'objective': obj_result,
+                    'subjective': subj_result,
+                    'feedback': None,
+                    'product': prod_result,
+                },
+            )
 
         # Determine if we need deep analysis
         # If no intervention and resolved successfully, we might skip deep diagnostics

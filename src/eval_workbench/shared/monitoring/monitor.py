@@ -17,6 +17,7 @@ from pandas.api import types as ptypes
 from eval_workbench.implementations.athena.metrics import (
     recommendation as _recommendation_metrics,  # noqa: F401
 )
+from eval_workbench.implementations.athena.metrics import slack as _slack_metrics  # noqa: F401
 from eval_workbench.shared import config
 from eval_workbench.shared.config import ConfigurationError
 from eval_workbench.shared.database.evaluation_upload import EvaluationUploader
@@ -322,6 +323,9 @@ class OnlineMonitor:
             slack_join_columns=slack_join_columns,
             neon_join_columns=neon_join_columns,
             dataset_id_column=source_cfg.get('dataset_id_column'),
+            use_slack_thread_dataset_id=source_cfg.get(
+                'use_slack_thread_dataset_id', False
+            ),
             neon_time_column=source_cfg.get('neon_time_column', 'created_at'),
             buffer_minutes=source_cfg.get('buffer_minutes', 0),
             neon_connection_string=source_cfg.get('connection_string'),
@@ -545,7 +549,7 @@ class OnlineMonitor:
         cfg = self._raw_config or {}
         source_cfg = config.get('source', cfg=cfg) or {}
         source_name = source_cfg.get('name')
-        source_type = source_cfg.get('type')
+        source_type = source_cfg.get('db_source_type') or source_cfg.get('type')
         source_component = source_cfg.get('component', 'agent')
         environment = source_cfg.get('environment')
         eval_mode = source_cfg.get('eval_mode')
