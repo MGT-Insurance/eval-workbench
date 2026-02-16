@@ -1,0 +1,53 @@
+name: Scheduled KPI Population
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      since_days:
+        description: 'Lookback window (days)'
+        required: false
+        default: '2'
+      write_mode:
+        description: 'Write mode: incremental (default) or backfill overwrite'
+        required: false
+        default: 'incremental'
+        type: choice
+        options:
+          - incremental
+          - backfill
+
+jobs:
+  populate-kpis:
+    name: Populate Athena KPIs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Default OFF for scheduled runs.
+    # Enable with repo variable KPI_POPULATION_ENABLED=true.
+    # Manual runs via "Run workflow" are always allowed.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.KPI_POPULATION_ENABLED == 'true' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Populate agent_kpi_logs
+        run: |
+          python scripts/populate_athena_kpis.py --since-days ${{ github.event.inputs.since_days || '2' }} --write-mode ${{ github.event.inputs.write_mode || 'incremental' }}
+        env:
+          # Supports same-db or split source/target DB setup.
+          SOURCE_DATABASE_URL: ${{ secrets.SOURCE_DATABASE_URL || secrets.DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.TARGET_DATABASE_URL || secrets.DATABASE_URL }}

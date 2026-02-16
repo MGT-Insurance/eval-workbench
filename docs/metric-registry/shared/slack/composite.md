@@ -203,21 +203,21 @@ The composite flattens all child analyzer sub-metrics into a single list for uni
 <div class="sub-metric">
 <span class="sub-metric__icon sub-metric__icon--score">0–1</span>
 <span class="sub-metric__text">
-<span class="sub-metric__name">learnings_count</span>
+<span class="sub-metric__name">learnings</span>
 <span class="sub-metric__desc">Learnings extracted</span>
 </span>
 </div>
 <div class="sub-metric">
 <span class="sub-metric__icon sub-metric__icon--score">0–1</span>
 <span class="sub-metric__text">
-<span class="sub-metric__name">feature_requests_count</span>
+<span class="sub-metric__name">feature_requests</span>
 <span class="sub-metric__desc">Feature requests identified</span>
 </span>
 </div>
 <div class="sub-metric">
 <span class="sub-metric__icon sub-metric__icon--classification">cls</span>
 <span class="sub-metric__text">
-<span class="sub-metric__name">has_actionable_feedback</span>
+<span class="sub-metric__name">actionable_feedback</span>
 <span class="sub-metric__desc">Actionable feedback exists</span>
 </span>
 </div>
