@@ -119,6 +119,10 @@ class ObjectiveAnalysisOutput(RichBaseModel):
         default=None,
         description='Technical details of the issue',
     )
+    rules_referenced: List[str] = Field(
+        default_factory=list,
+        description='Rule names or concepts referenced by the bot (e.g., "property_rate_low_Refer", "Payroll Cap $300k")',
+    )
 
     # Resolution
     final_status: Literal[
@@ -187,6 +191,7 @@ class InterventionSignals(RichBaseModel):
     intervention_summary: str = Field(default='')
     friction_point: Optional[str] = Field(default=None)
     issue_details: Optional[str] = Field(default=None)
+    rules_referenced: List[str] = Field(default_factory=list)
 
 
 class ResolutionSignals(RichBaseModel):
@@ -231,6 +236,7 @@ class ObjectiveAnalysisResult(RichBaseModel):
             'has_intervention': self.intervention.has_intervention,
             'intervention_type': self.intervention.intervention_type,
             'is_stp': self.intervention.is_stp,
+            'rules_referenced': self.intervention.rules_referenced,
             'final_status': self.resolution.final_status,
             'is_resolved': self.resolution.is_resolved,
             'time_to_resolution_seconds': self.resolution.time_to_resolution_seconds,
@@ -276,6 +282,22 @@ Focus specifically on differentiating between *helping* the bot (context) vs *co
 - User provides info the bot didn't have (not a correction, just an addition).
 - Examples: "Agent confirmed sprinklers are present".
 
+**clarification** - Asking "Why":
+- User is asking for an explanation, not correcting anything.
+- Examples: "Why did this get referred?", "What does property_rate_low mean?".
+
+**support** - General System Help:
+- User needs help navigating the platform, not about the recommendation itself.
+- Examples: "How do I override this?", "Where is the AAL field?".
+
+**approval** - Pure Sign-Off:
+- User explicitly approves with zero new reasoning or information.
+- Examples: "Looks good, approved", "Go ahead", "Accepted".
+
+**unknown** - Unclassifiable Intervention:
+- A human participated but the intervention doesn't fit any category above.
+- Use sparingly — prefer a specific category whenever possible.
+
 ---
 
 ## RESOLUTION STATUS
@@ -284,6 +306,7 @@ Focus specifically on differentiating between *helping* the bot (context) vs *co
 - `blocked`: Waiting on external factor or system fix.
 - `needs_info`: Explicitly waiting for agent/insured.
 - `stalemate`: No progress being made.
+- `pending`: Conversation still in progress, no clear outcome yet.
 
 ---
 
@@ -291,6 +314,24 @@ Focus specifically on differentiating between *helping* the bot (context) vs *co
 1. **Data vs. Opinion**: If the user says "The data is wrong", it is `correction_factual`. If they say "I don't like this risk", it is `risk_appetite`.
 2. **System vs. Model**: If the user complains about "SFX", "Socotra", or "Swallow" errors, it is `system_workaround`.
 3. **Escalation**: Only mark `is_escalated` if the conversation is explicitly handed off to another human/team.
+4. **Approval vs. Risk Appetite**: "Approved" + own judgment/reasoning = `risk_appetite`. "Approved" with no additions = `approval`. True approval means zero new information or reasoning from the user.
+
+---
+
+## FRICTION CONTEXT
+When an intervention is detected, also populate:
+- `friction_point`: A concise noun phrase for the domain concept causing friction (e.g., "Payroll Cap", "Year Built", "Coastal Distance", "Class Code").
+- `issue_details`: The specific technical details — incorrect values, rule names, system errors (e.g., "Magic Dust shows Year Built 1954, actual is 2026", "property_rate_low_Refer triggered incorrectly").
+
+These fields are critical for downstream root-cause analysis. Populate them whenever `has_intervention` is True.
+
+---
+
+## RULES REFERENCED
+Extract any specific underwriting rules, referral names, or business concepts that {bot_name} cited in its messages.
+- Look for rule identifiers like "property_rate_low_Refer", "Payroll Cap $300k", "coastal_distance_Decline".
+- Include referral reason names, hard-block rule names, and any quoted policy thresholds.
+- If no rules are referenced, return an empty list.
 
 ---
 
@@ -299,6 +340,112 @@ Provide your reasoning trace first, identifying the specific turn where interven
 
     input_model = ObjectiveAnalysisInput
     output_model = ObjectiveAnalysisOutput
+    description = 'Objective escalation/intervention/resolution classification'
+
+    examples = [
+        (
+            ObjectiveAnalysisInput(
+                conversation_transcript="""
+[Turn 0] Athena: Recommendation: Approved.
+[Turn 1] User: Looks good, approved.
+""",
+                has_recommendation=True,
+                recommendation_type='approve',
+                recommendation_turn=0,
+                detected_mentions=[],
+                human_message_count=1,
+                truncation_summary='',
+                bot_name='Athena',
+                domain_context='insurance underwriting',
+            ),
+            ObjectiveAnalysisOutput(
+                is_escalated=False,
+                escalation_type='no_escalation',
+                escalation_turn_index=None,
+                escalation_reason='',
+                has_intervention=True,
+                intervention_type='approval',
+                intervention_turn_index=1,
+                intervention_summary='User explicitly signed off with no additional reasoning.',
+                friction_point=None,
+                issue_details=None,
+                rules_referenced=[],
+                final_status='approved',
+                is_resolved=True,
+                resolution_turn_index=1,
+                reasoning_trace='User gave pure approval in Turn 1 and did not add new data or judgment.',
+            ),
+        ),
+        (
+            ObjectiveAnalysisInput(
+                conversation_transcript="""
+[Turn 0] Athena: Referred due to year_built_pre_1980_Refer (Year Built = 1954 from Magic Dust).
+[Turn 1] User: Year built is 2026, not 1954.
+[Turn 2] User: Can you rerun this?
+""",
+                has_recommendation=True,
+                recommendation_type='refer',
+                recommendation_turn=0,
+                detected_mentions=[],
+                human_message_count=2,
+                truncation_summary='',
+                bot_name='Athena',
+                domain_context='insurance underwriting',
+            ),
+            ObjectiveAnalysisOutput(
+                is_escalated=False,
+                escalation_type='no_escalation',
+                escalation_turn_index=None,
+                escalation_reason='',
+                has_intervention=True,
+                intervention_type='correction_factual',
+                intervention_turn_index=1,
+                intervention_summary='User corrected a factual data point used by the recommendation.',
+                friction_point='Year Built',
+                issue_details='Magic Dust reported 1954, but user states actual year built is 2026.',
+                rules_referenced=['year_built_pre_1980_Refer'],
+                final_status='pending',
+                is_resolved=False,
+                resolution_turn_index=None,
+                reasoning_trace='This is a factual correction, not risk appetite. Conversation is awaiting rerun outcome.',
+            ),
+        ),
+        (
+            ObjectiveAnalysisInput(
+                conversation_transcript="""
+[Turn 0] Athena: Recommendation: Approved.
+[Turn 1] User: This is owner occupied condo risk; I need to decline.
+[Turn 2] User: SFX gives "failed to decline" when I try.
+[Turn 3] User: @uw-support can someone force decline this?
+""",
+                has_recommendation=True,
+                recommendation_type='approve',
+                recommendation_turn=0,
+                detected_mentions=['@uw-support'],
+                human_message_count=3,
+                truncation_summary='',
+                bot_name='Athena',
+                domain_context='insurance underwriting',
+            ),
+            ObjectiveAnalysisOutput(
+                is_escalated=True,
+                escalation_type='team_mention',
+                escalation_turn_index=3,
+                escalation_reason='User mentioned support team for manual intervention.',
+                has_intervention=True,
+                intervention_type='system_workaround',
+                intervention_turn_index=2,
+                intervention_summary='User cannot execute decline due to platform error.',
+                friction_point='Decline Workflow',
+                issue_details='SFX returns "failed to decline", requiring manual support path.',
+                rules_referenced=[],
+                final_status='blocked',
+                is_resolved=False,
+                resolution_turn_index=None,
+                reasoning_trace='Intervention is driven by tooling failure and conversation escalates via team mention.',
+            ),
+        ),
+    ]
 
 
 @metric(
@@ -467,6 +614,7 @@ class SlackObjectiveAnalyzer(BaseMetric):
                 intervention_summary=llm_result.intervention_summary,
                 friction_point=llm_result.friction_point,
                 issue_details=llm_result.issue_details,
+                rules_referenced=llm_result.rules_referenced,
             )
 
             status = llm_result.final_status
@@ -565,8 +713,6 @@ class SlackObjectiveAnalyzer(BaseMetric):
         HARD = {
             'correction_factual',
             'correction_classification',
-            'tech_issue',
-            'data_quality',
             'system_workaround',
         }
         SOFT = {'missing_context', 'risk_appetite', 'clarification', 'support'}

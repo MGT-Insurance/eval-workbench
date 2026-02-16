@@ -1,13 +1,30 @@
+#!/usr/bin/env python3
 """
 Populate the agent_kpi_logs table from athena_cases and evaluation_results.
 
 Supports reading from one database (source) and writing to another (target).
-Safe to re-run — deduplicates against existing dataset_id+kpi_name in target.
+Safe to re-run - deduplicates against existing dataset_id+kpi_name in target.
+
+Usage:
+  python scripts/populate_athena_kpis.py --since-days 2
+
+Environment variables:
+  - SOURCE_DATABASE_URL: Source Postgres DB URL (optional)
+  - TARGET_DATABASE_URL: Target Postgres DB URL (optional)
+  - DATABASE_URL: Fallback URL if source/target URLs are not provided
+
+Write modes:
+  - incremental (default): insert only rows not already in agent_kpi_logs
+  - backfill: overwrite matching (dataset_id, kpi_name) rows in the lookback window
 """
 
 from __future__ import annotations
 
-from shared.database.neon import NeonConnection
+import argparse
+import logging
+import os
+
+from eval_workbench.shared.database.neon import NeonConnection
 
 # ---------------------------------------------------------------------------
 # Case-derived KPIs — SELECT queries (run against source DB)
@@ -205,7 +222,6 @@ INSERT INTO agent_kpi_logs
      source_component, created_at)
 VALUES (%(source_name)s, %(kpi_name)s, %(kpi_category)s, %(dataset_id)s,
         %(numeric_value)s, %(source_component)s, %(created_at)s)
-ON CONFLICT DO NOTHING
 """
 
 # We need a unique constraint for ON CONFLICT to work. If it doesn't exist,
@@ -220,6 +236,12 @@ WHERE NOT EXISTS (
     SELECT 1 FROM agent_kpi_logs
     WHERE dataset_id = %(dataset_id)s AND kpi_name = %(kpi_name)s
 )
+"""
+
+DELETE_KPI_ROW_BY_KEY = """
+DELETE FROM agent_kpi_logs
+WHERE dataset_id = %(dataset_id)s
+  AND kpi_name = %(kpi_name)s
 """
 
 # ---------------------------------------------------------------------------
@@ -247,11 +269,15 @@ def populate_athena_kpis(
     source_db: NeonConnection,
     target_db: NeonConnection,
     since_days: int = 30,
+    write_mode: str = 'incremental',
 ) -> dict[str, int]:
     """Populate agent_kpi_logs by reading from source_db and writing to target_db.
 
     Returns a dict mapping kpi_name -> rows inserted.
     """
+    if write_mode not in {'incremental', 'backfill'}:
+        raise ValueError("write_mode must be 'incremental' or 'backfill'.")
+
     results: dict[str, int] = {}
 
     for kpi_name, select_query in ALL_KPI_QUERIES:
@@ -266,10 +292,109 @@ def populate_athena_kpis(
         with target_db._connection() as conn:
             with conn.cursor() as cur:
                 for row in rows:
-                    cur.execute(INSERT_KPI_ROW_DEDUP, row)
-                    inserted += cur.rowcount
+                    if write_mode == 'backfill':
+                        # Backfill mode refreshes matched keys in-place.
+                        cur.execute(DELETE_KPI_ROW_BY_KEY, row)
+                        cur.execute(INSERT_KPI_ROW, row)
+                        inserted += 1
+                    else:
+                        cur.execute(INSERT_KPI_ROW_DEDUP, row)
+                        inserted += cur.rowcount
             conn.commit()
 
         results[kpi_name] = inserted
 
     return results
+
+
+def _resolve_db_urls(
+    source_database_url: str | None,
+    target_database_url: str | None,
+) -> tuple[str, str]:
+    source_url = (
+        source_database_url
+        or os.environ.get('SOURCE_DATABASE_URL')
+        or os.environ.get('DATABASE_URL')
+    )
+    target_url = (
+        target_database_url
+        or os.environ.get('TARGET_DATABASE_URL')
+        or os.environ.get('DATABASE_URL')
+    )
+    if not source_url:
+        raise ValueError(
+            'Missing source database URL. Set SOURCE_DATABASE_URL or DATABASE_URL.'
+        )
+    if not target_url:
+        raise ValueError(
+            'Missing target database URL. Set TARGET_DATABASE_URL or DATABASE_URL.'
+        )
+    return source_url, target_url
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description='Populate agent_kpi_logs from athena_cases and evaluation_results.'
+    )
+    parser.add_argument(
+        '--since-days',
+        type=int,
+        default=30,
+        help='Lookback window in days for source KPI rows (default: 30).',
+    )
+    parser.add_argument(
+        '--source-database-url',
+        default=None,
+        help='Source DB URL (falls back to SOURCE_DATABASE_URL then DATABASE_URL).',
+    )
+    parser.add_argument(
+        '--target-database-url',
+        default=None,
+        help='Target DB URL (falls back to TARGET_DATABASE_URL then DATABASE_URL).',
+    )
+    parser.add_argument(
+        '--write-mode',
+        choices=['incremental', 'backfill'],
+        default='incremental',
+        help='Write behavior: incremental (default) or backfill overwrite.',
+    )
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    )
+    logger = logging.getLogger(__name__)
+
+    if args.since_days <= 0:
+        logger.error('--since-days must be greater than 0.')
+        return 2
+
+    try:
+        source_url, target_url = _resolve_db_urls(
+            source_database_url=args.source_database_url,
+            target_database_url=args.target_database_url,
+        )
+    except ValueError as e:
+        logger.error('%s', e)
+        return 2
+
+    with NeonConnection(connection_string=source_url) as source_db:
+        with NeonConnection(connection_string=target_url) as target_db:
+            results = populate_athena_kpis(
+                source_db=source_db,
+                target_db=target_db,
+                since_days=args.since_days,
+                write_mode=args.write_mode,
+            )
+
+    total_inserted = sum(results.values())
+    logger.info('Inserted KPI rows: %s', total_inserted)
+    for kpi_name, count in results.items():
+        logger.info('  %s: %s', kpi_name, count)
+
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

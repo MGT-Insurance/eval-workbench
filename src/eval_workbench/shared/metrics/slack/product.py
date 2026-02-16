@@ -57,6 +57,21 @@ class ProductSignalsInput(RichBaseModel):
     )
 
 
+class GraphHint(RichBaseModel):
+    """Structured hint for knowledge graph mutations from product learnings."""
+
+    target_node_type: Literal['rule', 'guardrail', 'exception', 'other'] = Field(
+        description='Type of knowledge graph node this learning targets',
+    )
+    suggested_action: Literal['add', 'edit', 'remove', 'review'] = Field(
+        description='Suggested mutation action',
+    )
+    rule_name_hint: Optional[str] = Field(
+        default=None,
+        description='Name or identifier of the rule/guardrail if mentioned (e.g., "home_based_referral", "coastal_building_block")',
+    )
+
+
 class ProductSignalsOutput(RichBaseModel):
     """Output for product signals - actionable insights for daily report."""
 
@@ -94,6 +109,10 @@ class ProductSignalsOutput(RichBaseModel):
     suggested_action: Optional[str] = Field(
         default=None,
         description='Suggested action for product team',
+    )
+    graph_hints: List[GraphHint] = Field(
+        default_factory=list,
+        description='Structured hints for knowledge graph mutations (for rules/guardrails category learnings)',
     )
     reasoning_trace: str = Field(
         default='',
@@ -157,12 +176,30 @@ Analyze the conversation to identify improvements for the **AI Assistant ({bot_n
 - Confusing messages or lack of visibility.
 - Example: "Where can I see the Tier 1 county status?"
 
+**coverage** - Missing Capability:
+- The bot cannot handle a class of risk or a workflow the user expects.
+- Example: "Athena doesn't support BOP policies yet", "No condo coverage available".
+
+**speed** - Performance/Latency:
+- Complaints about how long the bot or platform takes to respond.
+- Example: "AAL takes forever", "Why is recommendation so slow today?"
+
 ---
 
 ## PRIORITY LEVELS
 - `high`: User cannot complete task, or requests a "Bug Fix" / "Ticket".
 - `medium`: User suggests an improvement ("It would be nice if...").
 - `low`: General observation or complaint without specific suggestion.
+
+---
+
+## GRAPH HINTS
+For learnings in the `rules` or `guardrails` categories, also populate `graph_hints`:
+- `target_node_type`: `rule` for underwriting logic changes, `guardrail` for prevention/validation, `exception` for known exceptions to rules.
+- `suggested_action`: `add` (new rule/guardrail), `edit` (modify existing), `remove` (eliminate rule), `review` (needs human review).
+- `rule_name_hint`: If the user mentions a specific rule name, referral name, or policy concept, include it (e.g., "home_based_referral", "coastal_building_block").
+
+Only populate graph_hints for `rules` and `guardrails` learnings. Other categories should leave this empty.
 
 ---
 
@@ -200,6 +237,13 @@ Extract clear, actionable learnings. If a user explicitly asks for a ticket/fix,
                 has_actionable_feedback=True,
                 priority_level='high',
                 suggested_action='Update referral logic to skip home-based check for contractor industries',
+                graph_hints=[
+                    GraphHint(
+                        target_node_type='rule',
+                        suggested_action='remove',
+                        rule_name_hint='home_based_referral',
+                    ),
+                ],
                 reasoning_trace='User explicitly requested a ticket to remove a specific underwriting question/rule for contractors.',
             ),
         ),
@@ -229,6 +273,13 @@ Extract clear, actionable learnings. If a user explicitly asks for a ticket/fix,
                 has_actionable_feedback=True,
                 priority_level='medium',
                 suggested_action='Add validation rule in SFX to prevent building coverage selection based on coastal distance',
+                graph_hints=[
+                    GraphHint(
+                        target_node_type='guardrail',
+                        suggested_action='add',
+                        rule_name_hint='coastal_building_block',
+                    ),
+                ],
                 reasoning_trace='User expressed desire for system to prevent invalid quotes upfront (guardrails).',
             ),
         ),
@@ -361,7 +412,7 @@ Extract clear, actionable learnings. If a user explicitly asks for a ticket/fix,
 
         sub_metrics = [
             SubMetricResult(
-                name='learnings_count',
+                name='learnings',
                 score=float(len(signals.learnings)),
                 explanation=f'Count: {len(signals.learnings)}',
                 metric_category=MetricCategory.SCORE,
@@ -369,10 +420,11 @@ Extract clear, actionable learnings. If a user explicitly asks for a ticket/fix,
                 metadata={
                     'learnings': signals.learnings,
                     'categories': signals.learning_categories,
+                    'graph_hints': [h.model_dump() for h in signals.graph_hints],
                 },
             ),
             SubMetricResult(
-                name='feature_requests_count',
+                name='feature_requests',
                 score=float(len(signals.feature_requests)),
                 explanation=f'Count: {len(signals.feature_requests)}',
                 metric_category=MetricCategory.SCORE,
@@ -382,7 +434,7 @@ Extract clear, actionable learnings. If a user explicitly asks for a ticket/fix,
                 },
             ),
             SubMetricResult(
-                name='has_actionable_feedback',
+                name='actionable_feedback',
                 score=None,
                 explanation=str(signals.has_actionable_feedback).lower(),
                 metric_category=MetricCategory.CLASSIFICATION,
@@ -418,4 +470,5 @@ __all__ = [
     'SlackProductAnalyzer',
     'ProductSignalsInput',
     'ProductSignalsOutput',
+    'GraphHint',
 ]

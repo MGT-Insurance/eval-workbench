@@ -44,7 +44,11 @@ source:
       slack_channel_id,
       quote_locator,
       langfuse_trace_id AS trace_id,
-      created_at
+      created_at,
+      recommendation_entries->-1->>'briefRecommendation' AS decision_status,
+      recommendation_entries->-1->>'detailedRecommendation' AS decision_reasoning,
+      recommendation_entries->-1->'underwritingFlags' AS referral_reasons,
+      (recommendation_entries->-1->>'executionTimeMs')::int AS latency_ms
     FROM athena_cases
   slack_join_columns: ["channel_id", "thread_ts"]
   neon_join_columns: ["slack_channel_id", "slack_thread_ts"]
@@ -55,7 +59,7 @@ source:
 # Available strategies: all, random, most_recent, oldest
 sampling:
   strategy: most_recent
-  n: 5
+  n: 10
   seed: 42
 
 # Metrics configuration

@@ -212,6 +212,11 @@ Populates `agent_kpi_logs` by reading from `athena_cases` and `evaluation_result
 python scripts/populate_athena_kpis.py
 ```
 
+```bash
+# Scheduled-style backfill window
+python scripts/populate_athena_kpis.py --since-days 2
+```
+
 **KPIs computed:**
 
 | KPI | Category | Source | Logic |
@@ -228,8 +233,30 @@ python scripts/populate_athena_kpis.py
 **Behavior:**
 
 - Reads from source database, writes to target database
-- Deduplicates by `(dataset_id, kpi_name)` using `ON CONFLICT DO NOTHING`
+- `incremental` mode (default): inserts only new `(dataset_id, kpi_name)` rows
+- `backfill` mode: overwrites existing `(dataset_id, kpi_name)` rows in the lookback window
 - Safe to re-run (idempotent)
 - Default lookback: 30 days
 
+**Arguments:**
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--since-days` | `30` | Lookback window for source rows |
+| `--source-database-url` | env fallback | Source DB URL (falls back to `SOURCE_DATABASE_URL`, then `DATABASE_URL`) |
+| `--target-database-url` | env fallback | Target DB URL (falls back to `TARGET_DATABASE_URL`, then `DATABASE_URL`) |
+| `--write-mode` | `incremental` | `incremental` or `backfill` |
+
 **Requires:** `DATABASE_URL` environment variable (or separate source/target URLs).
+
+### Scheduled automation (GitHub Actions)
+
+Workflow file: `.github/workflows/populate_athena_kpis.yml`
+
+- Cron: daily at 00:00 UTC
+- Scheduled runs are gated by repo variable `KPI_POPULATION_ENABLED=true`
+- Manual trigger available via **Run workflow**
+- Manual trigger supports `write_mode` (`incremental` or `backfill`)
+- Secrets:
+  - `DATABASE_URL` for same source/target DB, or
+  - `SOURCE_DATABASE_URL` + `TARGET_DATABASE_URL` for split DBs

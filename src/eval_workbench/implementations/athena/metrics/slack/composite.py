@@ -179,12 +179,21 @@ class UnderwritingCompositeEvaluator(BaseMetric):
         if frustration_score > 0.5:
             needs_diagnosis = True
 
+        # Overrides and accepted-with-discussion threads reveal rule gaps
+        if subj_signals.is_overridden:
+            needs_diagnosis = True
+        if subj_signals.acceptance_status == 'accepted_with_discussion':
+            needs_diagnosis = True
+
         feedback_context = {
             'has_intervention': obj_signals.intervention.has_intervention,
             'intervention_type': obj_signals.intervention.intervention_type,
             'sentiment_score': sentiment_score,
             'frustration_score': frustration_score,
             'frustration_cause': subj_signals.frustration_cause,
+            'thread_id': obj_signals.thread_id,
+            'channel_id': obj_signals.channel_id,
+            'case_id': obj_signals.case_id,
         }
 
         # FEEDBACK ATTRIBUTION
@@ -202,6 +211,9 @@ class UnderwritingCompositeEvaluator(BaseMetric):
             'intervention_type': obj_signals.intervention.intervention_type,
             'frustration_score': frustration_score,
             'sentiment': subj_signals.sentiment,
+            'thread_id': obj_signals.thread_id,
+            'channel_id': obj_signals.channel_id,
+            'case_id': obj_signals.case_id,
         }
         prod_result = await self.product.execute(item, analysis_context=prod_context)
 

@@ -192,6 +192,17 @@ class SubjectiveAnalysisOutput(RichBaseModel):
         description='Category of override reason',
     )
 
+    # Counterfactual routing (downstream action signal)
+    counterfactual_action: Literal[
+        'graph_rule_proposal',
+        'graph_exception_proposal',
+        'no_graph_action',
+        'data_correction',
+    ] = Field(
+        default='no_graph_action',
+        description='Downstream routing action based on override analysis',
+    )
+
     # Chain-of-Thought
     reasoning_trace: str = Field(
         default='',
@@ -251,6 +262,10 @@ Crucially, distinguish between frustration with **{bot_name} (the Bot)** vs frus
 - The bot misunderstood the prompt or gave a bad answer.
 - Evidence: "You missed the payroll cap", "That's not what I asked".
 
+**slow_response** - Latency Issues:
+- User is frustrated by how long something takes, not by the answer itself.
+- Evidence: "Why is this taking so long?", "Still waiting for AAL data", "It's been 10 minutes".
+
 ---
 
 ## ACCEPTANCE & OVERRIDE ANALYSIS
@@ -275,6 +290,43 @@ Crucially, distinguish between frustration with **{bot_name} (the Bot)** vs frus
 - `class_code_issue`: Class code disagreement
 - `rate_issue`: Rate/pricing disagreement
 - `experience_judgment`: Professional experience override
+
+---
+
+## SATISFACTION SCORE CALIBRATION
+When an override is present, score the quality of the override explanation:
+- **1.0**: Clear reason + supporting evidence + actionable (e.g., "Declined — inspection found knob-and-tube wiring, violates our electrical policy")
+- **0.5**: Vague reason, limited evidence (e.g., "Don't like this risk")
+- **0.0**: No explanation at all (e.g., just clicked Decline with no comment)
+
+Only populate `satisfaction_score` when `is_overridden` is True.
+
+---
+
+## COUNTERFACTUAL ROUTING
+For every override, determine what downstream action should be taken:
+
+**graph_rule_proposal** — Override reveals a wrong or missing underwriting rule.
+- The override suggests the system's rules need to change for *all* similar risks.
+- Maps from: `risk_assessment`, `policy_exception`, `rate_issue` override categories.
+- Example: "We always approve restaurants under $500k — this referral rule is wrong."
+
+**graph_exception_proposal** — Override reveals a known exception to an existing rule.
+- The rule is generally correct, but this specific case is a recognized exception.
+- Maps from: `experience_judgment`, `class_code_issue` override categories.
+- Example: "Churches with commercial kitchens should be classified as restaurants."
+
+**no_graph_action** — One-off judgment call, not generalizable.
+- The override is specific to this risk and wouldn't apply to future similar cases.
+- Maps from: `additional_info` override category, or any override with no clear pattern.
+- Example: "Approved because I know this insured personally."
+
+**data_correction** — Bad input data, not wrong rules.
+- The override was caused by incorrect third-party data, not flawed logic.
+- Maps from: overrides where the user corrected factual data (year built, sq ft, etc.).
+- Example: "Magic Dust had wrong year built — actual is 2026, not 1954."
+
+If `is_overridden` is False, use `no_graph_action`.
 
 ---
 
@@ -320,6 +372,7 @@ Note specific turns and quotes that inform your assessments."""
                 final_decision='decline',
                 override_reason='Owner occupied condo requiring decline, but system blocked the action.',
                 override_reason_category='additional_info',
+                counterfactual_action='no_graph_action',
                 reasoning_trace='User wanted to decline but was blocked by a system error ("failed to decline"). Frustration is directed at the tool (SFX), not the bot.',
             ),
         ),
@@ -356,6 +409,7 @@ Note specific turns and quotes that inform your assessments."""
                 final_decision=None,
                 override_reason='',
                 override_reason_category='none',
+                counterfactual_action='no_graph_action',
                 reasoning_trace='User is frustrated by repeated service failure ("AAL broken again"). This is a platform stability issue.',
             ),
         ),
@@ -515,6 +569,7 @@ Note specific turns and quotes that inform your assessments."""
                     'reason': signals.override_reason,
                     'reason_category': signals.override_reason_category,
                     'final_decision': signals.final_decision,
+                    'counterfactual_action': signals.counterfactual_action,
                 },
             ),
         ]
