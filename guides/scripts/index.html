@@ -925,6 +925,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="populate_athena_kpis.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scheduled-automation-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scheduled automation (GitHub Actions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1972,6 +1989,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="populate_athena_kpis.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scheduled-automation-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scheduled automation (GitHub Actions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -2436,6 +2470,9 @@
 <p>Populates <code>agent_kpi_logs</code> by reading from <code>athena_cases</code> and <code>evaluation_results</code>, then inserting deduplicated KPI observations.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>scripts/populate_athena_kpis.py
 </span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Scheduled-style backfill window</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>python<span class="w"> </span>scripts/populate_athena_kpis.py<span class="w"> </span>--since-days<span class="w"> </span><span class="m">2</span>
+</span></code></pre></div>
 <p><strong>KPIs computed:</strong></p>
 <table>
 <thead>
@@ -2500,11 +2537,55 @@
 <p><strong>Behavior:</strong></p>
 <ul>
 <li>Reads from source database, writes to target database</li>
-<li>Deduplicates by <code>(dataset_id, kpi_name)</code> using <code>ON CONFLICT DO NOTHING</code></li>
+<li><code>incremental</code> mode (default): inserts only new <code>(dataset_id, kpi_name)</code> rows</li>
+<li><code>backfill</code> mode: overwrites existing <code>(dataset_id, kpi_name)</code> rows in the lookback window</li>
 <li>Safe to re-run (idempotent)</li>
 <li>Default lookback: 30 days</li>
 </ul>
+<p><strong>Arguments:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--since-days</code></td>
+<td><code>30</code></td>
+<td>Lookback window for source rows</td>
+</tr>
+<tr>
+<td><code>--source-database-url</code></td>
+<td>env fallback</td>
+<td>Source DB URL (falls back to <code>SOURCE_DATABASE_URL</code>, then <code>DATABASE_URL</code>)</td>
+</tr>
+<tr>
+<td><code>--target-database-url</code></td>
+<td>env fallback</td>
+<td>Target DB URL (falls back to <code>TARGET_DATABASE_URL</code>, then <code>DATABASE_URL</code>)</td>
+</tr>
+<tr>
+<td><code>--write-mode</code></td>
+<td><code>incremental</code></td>
+<td><code>incremental</code> or <code>backfill</code></td>
+</tr>
+</tbody>
+</table>
 <p><strong>Requires:</strong> <code>DATABASE_URL</code> environment variable (or separate source/target URLs).</p>
+<h3 id="scheduled-automation-github-actions">Scheduled automation (GitHub Actions)<a class="headerlink" href="#scheduled-automation-github-actions" title="Permanent link">&para;</a></h3>
+<p>Workflow file: <code>.github/workflows/populate_athena_kpis.yml</code></p>
+<ul>
+<li>Cron: daily at 00:00 UTC</li>
+<li>Scheduled runs are gated by repo variable <code>KPI_POPULATION_ENABLED=true</code></li>
+<li>Manual trigger available via <strong>Run workflow</strong></li>
+<li>Manual trigger supports <code>write_mode</code> (<code>incremental</code> or <code>backfill</code>)</li>
+<li>Secrets:</li>
+<li><code>DATABASE_URL</code> for same source/target DB, or</li>
+<li><code>SOURCE_DATABASE_URL</code> + <code>TARGET_DATABASE_URL</code> for split DBs</li>
+</ul>
 
 
 
@@ -2527,7 +2608,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 15, 2026 18:44:21 UTC">February 15, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 16, 2026 03:58:31 UTC">February 16, 2026</span>
   </span>
 
     
