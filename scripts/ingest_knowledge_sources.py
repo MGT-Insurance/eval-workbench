@@ -44,14 +44,14 @@ import yaml
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT / 'src'))
 
-from eval_workbench.shared.database.neon import NeonConnection
-from eval_workbench.shared.memory.enums import (
+from eval_workbench.shared.database.neon import NeonConnection  # noqa: E402
+from eval_workbench.shared.memory.enums import (  # noqa: E402
     ProposalKind,
     ReviewStatus,
     SourceCategory,
     SourceDataset,
 )
-from eval_workbench.shared.memory.persistence import (
+from eval_workbench.shared.memory.persistence import (  # noqa: E402
     compute_extractor_version,
     find_existing_by_identity,
     save_extractions,

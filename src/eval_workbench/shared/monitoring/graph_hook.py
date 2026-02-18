@@ -226,8 +226,6 @@ def _format_thread_for_extraction(
     Enriches context with already-computed signals (NOT re-inferred).
     """
     intervention = getattr(obj_signals, 'intervention', None)
-    escalation = getattr(obj_signals, 'escalation', None)
-
     parts = [
         'Source: Live Slack Conversation (Intervention Detected)',
         f'Channel: {getattr(obj_signals, "channel_id", "unknown")}',
