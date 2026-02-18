@@ -8,7 +8,6 @@ from psycopg.types.json import Json
 
 from eval_workbench.shared.database.neon import NeonConnection
 from eval_workbench.shared.memory.enums import (
-    IngestionStatus,
     ProposalKind,
     ReviewStatus,
     SourceCategory,
@@ -34,7 +33,7 @@ _PROVENANCE_MIGRATION_COLUMNS: dict[str, str] = {
     'superseded_by': 'VARCHAR',
     'confidence_factors': 'JSONB',
     'evidence_snippet': 'TEXT',
-    "review_status": "VARCHAR DEFAULT 'pending_review'",
+    'review_status': "VARCHAR DEFAULT 'pending_review'",
     'reviewed_by': 'VARCHAR',
     'reviewed_at': 'TIMESTAMPTZ',
 }
@@ -44,12 +43,15 @@ _PROVENANCE_MIGRATION_COLUMNS: dict[str, str] = {
 # Hashing helpers
 # ---------------------------------------------------------------------------
 
+
 def compute_text_hash(text: str) -> str:
     """SHA-256 of input text for dedup."""
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def compute_extractor_version(system_prompt: str, model: str, formatting_version: str = '1') -> str:
+def compute_extractor_version(
+    system_prompt: str, model: str, formatting_version: str = '1'
+) -> str:
     """Short hash of extractor configuration for provenance tracking."""
     payload = f'{system_prompt}{model}{formatting_version}'
     return hashlib.sha256(payload.encode()).hexdigest()[:12]
@@ -61,21 +63,43 @@ def compute_extractor_version(system_prompt: str, model: str, formatting_version
 
 # Columns that always get written (core extraction fields)
 _CORE_COLUMNS = [
-    'id', 'batch_id', 'agent_name',
-    'raw_text', 'raw_text_hash',
-    'risk_factor', 'risk_category', 'rule_name', 'product_type',
-    'action', 'outcome_description',
-    'mitigants', 'source', 'source_type', 'confidence',
-    'threshold', 'threshold_type', 'historical_exceptions',
-    'decision_quality', 'compound_trigger', 'data_fields',
+    'id',
+    'batch_id',
+    'agent_name',
+    'raw_text',
+    'raw_text_hash',
+    'risk_factor',
+    'risk_category',
+    'rule_name',
+    'product_type',
+    'action',
+    'outcome_description',
+    'mitigants',
+    'source',
+    'source_type',
+    'confidence',
+    'threshold',
+    'threshold_type',
+    'historical_exceptions',
+    'decision_quality',
+    'compound_trigger',
+    'data_fields',
 ]
 
 # Provenance columns (optional, populated by CSV/Slack pipelines)
 _PROVENANCE_COLUMNS = [
-    'kb_entry_id', 'learning_id', 'source_dataset', 'source_category',
-    'proposal_kind', 'approval_status',
-    'slack_channel_id', 'slack_thread_ts', 'langfuse_trace_id',
-    'extractor_version', 'confidence_factors', 'evidence_snippet',
+    'kb_entry_id',
+    'learning_id',
+    'source_dataset',
+    'source_category',
+    'proposal_kind',
+    'approval_status',
+    'slack_channel_id',
+    'slack_thread_ts',
+    'langfuse_trace_id',
+    'extractor_version',
+    'confidence_factors',
+    'evidence_snippet',
     'review_status',
 ]
 
@@ -133,7 +157,14 @@ def save_extractions(
         ids.append(rule_id)
 
         # Merge provenance: rule-level overrides batch-level
-        merged_prov = {**prov, **{k: v for k, v in rule.items() if k in _PROVENANCE_COLUMNS and v is not None}}
+        merged_prov = {
+            **prov,
+            **{
+                k: v
+                for k, v in rule.items()
+                if k in _PROVENANCE_COLUMNS and v is not None
+            },
+        }
 
         # Validate enum fields
         if 'review_status' in merged_prov:
@@ -203,6 +234,7 @@ def save_extractions(
 # Identity-based dedup
 # ---------------------------------------------------------------------------
 
+
 def find_existing_by_identity(
     db: NeonConnection,
     *,
@@ -264,6 +296,7 @@ def supersede_rows(db: NeonConnection, old_ids: list[str], new_id: str) -> None:
 # Hash-based dedup (legacy, secondary safety net)
 # ---------------------------------------------------------------------------
 
+
 def has_extractions_for_raw_text_hash(
     db: NeonConnection,
     *,
@@ -292,6 +325,7 @@ def has_extractions_for_raw_text_hash(
 # ---------------------------------------------------------------------------
 # Status updates
 # ---------------------------------------------------------------------------
+
 
 def mark_ingested(db: NeonConnection, rule_id: str) -> None:
     """UPDATE ingestion_status='ingested', ingested_at=NOW()."""
@@ -339,6 +373,7 @@ def mark_reviewed(
 # ---------------------------------------------------------------------------
 # Fetch helpers
 # ---------------------------------------------------------------------------
+
 
 def fetch_pending(
     db: NeonConnection,

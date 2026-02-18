@@ -10,6 +10,8 @@ from axion.dataset import DatasetItem
 from eval_workbench.shared.extractors import BaseExtractor, ExtractorHelpers
 from eval_workbench.shared.extractors.utils import (
     safe_get as _shared_safe_get,
+)
+from eval_workbench.shared.extractors.utils import (
     to_plain_dict,
 )
 from eval_workbench.shared.langfuse.trace import Trace

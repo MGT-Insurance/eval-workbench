@@ -112,6 +112,7 @@ def extract_grounding(trace: Trace) -> DatasetItem:
     """Backward-compatible function wrapper for GroundingExtractor."""
     return _GROUNDING_EXTRACTOR.extract(trace)
 
+
 def _normalize_prompt_text(raw_text: Any) -> str:
     if isinstance(raw_text, str):
         return raw_text

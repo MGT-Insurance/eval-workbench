@@ -350,7 +350,9 @@ class AthenaRulePipeline(BasePipeline):
             rules = fetch_all_extractions(self.db, agent_name='athena', limit=10000)
         elif require_review:
             rules = fetch_approved_pending_ingestion(
-                self.db, agent_name='athena', batch_id=batch_id,
+                self.db,
+                agent_name='athena',
+                batch_id=batch_id,
             )
         else:
             rules = fetch_pending(self.db, agent_name='athena', batch_id=batch_id)

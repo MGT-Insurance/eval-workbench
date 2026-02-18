@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import logging
 import re
@@ -45,7 +44,6 @@ import yaml
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT / 'src'))
 
-from eval_workbench.shared.config import load_config
 from eval_workbench.shared.database.neon import NeonConnection
 from eval_workbench.shared.memory.enums import (
     ProposalKind,
@@ -55,7 +53,6 @@ from eval_workbench.shared.memory.enums import (
 )
 from eval_workbench.shared.memory.persistence import (
     compute_extractor_version,
-    compute_text_hash,
     find_existing_by_identity,
     save_extractions,
     supersede_rows,
@@ -90,6 +87,7 @@ def load_ingestion_config(path: Path | None = None) -> dict:
 # Operational marker filtering
 # ============================================================================
 
+
 def _normalize(text: str) -> str:
     """Lowercase, replace _/- with spaces, collapse whitespace."""
     return re.sub(r'\s+', ' ', text.lower().replace('_', ' ').replace('-', ' ')).strip()
@@ -120,6 +118,7 @@ def _has_operational_markers(text: str, config: dict) -> bool:
 # Triage
 # ============================================================================
 
+
 def triage_entry(
     kb_content: str,
     exec_summary: str,
@@ -138,7 +137,12 @@ def triage_entry(
 
     # Check for data quality patterns
     normed = _normalize(combined_text)
-    data_quality_markers = ['magic dust', 'discrepancy', 'data mismatch', 'exposure_value_units']
+    data_quality_markers = [
+        'magic dust',
+        'discrepancy',
+        'data mismatch',
+        'exposure_value_units',
+    ]
     has_dq = any(m in normed for m in data_quality_markers)
 
     # Check for UW content
@@ -166,6 +170,7 @@ def triage_entry(
 # ============================================================================
 # Extractable input builder
 # ============================================================================
+
 
 def extractable_input(kb_content: str, retro: dict, config: dict) -> str:
     """Build extraction input from KB content + retrospective fields.
@@ -208,10 +213,16 @@ def format_human_feedback(kb_content: str, metadata: dict) -> str:
 # Post-extraction operational filter
 # ============================================================================
 
+
 def has_operational_leakage(rule: dict, config: dict) -> bool:
     """Check if extracted rule contains operational markers that leaked through."""
-    scan_fields = ['risk_factor', 'rule_name', 'outcome_description',
-                   'historical_exceptions', 'source']
+    scan_fields = [
+        'risk_factor',
+        'rule_name',
+        'outcome_description',
+        'historical_exceptions',
+        'source',
+    ]
     text_parts = []
     for field in scan_fields:
         val = rule.get(field, '')
@@ -227,6 +238,7 @@ def has_operational_leakage(rule: dict, config: dict) -> bool:
 # ============================================================================
 # Confidence model
 # ============================================================================
+
 
 def compute_confidence(
     source_quality: str,
@@ -262,9 +274,17 @@ def compute_confidence(
     low_sources = {'production_partial', 'pending', 'operational'}
     low_categories = {'mixed'}
 
-    if source_quality in low_sources or triage_category in low_categories or extraction_specificity == 'low':
+    if (
+        source_quality in low_sources
+        or triage_category in low_categories
+        or extraction_specificity == 'low'
+    ):
         return 'low', factors
-    if source_quality == 'approved_sme' and triage_category == 'uw_rule' and extraction_specificity == 'high':
+    if (
+        source_quality == 'approved_sme'
+        and triage_category == 'uw_rule'
+        and extraction_specificity == 'high'
+    ):
         return 'high', factors
     return 'medium', factors
 
@@ -272,6 +292,7 @@ def compute_confidence(
 # ============================================================================
 # Data loading — DB (production) and CSV (fallback)
 # ============================================================================
+
 
 def load_kb_from_db(db: NeonConnection) -> list[dict]:
     """Load knowledge_base_entries from Neon DB."""
@@ -328,6 +349,7 @@ def safe_json_parse(value) -> dict | list | None:
 # Ingestion index (preview)
 # ============================================================================
 
+
 def build_ingestion_index(
     kb_rows: list[dict],
     learning_rows: list[dict],
@@ -345,7 +367,9 @@ def build_ingestion_index(
     triage_counts: Counter = Counter()
     entries_by_category: dict[str, list] = defaultdict(list)
     skipped: list[dict] = []
-    uncertain_alignments = triage_config.get('uncertain_alignments', ['partial', 'divergent'])
+    uncertain_alignments = triage_config.get(
+        'uncertain_alignments', ['partial', 'divergent']
+    )
 
     for kb in kb_rows:
         kb_id = kb.get('id', '')
@@ -354,7 +378,9 @@ def build_ingestion_index(
         status = kb.get('status', '')
         source_type_raw = metadata.get('sourceType', '')
         # source_learning_id is a top-level DB column; CSV stores it in metadata_json too
-        source_learning_id = kb.get('source_learning_id', '') or metadata.get('source_learning_id', '')
+        source_learning_id = kb.get('source_learning_id', '') or metadata.get(
+            'source_learning_id', ''
+        )
 
         # Skip rejected entries
         if status == 'rejected':
@@ -362,17 +388,23 @@ def build_ingestion_index(
             continue
 
         # Determine entry type
-        is_human_feedback = source_type_raw in ('chat_feedback', 'feedback') and not source_learning_id
+        is_human_feedback = (
+            source_type_raw in ('chat_feedback', 'feedback') and not source_learning_id
+        )
         is_retrospective = bool(source_learning_id)
 
         if is_human_feedback:
             category = 'human_feedback'
             triage_counts[category] += 1
-            entries_by_category[category].append({
-                'kb_id': kb_id,
-                'source_type': 'sme',
-                'approval_status': 'approved' if status == 'approved' else 'pending',
-            })
+            entries_by_category[category].append(
+                {
+                    'kb_id': kb_id,
+                    'source_type': 'sme',
+                    'approval_status': 'approved'
+                    if status == 'approved'
+                    else 'pending',
+                }
+            )
             continue
 
         if is_retrospective:
@@ -385,25 +417,41 @@ def build_ingestion_index(
 
             # Skip error retrospectives
             if model == 'error':
-                skipped.append({'id': kb_id, 'learning_id': source_learning_id, 'reason': 'error_model'})
+                skipped.append(
+                    {
+                        'id': kb_id,
+                        'learning_id': source_learning_id,
+                        'reason': 'error_model',
+                    }
+                )
                 continue
 
             # Skip non-athena agents (separate pipeline)
             if agent_name.lower() != 'athena':
-                skipped.append({'id': kb_id, 'learning_id': source_learning_id, 'reason': f'agent_{agent_name}'})
+                skipped.append(
+                    {
+                        'id': kb_id,
+                        'learning_id': source_learning_id,
+                        'reason': f'agent_{agent_name}',
+                    }
+                )
                 continue
 
             exec_summary = retro.get('executiveSummary', '')
-            triage_result = triage_entry(content, exec_summary, retro, op_config, uncertain_alignments)
+            triage_result = triage_entry(
+                content, exec_summary, retro, op_config, uncertain_alignments
+            )
             triage_counts[triage_result] += 1
 
             dq = retro.get('decisionQuality', {})
-            entries_by_category[triage_result].append({
-                'kb_id': kb_id,
-                'learning_id': source_learning_id,
-                'alignment': dq.get('alignment', ''),
-                'product_type': content_json.get('productType', ''),
-            })
+            entries_by_category[triage_result].append(
+                {
+                    'kb_id': kb_id,
+                    'learning_id': source_learning_id,
+                    'alignment': dq.get('alignment', ''),
+                    'product_type': content_json.get('productType', ''),
+                }
+            )
             continue
 
         # Uncategorized
@@ -415,11 +463,13 @@ def build_ingestion_index(
         'skipped': skipped,
         'total_entries': len(kb_rows),
         'total_extractable': sum(
-            len(v) for k, v in entries_by_category.items()
+            len(v)
+            for k, v in entries_by_category.items()
             if k not in (SourceCategory.OPERATIONAL.value,)
         ),
         'estimated_llm_calls': sum(
-            len(v) for k, v in entries_by_category.items()
+            len(v)
+            for k, v in entries_by_category.items()
             if k not in (SourceCategory.OPERATIONAL.value,)
         ),
     }
@@ -428,6 +478,7 @@ def build_ingestion_index(
 # ============================================================================
 # Main extraction pipeline
 # ============================================================================
+
 
 def run_extraction(
     kb_rows: list[dict],
@@ -449,8 +500,12 @@ def run_extraction(
 
     op_config = ingestion_config.get('operational_markers', {})
     triage_config = ingestion_config.get('triage', {})
-    priority_order = ingestion_config.get('extraction_priority', ['divergent', 'partial', 'aligned', 'pending'])
-    uncertain_alignments = triage_config.get('uncertain_alignments', ['partial', 'divergent'])
+    priority_order = ingestion_config.get(
+        'extraction_priority', ['divergent', 'partial', 'aligned', 'pending']
+    )
+    uncertain_alignments = triage_config.get(
+        'uncertain_alignments', ['partial', 'divergent']
+    )
 
     extractor = RuleExtractor(model='gpt-4o')
     ext_version = compute_extractor_version(EXTRACTION_SYSTEM_PROMPT, 'gpt-4o')
@@ -473,28 +528,38 @@ def run_extraction(
         status = kb.get('status', '')
         source_type_raw = metadata.get('sourceType', '')
         # source_learning_id is a top-level DB column; CSV stores it in metadata_json too
-        source_learning_id = kb.get('source_learning_id', '') or metadata.get('source_learning_id', '')
+        source_learning_id = kb.get('source_learning_id', '') or metadata.get(
+            'source_learning_id', ''
+        )
 
         if status == 'rejected':
             continue
 
-        is_human_feedback = source_type_raw in ('chat_feedback', 'feedback') and not source_learning_id
+        is_human_feedback = (
+            source_type_raw in ('chat_feedback', 'feedback') and not source_learning_id
+        )
         is_retrospective = bool(source_learning_id)
 
         if is_human_feedback:
             text = format_human_feedback(content, metadata)
-            work_items.append({
-                'kb_id': kb_id,
-                'text': text,
-                'source_dataset': SourceDataset.KB_FEEDBACK.value,
-                'source_type': 'sme',
-                'source_category': SourceCategory.UW_RULE.value,
-                'source_quality': 'approved_sme' if status == 'approved' else 'pending',
-                'approval_status': 'approved' if status == 'approved' else 'pending',
-                'product_type': metadata.get('productType', ''),
-                'alignment': '',
-                'sort_key': (-1, 0),  # Feedback first
-            })
+            work_items.append(
+                {
+                    'kb_id': kb_id,
+                    'text': text,
+                    'source_dataset': SourceDataset.KB_FEEDBACK.value,
+                    'source_type': 'sme',
+                    'source_category': SourceCategory.UW_RULE.value,
+                    'source_quality': 'approved_sme'
+                    if status == 'approved'
+                    else 'pending',
+                    'approval_status': 'approved'
+                    if status == 'approved'
+                    else 'pending',
+                    'product_type': metadata.get('productType', ''),
+                    'alignment': '',
+                    'sort_key': (-1, 0),  # Feedback first
+                }
+            )
             continue
 
         if is_retrospective:
@@ -508,7 +573,9 @@ def run_extraction(
                 continue
 
             exec_summary = retro.get('executiveSummary', '')
-            triage_result = triage_entry(content, exec_summary, retro, op_config, uncertain_alignments)
+            triage_result = triage_entry(
+                content, exec_summary, retro, op_config, uncertain_alignments
+            )
 
             # Skip pure operational
             if triage_result == SourceCategory.OPERATIONAL.value:
@@ -524,22 +591,30 @@ def run_extraction(
             if text.strip() == content.strip() or not text.strip():
                 continue
 
-            source_quality = f'production_{alignment}' if alignment else 'production_partial'
-            priority_idx = priority_order.index(alignment) if alignment in priority_order else len(priority_order)
+            source_quality = (
+                f'production_{alignment}' if alignment else 'production_partial'
+            )
+            priority_idx = (
+                priority_order.index(alignment)
+                if alignment in priority_order
+                else len(priority_order)
+            )
 
-            work_items.append({
-                'kb_id': kb_id,
-                'learning_id': source_learning_id,
-                'text': text,
-                'source_dataset': SourceDataset.RETROSPECTIVE.value,
-                'source_type': 'production',
-                'source_category': triage_result,
-                'source_quality': source_quality,
-                'approval_status': status,
-                'product_type': product_type,
-                'alignment': alignment,
-                'sort_key': (priority_idx, 0),
-            })
+            work_items.append(
+                {
+                    'kb_id': kb_id,
+                    'learning_id': source_learning_id,
+                    'text': text,
+                    'source_dataset': SourceDataset.RETROSPECTIVE.value,
+                    'source_type': 'production',
+                    'source_category': triage_result,
+                    'source_quality': source_quality,
+                    'approval_status': status,
+                    'product_type': product_type,
+                    'alignment': alignment,
+                    'sort_key': (priority_idx, 0),
+                }
+            )
 
     # Sort by priority
     work_items.sort(key=lambda x: x['sort_key'])
@@ -563,17 +638,25 @@ def run_extraction(
 
         logger.info(
             '[%d/%d] Extracting kb_id=%s learning_id=%s category=%s',
-            idx + 1, total, kb_id, learning_id, item['source_category'],
+            idx + 1,
+            total,
+            kb_id,
+            learning_id,
+            item['source_category'],
         )
 
         # Identity-based dedup
         existing = find_existing_by_identity(
             db,
-            kb_entry_id=kb_id if item['source_dataset'] == SourceDataset.KB_FEEDBACK.value else None,
+            kb_entry_id=kb_id
+            if item['source_dataset'] == SourceDataset.KB_FEEDBACK.value
+            else None,
             learning_id=learning_id,
             extractor_version=ext_version,
         )
-        same_version = [e for e in existing if e.get('extractor_version') == ext_version]
+        same_version = [
+            e for e in existing if e.get('extractor_version') == ext_version
+        ]
         if same_version:
             logger.info('Skipping (same extractor version): kb_id=%s', kb_id)
             stats['skipped_dedup'] += 1
@@ -603,7 +686,9 @@ def run_extraction(
 
             # Metadata override from CSV ground truth
             rule['source_type'] = item['source_type']
-            rule['decision_quality'] = item.get('alignment') or rule.get('decision_quality')
+            rule['decision_quality'] = item.get('alignment') or rule.get(
+                'decision_quality'
+            )
             if item.get('product_type'):
                 rule['product_type'] = item['product_type']
 
@@ -655,20 +740,40 @@ def run_extraction(
 # CLI
 # ============================================================================
 
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description='Batch ingestion of knowledge sources for knowledge graph')
+    parser = argparse.ArgumentParser(
+        description='Batch ingestion of knowledge sources for knowledge graph'
+    )
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument('--preview', action='store_true', help='Preview ingestion index (no LLM calls)')
-    mode.add_argument('--dry-run', action='store_true', help='Extract first 5 per category')
+    mode.add_argument(
+        '--preview', action='store_true', help='Preview ingestion index (no LLM calls)'
+    )
+    mode.add_argument(
+        '--dry-run', action='store_true', help='Extract first 5 per category'
+    )
     mode.add_argument('--run', action='store_true', help='Full extraction run')
 
-    parser.add_argument('--from-csv', action='store_true',
-                        help='Read from CSV dumps instead of Neon DB tables (default: read from DB)')
-    parser.add_argument('--kb-csv', type=str, default=None,
-                        help='Path to knowledge_base_entries.csv (implies --from-csv)')
-    parser.add_argument('--learnings-csv', type=str, default=None,
-                        help='Path to agent_learnings.csv (implies --from-csv)')
-    parser.add_argument('--config', type=str, default=None, help='Path to ingestion_config.yaml')
+    parser.add_argument(
+        '--from-csv',
+        action='store_true',
+        help='Read from CSV dumps instead of Neon DB tables (default: read from DB)',
+    )
+    parser.add_argument(
+        '--kb-csv',
+        type=str,
+        default=None,
+        help='Path to knowledge_base_entries.csv (implies --from-csv)',
+    )
+    parser.add_argument(
+        '--learnings-csv',
+        type=str,
+        default=None,
+        help='Path to agent_learnings.csv (implies --from-csv)',
+    )
+    parser.add_argument(
+        '--config', type=str, default=None, help='Path to ingestion_config.yaml'
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -686,12 +791,19 @@ def main() -> int:
     with NeonConnection() as db:
         if use_csv:
             data_dir = _PROJECT_ROOT / 'data'
-            kb_path = Path(args.kb_csv) if args.kb_csv else data_dir / 'knowledge_base_entries.csv'
+            kb_path = (
+                Path(args.kb_csv)
+                if args.kb_csv
+                else data_dir / 'knowledge_base_entries.csv'
+            )
             learnings_path = (
-                Path(args.learnings_csv) if args.learnings_csv
+                Path(args.learnings_csv)
+                if args.learnings_csv
                 else data_dir / 'agent_learnings (1).csv'
             )
-            logger.info('Loading from CSV: kb=%s, learnings=%s', kb_path, learnings_path)
+            logger.info(
+                'Loading from CSV: kb=%s, learnings=%s', kb_path, learnings_path
+            )
             kb_rows = load_csv(kb_path)
             learning_rows = load_csv(learnings_path)
         else:
@@ -699,21 +811,25 @@ def main() -> int:
             kb_rows = load_kb_from_db(db)
             learning_rows = load_learnings_from_db(db)
 
-        logger.info('Loaded %d KB entries, %d learnings', len(kb_rows), len(learning_rows))
+        logger.info(
+            'Loaded %d KB entries, %d learnings', len(kb_rows), len(learning_rows)
+        )
 
         if args.preview:
-            index = build_ingestion_index(kb_rows, learning_rows, op_config, triage_config)
+            index = build_ingestion_index(
+                kb_rows, learning_rows, op_config, triage_config
+            )
             print('\n=== INGESTION PREVIEW ===')
-            print(f"Source: {'CSV' if use_csv else 'Neon DB'}")
-            print(f"Total KB entries: {index['total_entries']}")
-            print(f"Total extractable: {index['total_extractable']}")
-            print(f"Estimated LLM calls: {index['estimated_llm_calls']}")
-            print(f'\nTriage counts:')
+            print(f'Source: {"CSV" if use_csv else "Neon DB"}')
+            print(f'Total KB entries: {index["total_entries"]}')
+            print(f'Total extractable: {index["total_extractable"]}')
+            print(f'Estimated LLM calls: {index["estimated_llm_calls"]}')
+            print('\nTriage counts:')
             for cat, count in sorted(index['triage_counts'].items()):
                 print(f'  {cat}: {count}')
-            print(f"\nSkipped: {len(index['skipped'])}")
+            print(f'\nSkipped: {len(index["skipped"])}')
             for s in index['skipped'][:10]:
-                print(f"  {s['id']}: {s['reason']}")
+                print(f'  {s["id"]}: {s["reason"]}')
             if len(index['skipped']) > 10:
                 print(f'  ... and {len(index["skipped"]) - 10} more')
             return 0

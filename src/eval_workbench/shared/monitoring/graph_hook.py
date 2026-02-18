@@ -38,12 +38,14 @@ logger = logging.getLogger(__name__)
 def _normalize(text: str) -> str:
     """Lowercase, replace _/- with spaces, collapse whitespace."""
     import re
+
     return re.sub(r'\s+', ' ', text.lower().replace('_', ' ').replace('-', ' ')).strip()
 
 
 def _has_operational_markers(text: str, config: dict) -> bool:
     """Check if text contains operational markers, respecting UW allowlist."""
     import re
+
     normed = _normalize(text)
     markers = config.get('keywords', [])
     patterns = [re.compile(p, re.I) for p in config.get('patterns', [])]
@@ -60,8 +62,13 @@ def _has_operational_markers(text: str, config: dict) -> bool:
 
 def _has_operational_leakage(rule: dict, config: dict) -> bool:
     """Check if extracted rule contains operational markers that leaked through."""
-    scan_fields = ['risk_factor', 'rule_name', 'outcome_description',
-                   'historical_exceptions', 'source']
+    scan_fields = [
+        'risk_factor',
+        'rule_name',
+        'outcome_description',
+        'historical_exceptions',
+        'source',
+    ]
     text_parts = []
     for field in scan_fields:
         val = rule.get(field, '')
@@ -76,12 +83,22 @@ def _has_operational_leakage(rule: dict, config: dict) -> bool:
 
 # Hard gates for Path 2 extraction (from ingestion_config.yaml defaults)
 _DEFAULT_EXCLUDED_INTERVENTION_TYPES = {'approval', 'support', 'clarification'}
-_DEFAULT_EXCLUDED_FAILED_STEPS = {'data_integrity_failure', 'system_tooling_failure', 'chat_interface'}
+_DEFAULT_EXCLUDED_FAILED_STEPS = {
+    'data_integrity_failure',
+    'system_tooling_failure',
+    'chat_interface',
+}
 
 # Correction keywords for evidence snippet extraction
 _DEFAULT_CORRECTION_KEYWORDS = [
-    'correct', 'actually', 'should be', 'override',
-    'decline', 'approve', 'not right', 'change to',
+    'correct',
+    'actually',
+    'should be',
+    'override',
+    'decline',
+    'approve',
+    'not right',
+    'change to',
 ]
 
 
@@ -123,7 +140,11 @@ def _extract_evidence_snippet(
 
     evidence_parts = []
     for msg in window:
-        content = msg.get('content', '') if isinstance(msg, dict) else getattr(msg, 'content', '')
+        content = (
+            msg.get('content', '')
+            if isinstance(msg, dict)
+            else getattr(msg, 'content', '')
+        )
         if not content:
             continue
         content_lower = content.lower()
@@ -149,12 +170,14 @@ def _passes_hard_gates(
     4. failed_step NOT in excluded set
     """
     gate_config = config.get('slack_extraction_gates', {})
-    excluded_interventions = set(gate_config.get(
-        'excluded_intervention_types', _DEFAULT_EXCLUDED_INTERVENTION_TYPES
-    ))
-    excluded_failures = set(gate_config.get(
-        'excluded_failed_steps', _DEFAULT_EXCLUDED_FAILED_STEPS
-    ))
+    excluded_interventions = set(
+        gate_config.get(
+            'excluded_intervention_types', _DEFAULT_EXCLUDED_INTERVENTION_TYPES
+        )
+    )
+    excluded_failures = set(
+        gate_config.get('excluded_failed_steps', _DEFAULT_EXCLUDED_FAILED_STEPS)
+    )
 
     # Gate 1: Must have recommendation
     resolution = getattr(obj_signals, 'resolution', None)
@@ -167,13 +190,19 @@ def _passes_hard_gates(
     # Gate 2: Must have intervention or escalation
     intervention = getattr(obj_signals, 'intervention', None)
     escalation = getattr(obj_signals, 'escalation', None)
-    has_intervention = getattr(intervention, 'has_intervention', False) if intervention else False
+    has_intervention = (
+        getattr(intervention, 'has_intervention', False) if intervention else False
+    )
     is_escalated = getattr(escalation, 'is_escalated', False) if escalation else False
     if not has_intervention and not is_escalated:
         return False
 
     # Gate 3: intervention_type not in exclusion set
-    int_type = getattr(intervention, 'intervention_type', 'no_intervention') if intervention else 'no_intervention'
+    int_type = (
+        getattr(intervention, 'intervention_type', 'no_intervention')
+        if intervention
+        else 'no_intervention'
+    )
     if int_type in excluded_interventions:
         return False
 
@@ -206,10 +235,16 @@ def _format_thread_for_extraction(
     ]
 
     if intervention:
-        parts.append(f'Intervention Type: {getattr(intervention, "intervention_type", "unknown")}')
+        parts.append(
+            f'Intervention Type: {getattr(intervention, "intervention_type", "unknown")}'
+        )
     if subj_signals:
-        parts.append(f'Override Type: {getattr(subj_signals, "override_type", "no_override")}')
-        parts.append(f'Frustration Cause: {getattr(subj_signals, "frustration_cause", "none")}')
+        parts.append(
+            f'Override Type: {getattr(subj_signals, "override_type", "no_override")}'
+        )
+        parts.append(
+            f'Frustration Cause: {getattr(subj_signals, "frustration_cause", "none")}'
+        )
     if fb_signals:
         parts.append(
             f'Attribution: {getattr(fb_signals, "failed_step", "unknown")} '
@@ -287,12 +322,17 @@ def process_graph_hints(
             # Build a pseudo-rule from the hint
             rule = {
                 'risk_factor': hint_dict.get('rule_name_hint', 'Unknown'),
-                'rule_name': hint_dict.get('rule_name_hint', f'graph_hint_{hint_dict.get("target_node_type", "unknown")}'),
+                'rule_name': hint_dict.get(
+                    'rule_name_hint',
+                    f'graph_hint_{hint_dict.get("target_node_type", "unknown")}',
+                ),
                 'risk_category': hint_dict.get('target_node_type', 'other'),
                 'action': hint_dict.get('suggested_action', 'review'),
                 'outcome_description': f'Graph hint: {hint_dict.get("suggested_action", "review")} '
-                                       f'{hint_dict.get("target_node_type", "unknown")}',
-                'source': f'slack_thread:{channel_id}:{thread_ts}' if channel_id else 'slack_thread',
+                f'{hint_dict.get("target_node_type", "unknown")}',
+                'source': f'slack_thread:{channel_id}:{thread_ts}'
+                if channel_id
+                else 'slack_thread',
                 'source_type': 'production',
                 'confidence': 'medium',
             }
@@ -313,7 +353,9 @@ def process_graph_hints(
                 'source_category': SourceCategory.UW_RULE.value,
                 'proposal_kind': ProposalKind.GRAPH_HINT.value,
                 'confidence_factors': hint_dict,
-                'evidence_snippet': ' | '.join(evidence_parts[:3]) if evidence_parts else '',
+                'evidence_snippet': ' | '.join(evidence_parts[:3])
+                if evidence_parts
+                else '',
                 'review_status': ReviewStatus.PENDING_REVIEW.value,
             }
 
@@ -361,14 +403,22 @@ def process_thread_extractions(
     config = config or _load_config()
     op_config = config.get('operational_markers', {})
     evidence_config = config.get('evidence_snippet', {})
-    correction_keywords = evidence_config.get('correction_keywords', _DEFAULT_CORRECTION_KEYWORDS)
+    correction_keywords = evidence_config.get(
+        'correction_keywords', _DEFAULT_CORRECTION_KEYWORDS
+    )
     context_window = evidence_config.get('context_window', 2)
 
     extractor = RuleExtractor(model='gpt-4o')
     ext_version = compute_extractor_version(EXTRACTION_SYSTEM_PROMPT, 'gpt-4o')
     batch_id = str(uuid.uuid4())
 
-    stats = {'extracted': 0, 'gate_filtered': 0, 'errors': 0, 'dedup_skipped': 0, 'operational_filtered': 0}
+    stats = {
+        'extracted': 0,
+        'gate_filtered': 0,
+        'errors': 0,
+        'dedup_skipped': 0,
+        'operational_filtered': 0,
+    }
 
     if not hasattr(results, 'results') or not results.results:
         return stats
@@ -401,7 +451,9 @@ def process_thread_extractions(
             slack_thread_ts=thread_ts,
             extractor_version=ext_version,
         )
-        same_version = [e for e in existing if e.get('extractor_version') == ext_version]
+        same_version = [
+            e for e in existing if e.get('extractor_version') == ext_version
+        ]
         if same_version:
             stats['dedup_skipped'] += 1
             continue
@@ -410,13 +462,17 @@ def process_thread_extractions(
         messages = _get_messages_from_item(item_id, item_results)
 
         # Format for extraction
-        text = _format_thread_for_extraction(messages, obj_signals, subj_signals, fb_signals)
+        text = _format_thread_for_extraction(
+            messages, obj_signals, subj_signals, fb_signals
+        )
 
         # Extract
         try:
             rules = extractor.extract_batch([text])
         except Exception as exc:
-            logger.error('Extraction failed for thread %s/%s: %s', channel_id, thread_ts, exc)
+            logger.error(
+                'Extraction failed for thread %s/%s: %s', channel_id, thread_ts, exc
+            )
             stats['errors'] += 1
             continue
 
@@ -425,11 +481,21 @@ def process_thread_extractions(
 
         # Post-extraction filter + metadata from computed signals
         intervention = getattr(obj_signals, 'intervention', None)
-        int_turn = getattr(intervention, 'intervention_turn_index', None) if intervention else None
+        int_turn = (
+            getattr(intervention, 'intervention_turn_index', None)
+            if intervention
+            else None
+        )
 
         evidence = _extract_evidence_snippet(
-            [{'content': getattr(m, 'content', '') if not isinstance(m, dict) else m.get('content', '')}
-             for m in messages],
+            [
+                {
+                    'content': getattr(m, 'content', '')
+                    if not isinstance(m, dict)
+                    else m.get('content', '')
+                }
+                for m in messages
+            ],
             int_turn,
             correction_keywords,
             context_window,
@@ -442,9 +508,11 @@ def process_thread_extractions(
                 stats['operational_filtered'] += 1
 
             # Process rule check: tag vague process rules
-            if (rule.get('risk_category') == 'process'
-                    and rule.get('action') == 'verify'
-                    and not rule.get('threshold')):
+            if (
+                rule.get('risk_category') == 'process'
+                and rule.get('action') == 'verify'
+                and not rule.get('threshold')
+            ):
                 rule['source_category'] = SourceCategory.PROCESS_FROM_SLACK.value
 
             # Override metadata from computed signals (NOT re-inferred)
@@ -453,7 +521,9 @@ def process_thread_extractions(
                 if override_type and override_type != 'no_override':
                     rule['decision_quality'] = 'divergent'
             if fb_signals:
-                rule['source'] = f'attribution:{getattr(fb_signals, "failed_step", "unknown")}'
+                rule['source'] = (
+                    f'attribution:{getattr(fb_signals, "failed_step", "unknown")}'
+                )
 
         provenance = {
             'slack_channel_id': channel_id,
@@ -468,7 +538,9 @@ def process_thread_extractions(
                 'source_quality': 'production',
                 'triage_category': 'uw_rule',
                 'extraction_specificity': 'medium',
-                'attribution_confidence': getattr(fb_signals, 'confidence', 'low') if fb_signals else 'low',
+                'attribution_confidence': getattr(fb_signals, 'confidence', 'low')
+                if fb_signals
+                else 'low',
             },
         }
 
@@ -494,6 +566,7 @@ def process_thread_extractions(
 # ============================================================================
 # Result navigation helpers
 # ============================================================================
+
 
 def _iter_evaluation_items(results: Any):
     """Iterate over evaluation results, yielding (item_id, item_results) pairs."""
@@ -581,6 +654,7 @@ def _get_messages_from_item(item_id: str, item_result: Any) -> list:
 # ============================================================================
 # Main entrypoint
 # ============================================================================
+
 
 def post_process_for_graph(results: Any, db: Any) -> dict:
     """Main entrypoint called from monitoring_entrypoint.py after monitor.run_async().

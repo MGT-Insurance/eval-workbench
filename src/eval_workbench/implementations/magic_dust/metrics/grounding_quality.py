@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import math
-import numpy as np
 from typing import Any
 
+import numpy as np
 from axion._core.schema import RichBaseModel
 from axion._core.tracing import trace
 from axion.dataset import DatasetItem
@@ -167,10 +167,10 @@ class MagicDustGroundingQuality(BaseMetric):
         )
 
         explanation = (
-            f"Required coverage={required_coverage:.2f}, "
-            f"confidence pass rate={confidence_rate:.2f}, "
-            f"schema adherence={schema_rate:.2f}, "
-            f"defaults used={default_applied_count}/{total_fields}"
+            f'Required coverage={required_coverage:.2f}, '
+            f'confidence pass rate={confidence_rate:.2f}, '
+            f'schema adherence={schema_rate:.2f}, '
+            f'defaults used={default_applied_count}/{total_fields}'
         )
 
         return MetricEvaluationResult(
@@ -186,7 +186,8 @@ class MagicDustGroundingQuality(BaseMetric):
                 name='Overall Quality',
                 description='Weighted grounding quality score',
                 group='Overview',
-                extractor=lambda r, s=self: f"{s._weighted_score(r.required_field_coverage, r.confidence_threshold_pass_rate, r.schema_adherence_rate) * 100:.0f}%",
+                extractor=lambda r,
+                s=self: f'{s._weighted_score(r.required_field_coverage, r.confidence_threshold_pass_rate, r.schema_adherence_rate) * 100:.0f}%',
                 headline_display=True,
             ),
             SignalDescriptor(
@@ -244,7 +245,7 @@ class MagicDustGroundingQuality(BaseMetric):
                 description='Fields failing type/options/summary checks',
                 group='Schema',
                 extractor=lambda r: '; '.join(
-                    f"{c.field_name}("
+                    f'{c.field_name}('
                     + ', '.join(
                         issue
                         for issue, failed in (
@@ -256,7 +257,9 @@ class MagicDustGroundingQuality(BaseMetric):
                     )
                     + ')'
                     for c in r.checked_fields
-                    if (not c.type_valid) or (not c.options_valid) or (not c.has_summary)
+                    if (not c.type_valid)
+                    or (not c.options_valid)
+                    or (not c.has_summary)
                 )
                 or 'None',
             ),
@@ -313,7 +316,7 @@ class MagicDustGroundingQuality(BaseMetric):
         if answer is None:
             # Null can still be valid for optional or defaulted fields.
             return True
-        expected = (str(expected_type).strip().lower() if expected_type else '')
+        expected = str(expected_type).strip().lower() if expected_type else ''
         if not expected:
             return True
         if expected == 'boolean':

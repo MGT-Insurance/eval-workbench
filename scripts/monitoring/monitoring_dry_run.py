@@ -63,7 +63,9 @@ def _summarize_results(results: object) -> dict:
                 [str(v) for v in df['metric_name'].dropna().unique().tolist()]
             )
         if 'dataset_id' in df.columns:
-            summary['dataset_ids'] = [str(v) for v in df['dataset_id'].head(10).tolist()]
+            summary['dataset_ids'] = [
+                str(v) for v in df['dataset_id'].head(10).tolist()
+            ]
     except Exception:
         summary['rows'] = 'unknown'
         summary['columns'] = []
@@ -137,4 +139,3 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
-

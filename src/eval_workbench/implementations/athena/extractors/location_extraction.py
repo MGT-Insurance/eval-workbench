@@ -31,7 +31,9 @@ class LocationExtractionExtractor(ExtractorHelpers[Trace]):
             try:
                 quote = json.loads(quote_raw)
             except json.JSONDecodeError:
-                logger.warning('Failed to JSON-decode location-extraction variables.quote')
+                logger.warning(
+                    'Failed to JSON-decode location-extraction variables.quote'
+                )
         elif isinstance(quote_raw, dict):
             quote = quote_raw
 
@@ -101,4 +103,3 @@ _LOCATION_EXTRACTOR = LocationExtractionExtractor()
 def extract_location_extraction(trace: Trace) -> DatasetItem:
     """Backward-compatible function wrapper for LocationExtractionExtractor."""
     return _LOCATION_EXTRACTOR.extract(trace)
-

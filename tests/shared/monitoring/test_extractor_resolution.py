@@ -38,4 +38,3 @@ def test_monitor_resolve_extractor_raises_for_unknown_identifier() -> None:
 
     with pytest.raises((ModuleNotFoundError, AttributeError, ValueError)):
         monitor_mod._resolve_extractor('totally.invalid.extractor.identifier')
-

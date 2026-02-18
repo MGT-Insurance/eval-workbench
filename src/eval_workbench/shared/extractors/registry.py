@@ -63,4 +63,3 @@ def resolve_extractor(kind_or_key: ExtractorKind | str) -> ExtractorFn | None:
         return None
 
     return _import_callable(EXTRACTOR_REGISTRY[kind])
-

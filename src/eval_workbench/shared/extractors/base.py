@@ -56,4 +56,3 @@ class ExtractorHelpers(BaseExtractor[TInput], ABC):
 
     def select_step_span(self, step: Any) -> Any:
         return select_step_span(step)
-
