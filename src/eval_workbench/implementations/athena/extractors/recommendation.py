@@ -176,9 +176,7 @@ class RecommendationExtractor(ExtractorMixin[Trace]):
             fuzzy_dict_match=True,
         )
 
-        latency = self.safe_get(
-            span_for_meta, 'latency', fuzzy_dict_match=True
-        )
+        latency = self.safe_get(span_for_meta, 'latency', fuzzy_dict_match=True)
         if latency is None:
             latency = self.safe_get(
                 trace, 'recommendation.span.latency', fuzzy_dict_match=True

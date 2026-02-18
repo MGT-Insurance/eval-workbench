@@ -10,7 +10,6 @@ from eval_workbench.shared.langfuse.trace import (
 
 
 class GroundingPromptPatterns(PromptPatternsBase):
-
     @staticmethod
     def _patterns_search_with_grounding() -> Dict[str, str]:
         """
