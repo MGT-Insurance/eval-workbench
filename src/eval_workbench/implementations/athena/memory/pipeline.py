@@ -9,6 +9,7 @@ from eval_workbench.shared.memory.ontology import OntologyDefinition
 from eval_workbench.shared.memory.persistence import (
     compute_text_hash,
     fetch_all_extractions,
+    fetch_approved_pending_ingestion,
     fetch_pending,
     has_extractions_for_raw_text_hash,
     mark_failed,
@@ -186,6 +187,8 @@ class AthenaRulePipeline(BasePipeline):
         *,
         batch_size: int = 5,
         dedup: bool = True,
+        persist_only: bool = False,
+        provenance: dict | None = None,
         **kwargs,
     ) -> PipelineResult:
         """Run the full extract-and-ingest pipeline.
@@ -196,6 +199,13 @@ class AthenaRulePipeline(BasePipeline):
         When a ``db`` (NeonConnection) is attached, extracted rules are persisted
         to the ``rule_extractions`` table before ingestion into Zep, and each
         rule's ingestion status is tracked.
+
+        When ``persist_only=True``, extraction + persistence happen but graph
+        ingestion is skipped. Rules stay ``ingestion_status='pending'`` for
+        later review and ingestion via ``run_from_db()``.
+
+        ``provenance`` is an optional dict of provenance fields passed through
+        to ``save_extractions`` (kb_entry_id, source_dataset, etc.).
         """
         result = PipelineResult()
 
@@ -232,7 +242,12 @@ class AthenaRulePipeline(BasePipeline):
                     batch_id=batch_id,
                     agent_name='athena',
                     raw_text=raw_text,
+                    provenance=provenance,
                 )
+
+                if persist_only:
+                    continue
+
                 rule_ids_by_idx = dict(zip(range(len(rules)), ids))
 
                 for i in range(0, len(rules), batch_size):
@@ -280,8 +295,12 @@ class AthenaRulePipeline(BasePipeline):
                 batch_id=batch_id,
                 agent_name='athena',
                 raw_text=str(raw_data),
+                provenance=provenance,
             )
             rule_ids = dict(zip(range(len(rules)), ids))
+
+        if persist_only:
+            return result
 
         for i in range(0, len(rules), batch_size):
             batch = rules[i : i + batch_size]
@@ -308,10 +327,18 @@ class AthenaRulePipeline(BasePipeline):
         batch_id: str | None = None,
         batch_size: int = 5,
         force: bool = False,
+        require_review: bool = True,
     ) -> PipelineResult:
         """Re-ingest rules from Neon into the graph store (no LLM extraction).
 
-        By default loads only rules with ``ingestion_status='pending'``.
+        When ``require_review=True`` (default), only loads rules with
+        ``review_status='approved'`` AND ``ingestion_status='pending'`` AND
+        ``superseded_by IS NULL``.  This ensures only reviewed, current
+        extractions enter the graph.
+
+        When ``require_review=False``, falls back to the legacy behaviour:
+        all rows with ``ingestion_status='pending'`` (regardless of review).
+
         Pass ``force=True`` to reload ALL rules regardless of status
         (useful when rebuilding a graph backend from scratch).
         """
@@ -321,6 +348,12 @@ class AthenaRulePipeline(BasePipeline):
         result = PipelineResult()
         if force:
             rules = fetch_all_extractions(self.db, agent_name='athena', limit=10000)
+        elif require_review:
+            rules = fetch_approved_pending_ingestion(
+                self.db,
+                agent_name='athena',
+                batch_id=batch_id,
+            )
         else:
             rules = fetch_pending(self.db, agent_name='athena', batch_id=batch_id)
         result.items_processed = len(rules)

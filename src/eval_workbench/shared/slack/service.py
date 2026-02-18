@@ -759,10 +759,14 @@ class SlackService:
     # --- Read/Scrape Operations ---
 
     async def get_thread_replies(
-        self, channel: str, thread_ts: str, agent_id: Optional[str] = None
+        self,
+        channel: str,
+        thread_ts: str,
+        agent_id: Optional[str] = None,
+        override_token: Optional[str] = None,
     ) -> SlackResponse:
         """Retrieves all replies in a thread with automatic pagination."""
-        token = SlackConfig.get_token(agent_id)
+        token = SlackConfig.get_token(agent_id, override_token)
         if not token:
             return {'success': False, 'error': 'Slack token not configured'}
 
@@ -799,11 +803,12 @@ class SlackService:
         channel: str,
         limit: int = 100,
         agent_id: Optional[str] = None,
+        override_token: Optional[str] = None,
         oldest_ts: Optional[float] = None,
         latest_ts: Optional[float] = None,
     ) -> SlackResponse:
         """Fetches channel history (messages) with optional pagination."""
-        token = SlackConfig.get_token(agent_id)
+        token = SlackConfig.get_token(agent_id, override_token)
         if not token:
             return {'success': False, 'error': 'Slack token not configured'}
 

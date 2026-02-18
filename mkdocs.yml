@@ -17,6 +17,7 @@ nav:
     - Monitoring Config (YAML): guides/monitoring-config.md
     - Slack: guides/slack.md
     - Knowledge Graph Memory: guides/memory.md
+    - Graph Ingestion Pipeline: guides/graph-ingestion-pipeline.md
     - Configuration: guides/configuration.md
     - Scripts Reference: guides/scripts.md
   - Metric Registry:

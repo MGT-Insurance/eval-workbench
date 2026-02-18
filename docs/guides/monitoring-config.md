@@ -53,7 +53,7 @@ source:
   type: langfuse
   name: "my_agent"
   component: "my_component"
-  extractor: "implementations.my_agent.extractors.extract_trace"
+  extractor: "athena.recommendation"  # preferred registry key
   # prompt_patterns: "implementations.my_agent.langfuse.prompt_patterns.MyPromptPatterns"
   limit: 100
   days_back: 7
@@ -65,11 +65,20 @@ source:
 
 Key fields:
 
-- `extractor`: python path to a `(Trace) -> DatasetItem` function
+- `extractor`: either a canonical registry key (recommended) or a dotted python path to a `(Trace) -> DatasetItem` function
 - `limit`: max traces to fetch
 - `days_back` / `hours_back` / `minutes_back`: time window (days_back wins if both set; hours_back wins over minutes_back)
 - `tags`: filter by Langfuse tags
 - `fetch_full_traces`: include observations/scores (slower but richer)
+
+Registry-key examples:
+
+- `athena.recommendation`
+- `athena.recommendation.row`
+- `athena.location_extraction`
+- `magic_dust.grounding`
+
+Legacy dotted paths remain supported for backward compatibility.
 
 ### Slack source (`type: slack`)
 
@@ -222,7 +231,7 @@ source:
     FROM athena_cases
     WHERE created_at >= NOW() - INTERVAL '1 hour'
     ORDER BY created_at DESC
-  extractor: "eval_workbench.implementations.athena.extractors.extract_recommendation_from_row"
+  extractor: "athena.recommendation.row"  # preferred registry key
   limit: 100
 ```
 
@@ -232,7 +241,7 @@ source:
 |-------|------|---------|-------------|
 | `name` | str | Required | Source identifier |
 | `query` | str | Required | SQL query to execute |
-| `extractor` | str | Required | Dotted Python path to `(row_dict) -> DatasetItem` function |
+| `extractor` | str | Required | Registry key (recommended) or dotted Python path to `(row_dict) -> DatasetItem` function |
 | `connection_string` | str | `DATABASE_URL` env | Database URL |
 | `params` | dict/tuple | — | Query parameters for parameterized SQL |
 | `limit` | int | — | Append `LIMIT` clause if query lacks one |

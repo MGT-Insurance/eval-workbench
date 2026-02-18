@@ -1,0 +1,106 @@
+# Configuration for CSV batch ingestion and Slack thread rule extraction.
+# Used by ingest_knowledge_sources.py and graph_hook.py.
+
+# Operational markers — entries matching these are filtered from extraction input.
+# UW allowlist protects terms that look operational but are legitimate UW concepts.
+operational_markers:
+  keywords:
+    - omi
+    - socotra
+    - bulk upload
+    - api error
+    - timeout
+    - swallow
+    - retry
+    - deployment
+    - integration
+    - webhook
+    - cron
+    - migration
+    - rollback
+    - sfx
+    - quote source
+
+  patterns:
+    - '\\bapi\\s+(error|500|timeout|failure)\\b'
+    - '\\b(deploy|rollback|hotfix|release)\\b'
+    - '\\bomi\\s+(bulk|upload|quote|import)\\b'
+
+  uw_allowlist:
+    - acv
+    - deductible
+    - debit
+    - credit
+    - endorsement
+    - wind exclusion
+    - sublimit
+    - coinsurance
+    - premium
+    - rate
+    - pricing
+    - coverage modification
+    - actual cash value
+    - replacement cost
+    - aggregate limit
+
+# Triage: keyword-only scan on KB content + executiveSummary
+triage:
+  # Entries with decisionQuality.alignment in these + sparse keyLearnings → triage_uncertain
+  uncertain_alignments:
+    - partial
+    - divergent
+
+# Extraction priority order (highest first)
+extraction_priority:
+  - divergent
+  - partial
+  - aligned
+  - pending
+
+# Confidence model factors
+confidence:
+  high_source_quality:
+    - approved_sme
+  medium_source_quality:
+    - production_aligned
+  low_source_quality:
+    - production_partial
+    - pending
+    - operational
+
+# Slack Path 2 hard gates
+slack_extraction_gates:
+  # intervention_types that do NOT qualify for extraction
+  excluded_intervention_types:
+    - approval
+    - support
+    - clarification
+  # failed_step values that are NOT graph-actionable
+  excluded_failed_steps:
+    - data_integrity_failure
+    - system_tooling_failure
+    - chat_interface
+
+# Post-extraction operational marker check
+post_extraction_filter:
+  # Fields to scan for operational leakage
+  scan_fields:
+    - risk_factor
+    - rule_name
+    - outcome_description
+    - historical_exceptions
+    - source
+    - data_fields
+
+# Evidence snippet extraction (Slack Path 2)
+evidence_snippet:
+  correction_keywords:
+    - correct
+    - actually
+    - should be
+    - override
+    - decline
+    - approve
+    - not right
+    - change to
+  context_window: 2  # messages before/after intervention marker

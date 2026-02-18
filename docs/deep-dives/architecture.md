@@ -214,7 +214,7 @@ This builds `DatasetItem` objects for evaluation and/or exploratory analysis.
   <div class="rule-card">
     <span class="rule-card__number">F</span>
     <p class="rule-card__title">Factory + Config-as-Code</p>
-    <p class="rule-card__desc"><code>OnlineMonitor.from_yaml(...)</code> translates YAML into concrete objects — loading dotted-path extractors, choosing sources and sampling strategies. Runtime topology is controlled by config, not code edits.</p>
+    <p class="rule-card__desc"><code>OnlineMonitor.from_yaml(...)</code> translates YAML into concrete objects — resolving extractor registry keys (with dotted-path fallback), choosing sources, and selecting sampling strategies. Runtime topology is controlled by config, not code edits.</p>
   </div>
   <div class="rule-card">
     <span class="rule-card__number">R</span>

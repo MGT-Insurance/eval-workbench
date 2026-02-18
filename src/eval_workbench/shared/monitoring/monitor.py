@@ -24,7 +24,7 @@ from eval_workbench.shared import config
 from eval_workbench.shared.config import ConfigurationError
 from eval_workbench.shared.database.evaluation_upload import EvaluationUploader
 from eval_workbench.shared.database.neon import NeonConnection
-from eval_workbench.shared.langfuse.trace import Trace
+from eval_workbench.shared.extractors import ExtractorFn, resolve_extractor
 from eval_workbench.shared.monitoring.sampling import (
     AllSampling,
     SamplingStrategy,
@@ -48,15 +48,25 @@ metric_registry.finalize_initial_state()
 logger = logging.getLogger(__name__)
 
 
-# Type alias for extractor functions
-ExtractorFn = Callable[[Trace], DatasetItem]
-
-
 def _load_function(path: str) -> Callable:
     """Load a function from dotted path like 'module.submodule.function'."""
     module_path, func_name = path.rsplit('.', 1)
     module = importlib.import_module(module_path)
     return getattr(module, func_name)
+
+
+def _resolve_extractor(identifier: str) -> ExtractorFn:
+    """Resolve extractor from registry key, then dotted path fallback."""
+    registry_extractor = resolve_extractor(identifier)
+    if registry_extractor is not None:
+        logger.info("Resolved extractor '%s' via registry key", identifier)
+        return registry_extractor
+
+    loaded = _load_function(identifier)
+    if not callable(loaded):
+        raise TypeError(f'Resolved extractor is not callable: {identifier}')
+    logger.info("Resolved extractor '%s' via dotted path", identifier)
+    return loaded
 
 
 def _load_class(path: str) -> type:
@@ -227,7 +237,7 @@ class OnlineMonitor:
         extractor_path = source_cfg.get('extractor')
         if not extractor_path:
             raise ConfigurationError("Langfuse source requires 'extractor' path")
-        extractor = _load_function(extractor_path)
+        extractor = _resolve_extractor(extractor_path)
 
         # Load prompt patterns (optional)
         patterns_path = source_cfg.get('prompt_patterns')
@@ -243,6 +253,9 @@ class OnlineMonitor:
             minutes_back=source_cfg.get('minutes_back'),
             tags=source_cfg.get('tags'),
             trace_ids=source_cfg.get('trace_ids'),
+            public_key=source_cfg.get('public_key'),
+            secret_key=source_cfg.get('secret_key'),
+            host=source_cfg.get('host'),
             timeout=source_cfg.get('timeout', 60),
             fetch_full_traces=source_cfg.get('fetch_full_traces', True),
             show_progress=source_cfg.get('show_progress', True),
@@ -277,6 +290,7 @@ class OnlineMonitor:
             window_days=source_cfg.get('window_days'),
             window_hours=source_cfg.get('window_hours'),
             window_minutes=source_cfg.get('window_minutes'),
+            slack_token=source_cfg.get('slack_token'),
         )
 
     @classmethod
@@ -285,7 +299,7 @@ class OnlineMonitor:
         extractor_path = source_cfg.get('extractor')
         if not extractor_path:
             raise ConfigurationError("Neon source requires 'extractor' path")
-        extractor = _load_function(extractor_path)
+        extractor = _resolve_extractor(extractor_path)
 
         query = source_cfg.get('query')
         if not query:
@@ -354,6 +368,7 @@ class OnlineMonitor:
             window_days=source_cfg.get('window_days'),
             window_hours=source_cfg.get('window_hours'),
             window_minutes=source_cfg.get('window_minutes'),
+            slack_token=source_cfg.get('slack_token'),
         )
 
     @classmethod

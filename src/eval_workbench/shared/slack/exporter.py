@@ -43,6 +43,7 @@ class SlackExporter:
         bot_names: Optional list of sender names to mark AI vs human.
         workspace_domain: Slack workspace subdomain for permalinks.
         agent_id: Agent identifier used by Slack service calls.
+        slack_token: Optional Slack API token override for read/scrape calls.
         drop_if_first_is_user: Drop if first turn is HumanMessage.
         drop_if_all_ai: Drop if all turns are AIMessage.
         max_concurrent: Max concurrent channel scrapes.
@@ -85,6 +86,7 @@ class SlackExporter:
         bot_names: Optional[List[str]] = None,
         workspace_domain: str = 'mgtinsurance',
         agent_id: str = 'athena',
+        slack_token: Optional[str] = None,
         drop_if_first_is_user: bool = False,
         drop_if_all_ai: bool = False,
         max_concurrent: int = 2,
@@ -114,6 +116,7 @@ class SlackExporter:
         self.bot_names = bot_names or [bot_name]
         self.workspace_domain = workspace_domain
         self.agent_id = agent_id
+        self.slack_token = slack_token
         self.drop_if_first_is_user = drop_if_first_is_user
         self.drop_if_all_ai = drop_if_all_ai
         self.max_concurrent = max_concurrent
@@ -304,6 +307,7 @@ class SlackExporter:
             channel_id,
             limit=limit if limit is not None else self.limit,
             agent_id=self.agent_id,
+            override_token=self.slack_token,
             oldest_ts=oldest_ts,
             latest_ts=latest_ts,
         )
@@ -386,6 +390,7 @@ class SlackExporter:
             channel_id,
             thread_ts,
             agent_id=self.agent_id,
+            override_token=self.slack_token,
         )
         if not response.get('success'):
             return []
