@@ -4,13 +4,13 @@ from typing import Any
 
 from axion.dataset import DatasetItem
 
-from eval_workbench.shared.extractors import ExtractorHelpers
+from eval_workbench.shared.extractors import ExtractorMixin
 from eval_workbench.shared.langfuse.trace import Trace
 
 logger = logging.getLogger(__name__)
 
 
-class LocationExtractionExtractor(ExtractorHelpers[Trace]):
+class LocationExtractionExtractor(ExtractorMixin[Trace]):
     """OOP extractor for Athena location-extraction traces."""
 
     def extract(self, source: Trace) -> DatasetItem:
