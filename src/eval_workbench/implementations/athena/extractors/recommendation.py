@@ -7,6 +7,11 @@ from typing import Any
 
 from axion.dataset import DatasetItem
 
+from eval_workbench.shared.extractors import BaseExtractor, ExtractorHelpers
+from eval_workbench.shared.extractors.utils import (
+    safe_get as _shared_safe_get,
+    to_plain_dict,
+)
 from eval_workbench.shared.langfuse.trace import Trace
 
 logger = logging.getLogger(__name__)
@@ -33,7 +38,7 @@ def extract_recommendation_label(s: str) -> str:
     return 'UNKNOWN'
 
 
-def extract_recommendation(trace: Trace) -> DatasetItem:
+def _extract_recommendation_impl(trace: Trace) -> DatasetItem:
     """
     Extract a DatasetItem from an Athena recommendation trace.
 
@@ -150,32 +155,8 @@ def extract_recommendation(trace: Trace) -> DatasetItem:
 
 
 def _safe_get(obj: Any, path: str, default: Any = None) -> Any:
-    """Safely get nested attribute using dot notation."""
-    parts = path.split('.')
-    current = obj
-
-    for part in parts:
-        try:
-            if hasattr(current, part):
-                current = getattr(current, part)
-            elif isinstance(current, dict):
-                if part in current:
-                    current = current[part]
-                else:
-                    matched = _fuzzy_dict_get(current, part)
-                    if matched is None:
-                        return default
-                    current = matched
-            else:
-                # Allow bracket access for SmartAccess wrappers (e.g. step names with hyphens)
-                try:
-                    current = current[part]
-                except Exception:
-                    return default
-        except Exception:
-            return default
-
-    return current if current is not None else default
+    """Safely get nested values with fuzzy dict key matching enabled."""
+    return _shared_safe_get(obj, path, default, fuzzy_dict_match=True)
 
 
 def _extract_location_extraction_first_location(trace: Trace) -> dict[str, Any] | None:
@@ -203,34 +184,8 @@ def _extract_location_extraction_first_location(trace: Trace) -> dict[str, Any] 
         return None
 
     first = locations[0]
-    out = _to_dict_like(first)
+    out = to_plain_dict(first)
     return out if isinstance(out, dict) and out else None
-
-
-def _to_dict_like(value: Any) -> Any:
-    """Convert common model-ish objects into plain dicts/lists for JSON metadata."""
-    if value is None or isinstance(value, (str, int, float, bool)):
-        return value
-    if isinstance(value, dict):
-        return {k: _to_dict_like(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_to_dict_like(v) for v in value]
-    if hasattr(value, 'to_dict'):
-        try:
-            return _to_dict_like(value.to_dict())
-        except Exception:
-            pass
-    if hasattr(value, 'model_dump'):
-        try:
-            return _to_dict_like(value.model_dump())
-        except Exception:
-            pass
-    if hasattr(value, '__dict__'):
-        try:
-            return _to_dict_like(vars(value))
-        except Exception:
-            pass
-    return str(value)
 
 
 def _is_invalid_value(value: Any) -> bool:
@@ -277,15 +232,7 @@ def _get_recommendation_output(observation: Any) -> tuple[str, str, list[Any]]:
     return brief, detailed, citations_raw
 
 
-def _fuzzy_dict_get(data: dict[str, Any], key: str) -> Any:
-    target = key.lower().replace('_', '')
-    for k, v in data.items():
-        if k.lower().replace('_', '') == target:
-            return v
-    return None
-
-
-def extract_recommendation_from_row(row: dict[str, Any]) -> DatasetItem:
+def _extract_recommendation_from_row_impl(row: dict[str, Any]) -> DatasetItem:
     """Extract a DatasetItem from an athena_cases database row."""
     quote_locator = row.get('quote_locator', 'unknown')
 
@@ -344,3 +291,32 @@ def extract_recommendation_from_row(row: dict[str, Any]) -> DatasetItem:
             'detailed_recommendation': detailed_recommendation,
         },
     )
+
+
+class RecommendationExtractor(ExtractorHelpers[Trace]):
+    """OOP extractor for Athena recommendation traces."""
+
+    def extract(self, source: Trace) -> DatasetItem:
+        trace = source
+        return _extract_recommendation_impl(trace)
+
+
+class RecommendationRowExtractor(BaseExtractor[dict[str, Any]]):
+    """OOP extractor for Athena recommendation rows from Neon."""
+
+    def extract(self, source: dict[str, Any]) -> DatasetItem:
+        return _extract_recommendation_from_row_impl(source)
+
+
+_RECOMMENDATION_EXTRACTOR = RecommendationExtractor()
+_RECOMMENDATION_ROW_EXTRACTOR = RecommendationRowExtractor()
+
+
+def extract_recommendation(trace: Trace) -> DatasetItem:
+    """Backward-compatible function wrapper for RecommendationExtractor."""
+    return _RECOMMENDATION_EXTRACTOR.extract(trace)
+
+
+def extract_recommendation_from_row(row: dict[str, Any]) -> DatasetItem:
+    """Backward-compatible function wrapper for RecommendationRowExtractor."""
+    return _RECOMMENDATION_ROW_EXTRACTOR.extract(row)

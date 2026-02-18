@@ -17,24 +17,30 @@
 
 <div class="rule-card">
 <span class="rule-card__number">2</span>
+<p class="rule-card__title">monitoring_dry_run.py</p>
+<p class="rule-card__desc">Run the same monitor flow locally with publishing disabled (no DB/Langfuse push).</p>
+</div>
+
+<div class="rule-card">
+<span class="rule-card__number">3</span>
 <p class="rule-card__title">create_evaluation_tables.py</p>
 <p class="rule-card__desc">Create <code>evaluation_dataset</code>, <code>evaluation_results</code> tables, and a joined view.</p>
 </div>
 
 <div class="rule-card">
-<span class="rule-card__number">3</span>
+<span class="rule-card__number">4</span>
 <p class="rule-card__title">create_athena_kpi_objects.py</p>
 <p class="rule-card__desc">Create the <code>agent_kpi_logs</code> EAV table for KPI observations.</p>
 </div>
 
 <div class="rule-card">
-<span class="rule-card__number">4</span>
+<span class="rule-card__number">5</span>
 <p class="rule-card__title">create_rule_extractions_table.py</p>
 <p class="rule-card__desc">Create the <code>rule_extractions</code> table for memory pipeline output.</p>
 </div>
 
 <div class="rule-card">
-<span class="rule-card__number">5</span>
+<span class="rule-card__number">6</span>
 <p class="rule-card__title">populate_athena_kpis.py</p>
 <p class="rule-card__desc">Populate <code>agent_kpi_logs</code> from <code>athena_cases</code> and <code>evaluation_results</code>.</p>
 </div>
@@ -83,6 +89,33 @@ python scripts/monitoring/monitoring_entrypoint.py src/eval_workbench/implementa
 
 # Disable deduplication
 DEDUPLICATE=false python scripts/monitoring/monitoring_entrypoint.py monitoring_slack
+```
+
+---
+
+## monitoring_dry_run.py
+
+Run a local dry-run of `OnlineMonitor` from YAML config using the same setup path as the GitHub Action entrypoint, but with `publish=False` enforced.
+
+```bash
+python scripts/monitoring/monitoring_dry_run.py [config_file] [--summary-only]
+```
+
+Behavior:
+
+- Fetches source items and runs evaluation normally.
+- Respects deduplication (`DEDUPLICATE=true/false`).
+- Does **not** push to DB.
+- Does **not** publish to Langfuse experiment/observability.
+
+Examples:
+
+```bash
+# Mimic Athena Langfuse monitor, no publishing side effects
+python scripts/monitoring/monitoring_dry_run.py monitoring_langfuse
+
+# Use a full path and print JSON summary only
+python scripts/monitoring/monitoring_dry_run.py src/eval_workbench/implementations/athena/config/monitoring_langfuse.yaml --summary-only
 ```
 
 ---
