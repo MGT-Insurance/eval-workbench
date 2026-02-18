@@ -7,7 +7,7 @@ from typing import Any
 
 from axion.dataset import DatasetItem
 
-from eval_workbench.shared.extractors import ExtractorHelpers
+from eval_workbench.shared.extractors import ExtractorMixin
 from eval_workbench.shared.langfuse.trace import Trace
 
 _RE_BUSINESS_NAME = re.compile(r'Business Name:\s*(.+)', re.IGNORECASE)
@@ -15,7 +15,7 @@ _RE_ADDRESS = re.compile(r'Address:\s*(.+)', re.IGNORECASE)
 _RE_REQUESTED_DATA = re.compile(r'REQUESTED DATA:\s*(\{.*\})\s*$', re.DOTALL)
 
 
-class GroundingExtractor(ExtractorHelpers[Trace]):
+class GroundingExtractor(ExtractorMixin[Trace]):
     """OOP extractor for Magic Dust grounding traces."""
 
     def extract(self, source: Trace) -> DatasetItem:
