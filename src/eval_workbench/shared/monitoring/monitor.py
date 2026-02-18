@@ -243,6 +243,9 @@ class OnlineMonitor:
             minutes_back=source_cfg.get('minutes_back'),
             tags=source_cfg.get('tags'),
             trace_ids=source_cfg.get('trace_ids'),
+            public_key=source_cfg.get('public_key'),
+            secret_key=source_cfg.get('secret_key'),
+            host=source_cfg.get('host'),
             timeout=source_cfg.get('timeout', 60),
             fetch_full_traces=source_cfg.get('fetch_full_traces', True),
             show_progress=source_cfg.get('show_progress', True),
@@ -277,6 +280,7 @@ class OnlineMonitor:
             window_days=source_cfg.get('window_days'),
             window_hours=source_cfg.get('window_hours'),
             window_minutes=source_cfg.get('window_minutes'),
+            slack_token=source_cfg.get('slack_token'),
         )
 
     @classmethod
@@ -354,6 +358,7 @@ class OnlineMonitor:
             window_days=source_cfg.get('window_days'),
             window_hours=source_cfg.get('window_hours'),
             window_minutes=source_cfg.get('window_minutes'),
+            slack_token=source_cfg.get('slack_token'),
         )
 
     @classmethod

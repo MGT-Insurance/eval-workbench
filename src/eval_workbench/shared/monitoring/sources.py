@@ -72,6 +72,9 @@ class LangfuseDataSource(DataSource):
         hours_back: Fetch traces from last N hours
         tags: Filter traces by tags
         trace_ids: Specific trace IDs to fetch (bypasses time-based fetch)
+        public_key: Optional Langfuse public key override
+        secret_key: Optional Langfuse secret key override
+        host: Optional Langfuse host override
         timeout: API timeout in seconds (default: 60)
         fetch_full_traces: Whether to fetch full trace data (default: True)
         show_progress: Show progress bar during fetch (default: True)
@@ -88,6 +91,9 @@ class LangfuseDataSource(DataSource):
         minutes_back: int | None = None,
         tags: list[str] | None = None,
         trace_ids: list[str] | None = None,
+        public_key: str | None = None,
+        secret_key: str | None = None,
+        host: str | None = None,
         timeout: int = 60,
         fetch_full_traces: bool = True,
         show_progress: bool = True,
@@ -101,6 +107,9 @@ class LangfuseDataSource(DataSource):
         self._minutes_back = minutes_back
         self._tags = tags
         self._trace_ids = trace_ids
+        self._public_key = public_key
+        self._secret_key = secret_key
+        self._host = host
         self._timeout = timeout
         self._fetch_full_traces = fetch_full_traces
         self._show_progress = show_progress
@@ -110,9 +119,17 @@ class LangfuseDataSource(DataSource):
         """Return source key in format 'langfuse:{name}'."""
         return f'langfuse:{self._name}'
 
+    def _build_loader(self) -> LangfuseTraceLoader:
+        return LangfuseTraceLoader(
+            public_key=self._public_key,
+            secret_key=self._secret_key,
+            host=self._host,
+            timeout=self._timeout,
+        )
+
     def _fetch_traces_by_time(self) -> TraceCollection:
         """Fetch traces using time-based filtering."""
-        loader = LangfuseTraceLoader(timeout=self._timeout)
+        loader = self._build_loader()
 
         hours_back = self._hours_back
         if (
@@ -148,7 +165,7 @@ class LangfuseDataSource(DataSource):
         """Fetch specific traces by their IDs."""
         logger.info(f'Fetching {len(trace_ids)} traces by ID')
 
-        loader = LangfuseTraceLoader(timeout=self._timeout)
+        loader = self._build_loader()
         trace_data = loader.fetch_traces(
             trace_ids=trace_ids,
             show_progress=self._show_progress,
@@ -205,6 +222,7 @@ class SlackDataSource(DataSource):
         window_days: Relative lookback window in days (if oldest_ts is unset)
         window_hours: Relative lookback window in hours (if oldest_ts is unset)
         window_minutes: Relative lookback window in minutes (if oldest_ts is unset)
+        slack_token: Optional Slack API token override for scrape/read calls
     """
 
     def __init__(
@@ -230,6 +248,7 @@ class SlackDataSource(DataSource):
         window_days: float | None = None,
         window_hours: float | None = None,
         window_minutes: float | None = None,
+        slack_token: str | None = None,
     ):
         self._name = name
         self._channel_ids = channel_ids
@@ -252,6 +271,7 @@ class SlackDataSource(DataSource):
         self._window_days = window_days
         self._window_hours = window_hours
         self._window_minutes = window_minutes
+        self._slack_token = slack_token
 
     @property
     def source_key(self) -> str:
@@ -288,6 +308,7 @@ class SlackDataSource(DataSource):
             window_days=self._window_days,
             window_hours=self._window_hours,
             window_minutes=self._window_minutes,
+            slack_token=self._slack_token,
         )
 
         items = await exporter.execute()
@@ -334,6 +355,7 @@ class SlackNeonJoinDataSource(DataSource):
         window_days: float | None = None,
         window_hours: float | None = None,
         window_minutes: float | None = None,
+        slack_token: str | None = None,
     ):
         if not slack_join_columns or not neon_join_columns:
             raise ValueError('slack_join_columns and neon_join_columns are required')
@@ -380,6 +402,7 @@ class SlackNeonJoinDataSource(DataSource):
             'window_days': window_days,
             'window_hours': window_hours,
             'window_minutes': window_minutes,
+            'slack_token': slack_token,
         }
 
     @property

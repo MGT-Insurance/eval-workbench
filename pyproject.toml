@@ -21,6 +21,7 @@ dependencies = [
     "APScheduler>=3.10",
     "aiohttp",
     "fastapi",
+    "json-repair",
     "pandas",
     "pyyaml",
     "langfuse>=3.0.0",

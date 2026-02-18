@@ -61,9 +61,11 @@ def _resolve_config_path(config_file: str) -> Path:
 
 async def _run(config_path: Path) -> int:
     deduplicate = _env_bool('DEDUPLICATE', default=True)
+    graph_ingestion = _env_bool('GRAPH_INGESTION', default=False)
 
     logger.info('Loading config: %s', config_path)
     logger.info('Deduplication: %s', 'enabled' if deduplicate else 'disabled')
+    logger.info('Graph ingestion: %s', 'enabled' if graph_ingestion else 'disabled')
 
     monitor = OnlineMonitor.from_yaml(config_path)
     results = await monitor.run_async(deduplicate=deduplicate, publish=True)
@@ -77,6 +79,15 @@ async def _run(config_path: Path) -> int:
         logger.info('Evaluated %s items', len(df))
     except Exception:
         logger.info('Monitoring run completed')
+
+    # Graph hook: extract proposals from monitoring results (opt-in)
+    if graph_ingestion:
+        from eval_workbench.shared.database.neon import NeonConnection
+        from eval_workbench.shared.monitoring.graph_hook import post_process_for_graph
+
+        with NeonConnection() as db:
+            graph_stats = post_process_for_graph(results, db)
+            logger.info('Graph hook stats: %s', graph_stats)
 
     return 0
 
